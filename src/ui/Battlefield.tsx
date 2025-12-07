@@ -11,6 +11,9 @@ const laneY: Record<LaneKey, number> = {
   bottom: -1.5
 };
 const spacing = 1.6;
+const BOARD_TILT = -0.42;
+const laneWidth = 10;
+const laneHeight = 1;
 
 export default function Battlefield() {
   const units = useGameStore(s => s.battlefield);
@@ -28,6 +31,19 @@ export default function Battlefield() {
 
   return (
     <group>
+      <group renderOrder={1}>
+        {laneOrder.map((lane, idx) => (
+          <mesh
+            key={`lane-${lane}`}
+            position={[0, laneY[lane], 0]}
+            rotation={[BOARD_TILT, 0, 0]}
+            renderOrder={1}
+          >
+            <planeGeometry args={[laneWidth, laneHeight]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.1} depthWrite={false} />
+          </mesh>
+        ))}
+      </group>
       {laneOrder.map(lane => {
         const laneUnits = lanes[lane];
         if (laneUnits.length === 0) return null;
@@ -41,8 +57,8 @@ export default function Battlefield() {
           >
             <CardMesh
               card={u.base}
-              scale={1.25}
-              position={[0, 0.03, 0]}
+              scale={1.2}
+              position={[0, 0.06, 0]}
               rotation={[-0.25, 0, 0]}
               enableHover={false}
               renderOrder={5}
