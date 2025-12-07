@@ -1,5 +1,6 @@
 import { useGameStore } from "../state/useGameStore";
 import Card from "./Card";
+import { ANCHORS } from "./boardAnchors";
 
 export default function Battlefield() {
   const units = useGameStore(s => s.battlefield);
@@ -8,14 +9,13 @@ export default function Battlefield() {
     <div
       style={{
         position: "absolute",
-        left: 0,
-        width: 1280,
-        top: 260,
-        height: 180,
+        insetInline: 0,
+        top: `${ANCHORS.battlefieldTop * 100}vh`,
+        height: `${ANCHORS.battlefieldHeight * 100}vh`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        gap: 40,
+        gap: `${ANCHORS.battlefieldGap * 100}vw`,
         pointerEvents: "none"
       }}
     >

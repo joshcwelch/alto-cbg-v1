@@ -1,5 +1,4 @@
 import { useGameStore } from "../state/useGameStore";
-import { STAGE_W } from "./BoardStage";
 
 export default function UIHud() {
   const mana = useGameStore(s => s.playerMana);
@@ -10,7 +9,6 @@ export default function UIHud() {
     <div
       style={{
         position: "absolute",
-        width: STAGE_W,
         inset: 0,
         pointerEvents: "none"
       }}
@@ -18,12 +16,12 @@ export default function UIHud() {
       <div
         style={{
           position: "absolute",
-          bottom: 10,
-          left: 10,
+          bottom: "3vh",
+          left: "2vw",
           pointerEvents: "auto",
           color: "#fff",
           fontWeight: "bold",
-          fontSize: 20,
+          fontSize: "clamp(16px, 1.8vw, 22px)",
           textShadow: "0 2px 4px rgba(0,0,0,0.4)"
         }}
       >
@@ -34,10 +32,10 @@ export default function UIHud() {
         onClick={endTurn}
         style={{
           position: "absolute",
-          bottom: 10,
-          right: 10,
+          bottom: "3vh",
+          right: "2vw",
           pointerEvents: "auto",
-          padding: "12px 20px",
+          padding: "clamp(10px, 1.3vw, 14px) clamp(16px, 1.6vw, 22px)",
           borderRadius: 12,
           background: "#42b7ff",
           border: "none",
