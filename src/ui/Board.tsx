@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import { Bloom, EffectComposer } from "@react-three/drei/postprocessing";
 import { useEffect } from "react";
 import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
