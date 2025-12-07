@@ -14,11 +14,32 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <div className="board-shell" style={{ position: "relative", width: "100%", height: "100%" }}>
-      <BoardBG />
-      <div className="board-stage" style={{ position: "absolute", inset: 0 }}>
+    <div
+      className="board-shell"
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <div
+        className="board-stage"
+        style={{
+          position: "relative",
+          width: "min(96vw, 1400px)",
+          aspectRatio: "2048 / 1152"
+        }}
+      >
+        <BoardBG />
         <div className="board-canvas-frame" style={{ position: "absolute", inset: 0 }}>
-          <Canvas shadows gl={{ alpha: true }} camera={{ position: [0, 0, 10], fov: 30 }}>
+          <Canvas
+            shadows
+            gl={{ alpha: true }}
+            camera={{ position: [0, 0, 10], fov: 30 }}
+          >
             <ambientLight intensity={0.65} />
             <directionalLight
               castShadow
