@@ -16,7 +16,7 @@ interface CardProps {
 export default function Card({ card, xOffset }: CardProps) {
   const playCard = useGameStore(s => s.playCard);
   const mana = useGameStore(s => s.playerMana);
-  const canPlay = mana >= card.mana;
+  const canPlay = mana >= card.cost;
 
   return (
     <motion.div
@@ -46,10 +46,10 @@ export default function Card({ card, xOffset }: CardProps) {
         <div style={{
           width: 28, height: 28, borderRadius: 8, background: "#3ea6ff",
           color: "white", fontWeight: 800, display: "grid", placeItems: "center"
-        }}>{card.mana}</div>
+        }}>{card.cost}</div>
         <div style={{ fontWeight: 800 }}>{card.name}</div>
       </div>
-      <div style={{ fontSize: 12, color: "#333", minHeight: 60 }}>{card.text ?? "\u00A0"}</div>
+      <div style={{ fontSize: 12, color: "#333", minHeight: 60 }}>{card.description ?? "\u00A0"}</div>
       <div style={{ position: "absolute", bottom: 8, left: 8, fontWeight: 800 }}>ATK {card.attack}</div>
       <div style={{ position: "absolute", bottom: 8, right: 8, fontWeight: 800 }}>HP {card.health}</div>
     </motion.div>

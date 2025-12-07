@@ -78,24 +78,24 @@ export const useGameStore = create<Store>((set, get) => {
       const idx = hand.findIndex(c => c.id === cardId);
       if (idx === -1) return;
 
-      const card = hand[idx];
+    const card = hand[idx];
 
-      // rule checks
-      if (card.mana > playerMana) return;                  // not enough mana
-      if (battlefield.length >= maxBoardSlots) return;     // board full
+    // rule checks
+    if (card.cost > playerMana) return;                  // not enough mana
+    if (battlefield.length >= maxBoardSlots) return;     // board full
 
-      const unit: UnitOnBoard = {
-        uid: uid(),
-        base: card,
+    const unit: UnitOnBoard = {
+      uid: uid(),
+      base: card,
         damage: 0,
         exhausted: true  // summoning sickness placeholder
-      };
+    };
 
-      set({
-        playerMana: playerMana - card.mana,
-        hand: hand.filter((_, i) => i !== idx),
-        battlefield: [...battlefield, unit]
-      });
+    set({
+      playerMana: playerMana - card.cost,
+      hand: hand.filter((_, i) => i !== idx),
+      battlefield: [...battlefield, unit]
+    });
     },
 
     endTurn: () => {

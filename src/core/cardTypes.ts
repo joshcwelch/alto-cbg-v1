@@ -3,12 +3,12 @@ export type CardID = string;
 export interface CardDef {
   id: CardID;
   name: string;
-  mana: number;
+  cost: number;
   attack: number;
   health: number;
   // image used for 3D/texture rendering
   artSrc: string;
-  text?: string;
+  description?: string;
 }
 
 export interface UnitOnBoard {

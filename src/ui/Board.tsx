@@ -1,9 +1,9 @@
+import { Canvas } from "@react-three/fiber";
 import { useEffect } from "react";
-import { useGameStore } from "../state/useGameStore";
-import Battlefield from "./Battlefield";
-import Hand from "./Hand";
-import ManaBar from "./ManaBar";
+import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
+import ManaBar from "./ManaBar";
+import { useGameStore } from "../state/useGameStore";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -16,10 +16,31 @@ export default function Board() {
     <div className="board-shell">
       <div className="board-stage">
         <div className="board-canvas-frame">
-          <Battlefield />
+          <Canvas
+            shadows
+            camera={{ position: [0, 6, 11], fov: 50 }}
+          >
+            <color attach="background" args={["#0f1624"]} />
+            <ambientLight intensity={0.6} />
+            <directionalLight
+              castShadow
+              position={[4, 10, 6]}
+              intensity={1}
+              shadow-mapSize-height={2048}
+              shadow-mapSize-width={2048}
+              shadow-bias={-0.0002}
+            />
+            <spotLight
+              position={[0, 10, 0]}
+              angle={0.6}
+              intensity={0.3}
+              penumbra={0.3}
+              castShadow
+            />
+            <GameScene />
+          </Canvas>
         </div>
       </div>
-      <Hand />
       <ManaBar />
       <EndTurnButton />
     </div>

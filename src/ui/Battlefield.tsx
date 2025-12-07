@@ -1,5 +1,6 @@
 import type { UnitOnBoard } from "../core/cardTypes";
 import { useGameStore } from "../state/useGameStore";
+import CardMesh from "./CardMesh";
 
 type LaneKey = "top" | "middle" | "bottom";
 
@@ -9,8 +10,7 @@ const laneY: Record<LaneKey, number> = {
   middle: 0,
   bottom: -1.5
 };
-const spacing = 2;
-const pxPerUnit = 100; // scale board units to pixels
+const spacing = 1.6;
 
 export default function Battlefield() {
   const units = useGameStore(s => s.battlefield);
@@ -27,43 +27,23 @@ export default function Battlefield() {
   });
 
   return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+    <group>
       {laneOrder.map(lane => {
         const laneUnits = lanes[lane];
         if (laneUnits.length === 0) return null;
 
         const startX = -(laneUnits.length - 1) * spacing * 0.5;
 
-        return laneUnits.map((u, idx) => {
-          const xUnits = startX + idx * spacing;
-          const xPx = xUnits * pxPerUnit;
-          const yPx = laneY[lane] * pxPerUnit;
-
-          return (
-            <div
-              key={u.uid}
-              style={{
-                position: "absolute",
-                left: `calc(50% + ${xPx}px)`,
-                top: `calc(50% - ${yPx}px)`,
-                transform: "translate(-50%, -50%)",
-                width: 120,
-                height: 170,
-                borderRadius: 12,
-                background: "#f6f7fb",
-                boxShadow: "0 6px 14px rgba(0,0,0,0.35)",
-                border: "2px solid #2a2f45",
-                pointerEvents: "none"
-              }}
-            >
-              <div style={{ position: "absolute", top: 8, left: 8, fontWeight: 800 }}>{u.base.name}</div>
-              <div style={{ position: "absolute", bottom: 8, left: 8, fontWeight: 800 }}>ATK {u.base.attack}</div>
-              <div style={{ position: "absolute", bottom: 8, right: 8, fontWeight: 800 }}>HP {u.base.health - u.damage}</div>
-            </div>
-          );
-        });
+        return laneUnits.map((u, idx) => (
+          <group
+            key={u.uid}
+            position={[startX + idx * spacing, laneY[lane], 0]}
+          >
+            <CardMesh card={u.base} scale={0.85} position={[0, 0.01, 0]} />
+          </group>
+        ));
       })}
-    </div>
+    </group>
   );
 }
 

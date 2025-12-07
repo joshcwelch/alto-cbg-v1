@@ -1,62 +1,51 @@
 console.log("Loading cardTypes from:", import.meta.url);
 import type { CardDef } from "./cardTypes";
 
-// lightweight placeholder art as data URIs until real textures are available
-const svgArt = (label: string, color: string) =>
-  `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 560'>
-      <defs>
-        <linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'>
-          <stop offset='0%' stop-color='${color}' stop-opacity='0.85'/>
-          <stop offset='100%' stop-color='#0f1624' stop-opacity='0.95'/>
-        </linearGradient>
-      </defs>
-      <rect width='400' height='560' rx='28' fill='url(#g)'/>
-      <text x='200' y='280' fill='white' font-size='44' font-family='Segoe UI, Arial' text-anchor='middle' dominant-baseline='middle'>${label}</text>
-    </svg>`
-  )}`;
-
 export const CARDS: Record<string, CardDef> = {
   "CELESTIAL_BEACON_MONK": {
     id: "CELESTIAL_BEACON_MONK",
     name: "Beacon Monk",
-    mana: 1,
+    cost: 1,
     attack: 1,
     health: 2,
-    text: "Peaceful starter.",
-    artSrc: svgArt("Beacon Monk", "#5b8def")
+    description: "Peaceful starter.",
+    artSrc: "/src/assets/cards/beacon-monk.png"
   },
   "SUNLANCE_SCOUT": {
     id: "SUNLANCE_SCOUT",
     name: "Sunlance Scout",
-    mana: 2,
+    cost: 2,
     attack: 2,
     health: 2,
-    artSrc: svgArt("Sunlance Scout", "#f4a261")
+    description: "Quick to the front.",
+    artSrc: "/src/assets/cards/sunlance-scout.png"
   },
   "CRYSTAL_ACOLYTE": {
     id: "CRYSTAL_ACOLYTE",
     name: "Crystal Acolyte",
-    mana: 3,
+    cost: 3,
     attack: 3,
     health: 3,
-    artSrc: svgArt("Crystal Acolyte", "#72d6ff")
+    description: "Supports the crystal choir.",
+    artSrc: "/src/assets/cards/crystal-acolyte.png"
   },
   "SERAPHIC_WARDEN": {
     id: "SERAPHIC_WARDEN",
     name: "Seraphic Warden",
-    mana: 4,
+    cost: 4,
     attack: 4,
     health: 5,
-    artSrc: svgArt("Seraphic Warden", "#c084fc")
+    description: "Shields allies with radiant zeal.",
+    artSrc: "/src/assets/cards/seraphic-warden.png"
   },
   "SUNLANCE_CHAMPION": {
     id: "SUNLANCE_CHAMPION",
     name: "Sunlance Champion",
-    mana: 5,
+    cost: 5,
     attack: 6,
     health: 5,
-    artSrc: svgArt("Sunlance Champion", "#f59e0b")
+    description: "Commands the vanguard.",
+    artSrc: "/src/assets/cards/sunlance-champion.png"
   },
 };
 
