@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import { CARDS, buildStarterDeck } from "../core/cardsDb";
-import { createInitialState, GameState } from "../core/gameState";
+import type { GameState } from "../core/gameState";
+import { createInitialState } from "../core/gameState";
 import { endTurn as endTurnRule } from "../core/turnSystem";
+import type { CardDef, UnitOnBoard } from "../core/cardTypes";
 import { shuffle } from "../utils/shuffle";
-import { CardDef, UnitOnBoard } from "../core/cardTypes";
 
 type Store = GameState & {
   newGame: () => void;

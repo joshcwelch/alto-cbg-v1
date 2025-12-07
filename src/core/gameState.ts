@@ -1,4 +1,4 @@
-import { CardDef, UnitOnBoard } from "./cardTypes";
+import type { CardDef, UnitOnBoard } from "./cardTypes";
 
 export interface GameState {
   // mana

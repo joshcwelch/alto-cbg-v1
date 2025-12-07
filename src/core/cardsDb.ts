@@ -1,5 +1,5 @@
 console.log("Loading cardTypes from:", import.meta.url);
-import { CardDef } from "./cardTypes";
+import type { CardDef } from "./cardTypes";
 
 export const CARDS: Record<string, CardDef> = {
   "CELESTIAL_BEACON_MONK": { id: "CELESTIAL_BEACON_MONK", name: "Beacon Monk", mana: 1, attack: 1, health: 2, text: "Peaceful starter." },

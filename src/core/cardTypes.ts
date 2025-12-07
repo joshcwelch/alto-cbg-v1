@@ -1,5 +1,3 @@
-import type { CardDef } from './core/cardTypes';
-
 export type CardID = string;
 
 export interface CardDef {

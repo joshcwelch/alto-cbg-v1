@@ -1,4 +1,4 @@
-import { GameState } from "./gameState";
+import type { GameState } from "./gameState";
 
 export function endTurn(state: GameState): GameState {
   const newMax = Math.min(10, state.maxMana + 1);
