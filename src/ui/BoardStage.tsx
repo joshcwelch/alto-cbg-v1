@@ -1,10 +1,15 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
+import { Canvas } from "@react-three/fiber";
 import boardPng from "../assets/board/board.png";
 
 export const STAGE_W = 1280;
 export const STAGE_H = 640;
 
-export default function BoardStage({ children }: PropsWithChildren) {
+type BoardStageProps = PropsWithChildren<{
+  canvasContent?: ReactNode;
+}>;
+
+export default function BoardStage({ children, canvasContent }: BoardStageProps) {
   return (
     <div
       className="alto-stage"
@@ -23,13 +28,28 @@ export default function BoardStage({ children }: PropsWithChildren) {
         draggable={false}
         style={{
           position: "absolute",
-          inset: 0,
           width: "100%",
           height: "100%",
+          top: 0,
+          left: 0,
           objectFit: "cover",
           pointerEvents: "none"
         }}
       />
+      <Canvas
+        orthographic
+        camera={{ zoom: 100, position: [0, 0, 10] }}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          inset: 0,
+          pointerEvents: "none"
+        }}
+        dpr={[1, 2]}
+      >
+        {canvasContent}
+      </Canvas>
       {children}
     </div>
   );
