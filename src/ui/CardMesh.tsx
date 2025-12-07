@@ -37,7 +37,7 @@ type CardMeshProps = {
 export default function CardMesh({
   card,
   position = [0, 0, 0],
-  rotation = [-0.25, 0, 0],
+  rotation = [0, 0, 0],
   scale = 1,
   isFaceUp = true,
   enableHover = true,
@@ -165,13 +165,13 @@ function useFrameHover(
     if (!grp) return;
 
     const targetY = hovered ? HOVER_LIFT : 0;
-    const targetRotX = hovered ? HOVER_TILT_X : 0;
-    const targetRotZ = hovered ? HOVER_TILT_Z : 0;
+    const targetRotX = 0;
+    const targetRotZ = 0;
 
     grp.position.y = MathUtils.damp(grp.position.y, targetY, 8, delta);
     grp.rotation.x = MathUtils.damp(grp.rotation.x, targetRotX, 8, delta);
     grp.rotation.z = MathUtils.damp(grp.rotation.z, targetRotZ, 8, delta);
-    const targetScale = hovered ? 1.05 : 1;
+    const targetScale = 1;
     grp.scale.x = MathUtils.damp(grp.scale.x, targetScale, 8, delta);
     grp.scale.y = MathUtils.damp(grp.scale.y, targetScale, 8, delta);
     grp.scale.z = MathUtils.damp(grp.scale.z, targetScale, 8, delta);
