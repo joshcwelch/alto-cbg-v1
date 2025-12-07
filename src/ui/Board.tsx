@@ -4,8 +4,9 @@ import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
 import ManaBar from "./ManaBar";
 import { useGameStore } from "../state/useGameStore";
-import BoardBG from "./BoardBG";
+import BoardStage from "./BoardStage";
 import Battlefield from "./Battlefield";
+import Hand from "./Hand";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -15,63 +16,21 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <div
-      className="board-shell"
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-    >
-      <div
-        className="board-stage"
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          maxWidth: "100%",
-          maxHeight: "100%",
-          aspectRatio: "2048 / 1152",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
+    <BoardStage>
+      <Canvas
+        shadows
+        orthographic
+        gl={{ alpha: true }}
+        dpr={[1, 2]}
+        camera={{ zoom: 100, position: [0, 0, 10] }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
-        <BoardBG />
-        <div
-        className="board-canvas-frame"
-          style={{
-            position: "absolute",
-            inset: 0
-          }}
-        >
-          <Canvas
-            shadows
-            orthographic
-            gl={{ alpha: true }}
-            camera={{ zoom: 100, position: [0, 0, 10] }}
-          >
-            <ambientLight intensity={0.65} />
-            <directionalLight
-              castShadow
-              position={[6, 12, 8]}
-              intensity={1.2}
-              shadow-mapSize-height={2048}
-              shadow-mapSize-width={2048}
-              shadow-bias={-0.0002}
-            />
-            <directionalLight position={[-4, 9, -6]} intensity={0.55} />
-            <pointLight position={[0, 6, 0]} intensity={0.3} distance={15} />
-            <GameScene />
-          </Canvas>
-        </div>
-        <Battlefield />
-      </div>
+        <GameScene />
+      </Canvas>
+      <Battlefield />
+      <Hand />
       <ManaBar />
       <EndTurnButton />
-    </div>
+    </BoardStage>
   );
 }
