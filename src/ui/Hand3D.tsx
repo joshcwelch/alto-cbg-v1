@@ -14,7 +14,13 @@ export default function Hand3D() {
     <group position={[0, handHeightOffset, handDepth]} rotation={[handTilt, 0, 0]}>
       {hand.map((card, i) => (
         <group key={`${card.id}-${i}`} position={[startX + i * spacing, 0, 0]}>
-          <CardMesh card={card} isFaceUp renderOrder={20} scale={1.2} />
+          <CardMesh
+            card={card}
+            isFaceUp
+            renderOrder={20}
+            scale={1.0}
+            rotation={[-0.12, 0, 0]}
+          />
         </group>
       ))}
     </group>
