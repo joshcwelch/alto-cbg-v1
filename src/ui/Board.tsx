@@ -1,10 +1,9 @@
-import Hand from "./Hand";
-import Battlefield from "./Battlefield";
-import ManaBar from "./ManaBar";
-import EndTurnButton from "./EndTurnButton";
-// import board from "../assets/board/board.png"; // use when you have an image
 import { useEffect } from "react";
 import { useGameStore } from "../state/useGameStore";
+import Battlefield from "./Battlefield";
+import Hand from "./Hand";
+import ManaBar from "./ManaBar";
+import EndTurnButton from "./EndTurnButton";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -14,19 +13,12 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        // backgroundImage: `url(${board})`,
-        // backgroundSize: "cover",
-        background: "linear-gradient(#1b2130, #0d111a)",
-        position: "relative",
-        overflow: "hidden",
-        userSelect: "none",
-      }}
-    >
-      <Battlefield />
+    <div className="board-shell">
+      <div className="board-stage">
+        <div className="board-canvas-frame">
+          <Battlefield />
+        </div>
+      </div>
       <Hand />
       <ManaBar />
       <EndTurnButton />
