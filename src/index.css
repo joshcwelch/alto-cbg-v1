@@ -186,3 +186,18 @@ html, body, #root {
 button {
   font-family: inherit;
 }
+
+.card-overlay,
+.card-overlay .name,
+.card-overlay .cost,
+.card-overlay .atk,
+.card-overlay .hp,
+.card-overlay .rules {
+  background: transparent !important;
+}
+
+.card-overlay {
+  pointer-events: none;
+  box-shadow: none !important;
+  filter: none !important;
+}
