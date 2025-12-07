@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useGameStore } from "../state/useGameStore";
-import BoardStage from "./BoardStage";
+import GameRoot from "./GameRoot";
 import Battlefield from "./Battlefield";
 import Hand from "./Hand";
 import UIHud from "./UIHud";
@@ -13,10 +13,10 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <BoardStage>
+    <GameRoot>
       <Battlefield />
       <Hand />
       <UIHud />
-    </BoardStage>
+    </GameRoot>
   );
 }

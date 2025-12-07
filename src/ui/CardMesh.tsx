@@ -15,8 +15,6 @@ import type { CardDef } from "../core/cardTypes";
 const CARD_WIDTH = 1;
 const CARD_HEIGHT = 1.45;
 const HOVER_LIFT = 0.25;
-const HOVER_TILT_X = -0.1;
-const HOVER_TILT_Z = 0.06;
 const FRAME_Z = 0.006;
 const ART_Z = 0.001;
 const BACK_Z = -0.003;
@@ -154,9 +152,9 @@ function useTextureConfig(textures: Texture[], anisotropy: number) {
 }
 
 function useFrameHover(
-  hoverRef: RefObject<Group>,
-  shadowRef: RefObject<Mesh>,
-  frontMaterialRef: RefObject<MeshStandardMaterial>,
+  hoverRef: RefObject<Group | null>,
+  shadowRef: RefObject<Mesh | null>,
+  frontMaterialRef: RefObject<MeshStandardMaterial | null>,
   hovered: boolean
 ) {
   useFrame((_, delta) => {
@@ -193,7 +191,7 @@ function useFrameHover(
   });
 }
 
-function useFrameFlip(cardRef: RefObject<Group>, isFaceUp: boolean) {
+function useFrameFlip(cardRef: RefObject<Group | null>, isFaceUp: boolean) {
   useFrame((_, delta) => {
     const grp = cardRef.current;
     if (!grp) return;
