@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useGameStore } from "../state/useGameStore";
 import GameRoot from "./GameRoot";
+import GameScene from "./GameScene";
 import Battlefield from "./Battlefield";
 import Hand from "./Hand";
 import UIHud from "./UIHud";
@@ -13,7 +14,7 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <GameRoot>
+    <GameRoot canvasContent={<GameScene />}>
       <Battlefield />
       <Hand />
       <UIHud />
