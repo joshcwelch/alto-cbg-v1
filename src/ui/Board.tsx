@@ -5,6 +5,7 @@ import EndTurnButton from "./EndTurnButton";
 import ManaBar from "./ManaBar";
 import { useGameStore } from "../state/useGameStore";
 import BoardBG from "./BoardBG";
+import Battlefield from "./Battlefield";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -67,6 +68,7 @@ export default function Board() {
             <GameScene />
           </Canvas>
         </div>
+        <Battlefield />
       </div>
       <ManaBar />
       <EndTurnButton />
