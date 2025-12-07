@@ -1,26 +1,47 @@
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { useGameStore } from "../state/useGameStore";
 import type { CardDef } from "../core/cardTypes";
 
-const CARD_WIDTH = "clamp(120px, 12.5vw, 180px)";
-const CARD_ASPECT_RATIO = "5 / 8"; // matches 160x256 base
-const CARD_PADDING = "clamp(10px, 1vw, 14px)";
+const CARD_ASPECT = 915 / 1390;
+const CARD_PADDING_MIN = 10;
+const CARD_PADDING_MAX = 18;
+
+function computeCardSize(viewportHeight: number) {
+  const cardHeight = Math.min(Math.max(viewportHeight * 0.22, 140), 260);
+  const cardWidth = cardHeight * CARD_ASPECT;
+  return { cardHeight, cardWidth };
+}
 
 export default function Card({ card }: { card: CardDef }) {
   const playCard = useGameStore(s => s.playCard);
   const mana = useGameStore(s => s.playerMana);
   const canPlay = mana >= card.cost;
+  const [size, setSize] = useState(() => computeCardSize(typeof window !== "undefined" ? window.innerHeight : 900));
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handle = () => setSize(computeCardSize(window.innerHeight));
+    handle();
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  const padding = useMemo(
+    () => Math.min(Math.max(size.cardHeight * 0.08, CARD_PADDING_MIN), CARD_PADDING_MAX),
+    [size.cardHeight]
+  );
 
   return (
     <motion.div
       layout
       onClick={() => canPlay && playCard(card.id)}
       style={{
-        width: CARD_WIDTH,
-        aspectRatio: CARD_ASPECT_RATIO,
+        width: `${size.cardWidth}px`,
+        height: `${size.cardHeight}px`,
         background: canPlay ? "#ffffff" : "#d9dde6",
         borderRadius: 12,
-        padding: CARD_PADDING,
+        padding,
         position: "relative",
         boxShadow: "0 6px 14px rgba(0,0,0,0.4)",
         cursor: canPlay ? "pointer" : "not-allowed",

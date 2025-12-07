@@ -2,21 +2,21 @@ import { useMemo } from "react";
 import { useThree } from "@react-three/fiber";
 import { useGameStore } from "../state/useGameStore";
 import CardMesh from "./CardMesh";
-import { ANCHORS } from "./boardAnchors";
+import { useAnchors } from "./boardAnchors";
 
 const ENEMY_HAND_TILT = 0.08;
 
 export default function EnemyHand3D() {
   const enemyHand = useGameStore(s => s.enemyHand);
   const viewport = useThree(state => state.viewport);
+  const anchors = useAnchors();
 
   const { spacing, centerY } = useMemo(() => {
-    const playerCenterRatio = ANCHORS.handTop + ANCHORS.handHeight / 2;
-    const enemyCenterRatio = 1 - playerCenterRatio;
-    const spacingWorld = viewport.width * ANCHORS.cardSpacing;
+    const enemyCenterRatio = anchors.enemyHand.center;
+    const spacingWorld = viewport.width * anchors.cardSpacing;
     const centerYWorld = (0.5 - enemyCenterRatio) * viewport.height;
     return { spacing: spacingWorld, centerY: centerYWorld };
-  }, [viewport.height, viewport.width]);
+  }, [anchors.cardSpacing, anchors.enemyHand.center, viewport.height, viewport.width]);
 
   return (
     <group>
