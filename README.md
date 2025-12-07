@@ -1,10 +1,10 @@
-# ALTO — Crystalbound Battlegrounds
+# ALTO — Crystalbound Battlegrounds ✨🧊
 
 ALTO is a custom-built 3D-enhanced tactical card battler made with React, TypeScript, Vite, Zustand, and React Three Fiber. It blends a traditional lane-based card game structure with modern presentation using 3D card meshes and a stylized fantasy theme.
 
 ## Features
 
-### Core Gameplay
+### Core Gameplay ⚔️
 - Turn-based system
 - Lane-based board with three combat lanes
 - Mana system (“Alt Shards”), max 10
@@ -13,20 +13,20 @@ ALTO is a custom-built 3D-enhanced tactical card battler made with React, TypeSc
 - ATK / HP stats and future combat logic
 - End Turn button and turn progression
 
-### Visual & UI Systems
+### Visual & UI Systems 🎨
 - 3D card meshes with custom fantasy card frames
 - Static board background art rendered in 2D
 - 3D hand of cards positioned using React Three Fiber
 - Lane highlighting
 - Future additions: card animations, battle effects, hover highlights
 
-### Engine / Architecture
+### Engine / Architecture 🛠️
 - Zustand game store for synchronous game state
 - Pure game logic in src/core (rules, turn system, card definitions)
 - Presentation layer in src/ui (3D, layout, hand, scene)
 - Clean separation between state, rules, and rendering
 
-## Tech Stack
+## Tech Stack 🧰
 
 - React 18
 - TypeScript
@@ -37,7 +37,7 @@ ALTO is a custom-built 3D-enhanced tactical card battler made with React, TypeSc
 - @react-three/drei
 - ESLint / Prettier
 
-## Getting Started
+## Getting Started 🚀
 
 Install dependencies:
 npm install
@@ -59,7 +59,7 @@ Copy code
 
 The dev server runs at http://localhost:5173
 
-## Project Structure
+## Project Structure 🗂️
 
 src/
 core/ Game rules, card types, deck logic, turn system
@@ -70,7 +70,7 @@ assets/ Card art, board art, icons, textures
 markdown
 Copy code
 
-## Roadmap
+## Roadmap 🧭
 
 - Card abilities
 - Hover and selection animations
