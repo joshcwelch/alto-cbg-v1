@@ -1,4 +1,4 @@
-# ALTO — Crystalbound Battlegrounds ✨🧊
+# ALTO — Crystalbound Battlegrounds ✨
 
 ALTO is a custom-built 3D-enhanced tactical card battler made with React, TypeScript, Vite, Zustand, and React Three Fiber. It blends a traditional lane-based card game structure with modern presentation using 3D card meshes and a stylized fantasy theme.
 
