@@ -1,11 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ThreeElements } from "@react-three/fiber";
 import type { CardVisual, Rarity } from "./types";
 import { rarityParams } from "./rarity";
-import { useCardMaterials } from "./cardMaterials";
 
 const CARD_ASPECT = 1390 / 915;
 export const CARD_W = 1.2;
@@ -28,28 +27,47 @@ function tex(url: string) {
 export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut, shadow = true, ...rest }: Props) {
   const rarity: Rarity = visual.rarity ?? "common";
   const state = visual.state ?? "idle";
-  const foil = visual.foil ?? false;
-  const backId = visual.backId;
 
-  const frontTex = useTexture(tex(`./textures/${visual.id}.png`));
-  const backTex  = useTexture(tex(`./textures/${backId ?? "_back_default"}.png`));
-  const aoTex    = useTexture(tex(`./textures/_occlusion_soft.png`));
-  const foilTex  = useTexture(tex(`./textures/_foil_noise.png`));
+  const frontTex = useTexture(tex("./textures/card-front.png"));
+  const backTex  = useTexture(tex("./textures/card-back.png"));
 
   // Ensure sRGB and mipmap settings
-  [frontTex, backTex, aoTex, foilTex].forEach((t) => {
-    if (!t) return;
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 8;
-    t.needsUpdate = true;
-  });
+  useEffect(() => {
+    [frontTex, backTex].forEach((t) => {
+      if (!t) return;
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      t.needsUpdate = true;
+    });
+  }, [frontTex, backTex]);
 
-  const { front, back, edge, foil: foilMat } = useCardMaterials({
-    frontTex, backTex, aoTex,
-    foilTex, foilEnabled: foil,
-    emissiveColor: new THREE.Color().fromArray(rarityParams[rarity].color),
-    emissiveBoost: visual.emissiveBoost ?? 0
-  });
+  // Basic frame-only materials
+  const frontMat = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      map: frontTex,
+      transparent: true,
+      roughness: 0.55,
+      metalness: 0.05
+    }),
+    [frontTex]
+  );
+
+  const backMat = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      map: backTex,
+      roughness: 0.85,
+      metalness: 0.02
+    }),
+    [backTex]
+  );
+
+  const edgeMat = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: "#2a2f3a",
+      roughness: 0.9
+    }),
+    []
+  );
 
   // Geometry: thin box so we get real edges + proper back
   const geo = useMemo(() => new THREE.BoxGeometry(CARD_W, CARD_H, THICKNESS, 1, 1, 1), []);
@@ -59,7 +77,6 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
   }, [geo]);
 
   const group = useRef<THREE.Group>(null!);
-  const foilMesh = useRef<THREE.Mesh>(null!);
 
   // Animation states (idle/hover/drag/played)
   useFrame((_, dt) => {
@@ -78,24 +95,15 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
 
     g.position.y += (targetLift - g.position.y) * Math.min(1, dt * 10);
     g.rotation.x += (targetTilt - g.rotation.x) * Math.min(1, dt * 10);
-
-    // Foil shimmer scroll
-    if (foil && foilMesh.current && (foilMat as any)?.map) {
-      const m = (foilMat as THREE.MeshBasicMaterial);
-      const map = m.map!;
-      map.offset.x = (map.offset.x + dt * 0.05) % 1;
-      map.offset.y = (map.offset.y + dt * 0.035) % 1;
-      m.opacity = THREE.MathUtils.lerp(m.opacity, state === "hover" ? 0.34 : 0.22, Math.min(1, dt * 8));
-    }
   });
 
   // Material array order for BoxGeometry (right,left,top,bottom,front,back)
   const mats = useMemo(() => {
     const arr: THREE.Material[] = [
-      edge, edge, edge, edge, front, back
+      edgeMat, edgeMat, edgeMat, edgeMat, frontMat, backMat
     ];
     return arr;
-  }, [front, back, edge]);
+  }, [frontMat, backMat, edgeMat]);
 
   // Border glow via sprite ring
   const rimColor = useMemo(() => new THREE.Color().fromArray(rarityParams[rarity].color), [rarity]);
@@ -105,14 +113,6 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
     <group ref={group} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} {...rest}>
       {/* Main card body */}
       <mesh geometry={geo} material={mats} castShadow={shadow} receiveShadow={false} />
-
-      {/* Foil overlay as slightly larger plane on front face */}
-      {foil && foilMat && (
-        <mesh ref={foilMesh} position={[0, 0, THICKNESS/2 + 0.0005]}>
-          <planeGeometry args={[CARD_W * 1.002, CARD_H * 1.002, 1, 1]} />
-          <primitive object={foilMat} attach="material" />
-        </mesh>
-      )}
 
       {/* Border/rim glow (additive billboard) */}
       <mesh position={[0, 0, THICKNESS/2 + 0.001]} renderOrder={10}>
