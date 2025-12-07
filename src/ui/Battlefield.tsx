@@ -52,12 +52,12 @@ export default function Battlefield() {
         return laneUnits.map((u, idx) => (
           <group
             key={u.uid}
-            position={[startX + idx * spacing, 0.08, laneZ[lane] + 0.05]}
+            position={[startX + idx * spacing, 0.05, laneZ[lane] + 0.05]}
           >
             <CardMesh
               card={u.base}
               scale={1.0}
-              position={[0, 0, 0]}
+              position={[0, 0, 0.05]}
               rotation={[-0.28, 0, 0]}
               enableHover={false}
               renderOrder={10}

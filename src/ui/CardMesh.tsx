@@ -36,7 +36,7 @@ type CardMeshProps = {
 
 export default function CardMesh({
   card,
-  position = [0, 0.05, 0],
+  position = [0, 0, 0],
   rotation = [-0.25, 0, 0],
   scale = 1,
   isFaceUp = true,

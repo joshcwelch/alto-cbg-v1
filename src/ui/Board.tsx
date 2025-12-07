@@ -8,6 +8,7 @@ import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
 import ManaBar from "./ManaBar";
 import { useGameStore } from "../state/useGameStore";
+import FixedCamera from "./FixedCamera";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -20,13 +21,8 @@ export default function Board() {
     <div className="board-shell">
       <div className="board-stage">
         <div className="board-canvas-frame">
-          <Canvas
-            shadows
-            camera={{ position: [0, 8, 12], fov: 32 }}
-            onCreated={({ camera }) => {
-              camera.lookAt(0, 0, 0);
-            }}
-          >
+          <Canvas shadows>
+            <FixedCamera />
             <color attach="background" args={["#0f1624"]} />
             <fog attach="fog" args={["#0a0f1e", 7, 20]} />
             <ambientLight intensity={0.65} />
