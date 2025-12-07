@@ -14,6 +14,7 @@ export interface UnitOnBoard {
   base: CardDef;      // reference to card stats
   damage: number;     // damage taken
   exhausted: boolean; // prevents attacking the turn it is played (HS style)
+  lane?: "top" | "middle" | "bottom" | -1 | 0 | 1; // optional lane indicator for positioning
 }
 
 export const __DEBUG = "CardTypes Loaded";
