@@ -3,8 +3,7 @@ import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useEffect, useMemo, useRef } from "react";
 import type { ThreeElements } from "@react-three/fiber";
-import type { CardVisual, Rarity } from "./types";
-import { rarityParams } from "./rarity";
+import type { CardVisual } from "./types";
 
 const CARD_ASPECT = 1390 / 915;
 export const CARD_W = 1.2;
@@ -20,7 +19,6 @@ type Props = ThreeElements["group"] & {
 };
 
 export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut, shadow = true, ...rest }: Props) {
-  const rarity: Rarity = visual.rarity ?? "common";
   const state = visual.state ?? "idle";
 
   const frontTex = useTexture(new URL("./textures/card-front.png", import.meta.url).href);
@@ -100,26 +98,10 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
     return arr;
   }, [frontMat, backMat, edgeMat]);
 
-  // Border glow via sprite ring
-  const rimColor = useMemo(() => new THREE.Color().fromArray(rarityParams[rarity].color), [rarity]);
-  const rimStrength = rarityParams[rarity].rim;
-
   return (
     <group ref={group} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} {...rest}>
       {/* Main card body */}
       <mesh geometry={geo} material={mats} castShadow={shadow} receiveShadow={false} />
-
-      {/* Border/rim glow (additive billboard) */}
-      <mesh position={[0, 0, THICKNESS/2 + 0.001]} renderOrder={10}>
-        <planeGeometry args={[CARD_W * 1.08, CARD_H * 1.08]} />
-        <meshBasicMaterial
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          opacity={rimStrength}
-          color={rimColor}
-        />
-      </mesh>
     </group>
   );
 }
