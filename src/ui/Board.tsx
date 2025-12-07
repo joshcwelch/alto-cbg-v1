@@ -1,6 +1,9 @@
-import { Canvas } from "@react-three/fiber";
-import { Bloom, EffectComposer } from "@react-three/drei/postprocessing";
-import { useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { EffectComposer as ThreeEffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import { Vector2 } from "three";
 import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
 import ManaBar from "./ManaBar";
@@ -38,14 +41,7 @@ export default function Board() {
             <directionalLight position={[-4, 9, -6]} intensity={0.55} />
             <pointLight position={[0, 6, 0]} intensity={0.3} distance={15} />
             <GameScene />
-            <EffectComposer>
-              <Bloom
-                mipmapBlur
-                intensity={0.35}
-                radius={0.6}
-                luminanceThreshold={0.5}
-              />
-            </EffectComposer>
+            <PostProcessing />
           </Canvas>
         </div>
       </div>
@@ -53,4 +49,35 @@ export default function Board() {
       <EndTurnButton />
     </div>
   );
+}
+
+function PostProcessing() {
+  const { gl, scene, camera, size } = useThree();
+  const composer = useRef<ThreeEffectComposer>();
+
+  useEffect(() => {
+    const renderPass = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(
+      new Vector2(size.width, size.height),
+      0.35,
+      0.6,
+      0.5
+    );
+
+    const comp = new ThreeEffectComposer(gl);
+    comp.addPass(renderPass);
+    comp.addPass(bloomPass);
+    comp.setSize(size.width, size.height);
+    composer.current = comp;
+
+    return () => {
+      comp.dispose();
+    };
+  }, [gl, scene, camera, size.width, size.height]);
+
+  useFrame(() => {
+    composer.current?.render();
+  }, 1);
+
+  return null;
 }
