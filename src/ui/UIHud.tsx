@@ -1,9 +1,16 @@
+import { useMemo } from "react";
 import { useGameStore } from "../state/useGameStore";
 
-export default function UIHud() {
+type UIHudProps = {
+  safeBottom?: number;
+};
+
+export default function UIHud({ safeBottom = 90 }: UIHudProps) {
   const mana = useGameStore(s => s.playerMana);
   const maxMana = useGameStore(s => s.maxMana);
   const endTurn = useGameStore(s => s.endTurn);
+
+  const bottomOffset = useMemo(() => Math.max(24, safeBottom * 0.75), [safeBottom]);
 
   return (
     <div
@@ -16,8 +23,8 @@ export default function UIHud() {
       <div
         style={{
           position: "absolute",
-          bottom: "3vh",
-          left: "2vw",
+          bottom: `${bottomOffset}px`,
+          left: "clamp(24px, 2.8vw, 40px)",
           pointerEvents: "auto",
           color: "#fff",
           fontWeight: "bold",
@@ -32,8 +39,8 @@ export default function UIHud() {
         onClick={endTurn}
         style={{
           position: "absolute",
-          bottom: "3vh",
-          right: "2vw",
+          bottom: `${bottomOffset}px`,
+          right: "clamp(24px, 2.8vw, 40px)",
           pointerEvents: "auto",
           padding: "clamp(10px, 1.3vw, 14px) clamp(16px, 1.6vw, 22px)",
           borderRadius: 12,

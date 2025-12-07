@@ -9,21 +9,20 @@ type GameRootProps = PropsWithChildren<{
 export default function GameRoot({ children, canvasContent }: GameRootProps) {
   return (
     <div id="game-root">
-      <img
-        className="board-bg"
-        src={boardPng}
-        alt="Board"
-        draggable={false}
-      />
-      <Canvas
-        orthographic
-        camera={{ zoom: 100, position: [0, 0, 10] }}
-        className="game-canvas"
-        dpr={[1, 2]}
-      >
-        {canvasContent}
-      </Canvas>
-      <div id="ui-root">{children}</div>
+      <img className="board-bg" src={boardPng} alt="Board" draggable={false} />
+      <div className="board-layer">
+        <div className="board-frame">
+          <Canvas
+            orthographic
+            camera={{ zoom: 100, position: [0, 0, 10] }}
+            className="game-canvas"
+            dpr={[1, 2]}
+          >
+            {canvasContent}
+          </Canvas>
+          <div id="ui-root">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

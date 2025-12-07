@@ -1,23 +1,33 @@
 import { useGameStore } from "../state/useGameStore";
+import type { UnitOnBoard } from "../core/cardTypes";
 import Card from "./Card";
-import { ANCHORS } from "./boardAnchors";
+import type { BoardAnchors } from "./boardAnchors";
+import { useAnchors } from "./boardAnchors";
 
-export default function Battlefield() {
-  const units = useGameStore(s => s.battlefield);
+type BattlefieldProps = {
+  anchors?: BoardAnchors;
+  side?: "player" | "enemy";
+  units?: UnitOnBoard[];
+};
+
+export default function Battlefield({ anchors: anchorsProp, side = "player", units: providedUnits }: BattlefieldProps) {
+  const anchors = anchorsProp ?? useAnchors();
+  const units = providedUnits ?? useGameStore(s => s.battlefield);
+  const gap = `clamp(14px, ${anchors.boardSpacing * 100}vw, 44px)`;
 
   return (
     <div
       style={{
-        position: "absolute",
-        insetInline: 0,
-        top: `${ANCHORS.battlefieldTop * 100}vh`,
-        height: `${ANCHORS.battlefieldHeight * 100}vh`,
+        position: "relative",
+        width: "100%",
+        height: "100%",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        gap: `${ANCHORS.battlefieldGap * 100}vw`,
+        gap,
         pointerEvents: "none"
       }}
+      data-side={side}
     >
       {units.map(u => (
         <div key={u.uid} style={{ pointerEvents: "auto" }}>
