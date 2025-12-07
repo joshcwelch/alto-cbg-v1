@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { Bloom, EffectComposer } from "@react-three/drei";
 import { useEffect } from "react";
 import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
@@ -18,26 +19,33 @@ export default function Board() {
         <div className="board-canvas-frame">
           <Canvas
             shadows
-            camera={{ position: [0, 6, 11], fov: 50 }}
+            camera={{ position: [0, 4.5, 8], fov: 32 }}
+            onCreated={({ camera }) => {
+              camera.lookAt(0, 0, 0);
+            }}
           >
             <color attach="background" args={["#0f1624"]} />
-            <ambientLight intensity={0.6} />
+            <fog attach="fog" args={["#0a0f1e", 7, 20]} />
+            <ambientLight intensity={0.65} />
             <directionalLight
               castShadow
-              position={[4, 10, 6]}
-              intensity={1}
+              position={[6, 12, 8]}
+              intensity={1.2}
               shadow-mapSize-height={2048}
               shadow-mapSize-width={2048}
               shadow-bias={-0.0002}
             />
-            <spotLight
-              position={[0, 10, 0]}
-              angle={0.6}
-              intensity={0.3}
-              penumbra={0.3}
-              castShadow
-            />
+            <directionalLight position={[-4, 9, -6]} intensity={0.55} />
+            <pointLight position={[0, 6, 0]} intensity={0.3} distance={15} />
             <GameScene />
+            <EffectComposer>
+              <Bloom
+                mipmapBlur
+                intensity={0.35}
+                radius={0.6}
+                luminanceThreshold={0.5}
+              />
+            </EffectComposer>
           </Canvas>
         </div>
       </div>

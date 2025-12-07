@@ -29,6 +29,7 @@ type CardMeshProps = {
   rotation?: [number, number, number];
   scale?: number;
   isFaceUp?: boolean;
+  enableHover?: boolean;
   onClick?: (e: ThreeEvent<MouseEvent>) => void;
 };
 
@@ -38,6 +39,7 @@ export default function CardMesh({
   rotation = [0, 0, 0],
   scale = 1,
   isFaceUp = true,
+  enableHover = true,
   onClick
 }: CardMeshProps) {
   const { gl } = useThree();
@@ -48,12 +50,13 @@ export default function CardMesh({
   const hoverRef = useRef<Group>(null);
   const cardRef = useRef<Group>(null);
   const shadowRef = useRef<Mesh>(null);
+  const frontMaterialRef = useRef<MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
 
-  useCursor(hovered);
+  useCursor(enableHover && hovered);
 
   useTextureConfig([frontFrame, backFrame, artTex], gl.capabilities.getMaxAnisotropy());
-  useFrameHover(hoverRef, shadowRef, hovered);
+  useFrameHover(hoverRef, shadowRef, frontMaterialRef, enableHover ? hovered : false);
   useFrameFlip(cardRef, isFaceUp);
 
   return (
@@ -61,14 +64,22 @@ export default function CardMesh({
       <group
         ref={hoverRef}
         onClick={onClick}
-        onPointerOver={e => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={e => {
-          e.stopPropagation();
-          setHovered(false);
-        }}
+        onPointerOver={
+          enableHover
+            ? e => {
+                e.stopPropagation();
+                setHovered(true);
+              }
+            : undefined
+        }
+        onPointerOut={
+          enableHover
+            ? e => {
+                e.stopPropagation();
+                setHovered(false);
+              }
+            : undefined
+        }
       >
         <mesh
           ref={shadowRef}
@@ -102,10 +113,13 @@ export default function CardMesh({
           <mesh castShadow receiveShadow position={[0, 0, FRAME_Z]}>
             <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
             <meshStandardMaterial
+              ref={frontMaterialRef}
               map={frontFrame}
               side={DoubleSide}
               roughness={0.35}
               metalness={0.05}
+              emissive="#2ec2ff"
+              emissiveIntensity={0}
             />
           </mesh>
 
@@ -139,6 +153,7 @@ function useTextureConfig(textures: Texture[], anisotropy: number) {
 function useFrameHover(
   hoverRef: RefObject<Group>,
   shadowRef: RefObject<Mesh>,
+  frontMaterialRef: RefObject<MeshStandardMaterial>,
   hovered: boolean
 ) {
   useFrame((_, delta) => {
@@ -153,6 +168,10 @@ function useFrameHover(
     grp.position.y = MathUtils.damp(grp.position.y, targetY, 8, delta);
     grp.rotation.x = MathUtils.damp(grp.rotation.x, targetRotX, 8, delta);
     grp.rotation.z = MathUtils.damp(grp.rotation.z, targetRotZ, 8, delta);
+    const targetScale = hovered ? 1.05 : 1;
+    grp.scale.x = MathUtils.damp(grp.scale.x, targetScale, 8, delta);
+    grp.scale.y = MathUtils.damp(grp.scale.y, targetScale, 8, delta);
+    grp.scale.z = MathUtils.damp(grp.scale.z, targetScale, 8, delta);
 
     if (shadow) {
       const targetShadowScale = hovered ? 1.12 : 1;
@@ -161,6 +180,12 @@ function useFrameHover(
       shadow.scale.y = MathUtils.damp(shadow.scale.y, targetShadowScale, 10, delta);
       const mat = shadow.material as MeshStandardMaterial;
       mat.opacity = MathUtils.damp(mat.opacity, targetShadowOpacity, 10, delta);
+    }
+
+    const frontMat = frontMaterialRef.current;
+    if (frontMat) {
+      const targetEmissive = hovered ? 0.25 : 0;
+      frontMat.emissiveIntensity = MathUtils.damp(frontMat.emissiveIntensity, targetEmissive, 6, delta);
     }
   });
 }

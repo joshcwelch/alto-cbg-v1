@@ -4,9 +4,11 @@ import { SRGBColorSpace } from "three";
 
 const BOARD_PATH = "/src/assets/board/board.png";
 const BOARD_ASPECT = 1152 / 2048; // approximate height / width from provided asset
-const BOARD_WIDTH = 12;
+const BASE_WIDTH = 12;
+const BOARD_SCALE = 1.35;
+const BOARD_WIDTH = BASE_WIDTH * BOARD_SCALE;
 const BOARD_HEIGHT = BOARD_WIDTH * BOARD_ASPECT;
-const BOARD_TILT = -0.3;
+const BOARD_TILT = -0.42;
 
 export default function Board3D() {
   const { gl } = useThree();
@@ -20,7 +22,7 @@ export default function Board3D() {
 
   return (
     <mesh
-      position={[0, -1.8, 0]}
+      position={[0, 0, 0]}
       rotation={[BOARD_TILT, 0, 0]}
       receiveShadow
     >

@@ -39,7 +39,13 @@ export default function Battlefield() {
             key={u.uid}
             position={[startX + idx * spacing, laneY[lane], 0]}
           >
-            <CardMesh card={u.base} scale={0.85} position={[0, 0.01, 0]} />
+            <CardMesh
+              card={u.base}
+              scale={1.25}
+              position={[0, 0.03, 0]}
+              rotation={[-0.25, 0, 0]}
+              enableHover={false}
+            />
           </group>
         ));
       })}
