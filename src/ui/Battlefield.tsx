@@ -45,6 +45,7 @@ export default function Battlefield() {
               position={[0, 0.03, 0]}
               rotation={[-0.25, 0, 0]}
               enableHover={false}
+              renderOrder={5}
             />
           </group>
         ));

@@ -30,6 +30,7 @@ type CardMeshProps = {
   scale?: number;
   isFaceUp?: boolean;
   enableHover?: boolean;
+  renderOrder?: number;
   onClick?: (e: ThreeEvent<MouseEvent>) => void;
 };
 
@@ -40,6 +41,7 @@ export default function CardMesh({
   scale = 1,
   isFaceUp = true,
   enableHover = true,
+  renderOrder = 1,
   onClick
 }: CardMeshProps) {
   const { gl } = useThree();
@@ -86,6 +88,7 @@ export default function CardMesh({
           rotation={[-Math.PI / 2, 0, 0]}
           position={[0, -0.025, 0]}
           receiveShadow
+          renderOrder={renderOrder}
         >
           <planeGeometry args={[CARD_WIDTH * 1.2, CARD_HEIGHT * 0.55]} />
           <meshStandardMaterial
@@ -99,7 +102,7 @@ export default function CardMesh({
 
         <group ref={cardRef}>
           {/* art window */}
-          <mesh position={[0, 0, ART_Z]}>
+          <mesh position={[0, 0, ART_Z]} renderOrder={renderOrder}>
             <planeGeometry args={[ART_WIDTH, ART_HEIGHT]} />
             <meshStandardMaterial
               map={artTex}
@@ -110,7 +113,7 @@ export default function CardMesh({
           </mesh>
 
           {/* front frame */}
-          <mesh castShadow receiveShadow position={[0, 0, FRAME_Z]}>
+          <mesh castShadow receiveShadow position={[0, 0, FRAME_Z]} renderOrder={renderOrder}>
             <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
             <meshStandardMaterial
               ref={frontMaterialRef}
@@ -124,7 +127,7 @@ export default function CardMesh({
           </mesh>
 
           {/* back frame */}
-          <mesh castShadow receiveShadow position={[0, 0, BACK_Z]} rotation={[0, Math.PI, 0]}>
+          <mesh castShadow receiveShadow position={[0, 0, BACK_Z]} rotation={[0, Math.PI, 0]} renderOrder={renderOrder}>
             <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
             <meshStandardMaterial
               map={backFrame}

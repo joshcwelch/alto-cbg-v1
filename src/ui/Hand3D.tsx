@@ -12,7 +12,7 @@ export default function Hand3D() {
     <group position={[0, handHeightOffset, 0]}>
       {hand.map((card, i) => (
         <group key={`${card.id}-${i}`} position={[startX + i * spacing, 0, 0]}>
-          <CardMesh card={card} isFaceUp />
+          <CardMesh card={card} isFaceUp renderOrder={5} />
         </group>
       ))}
     </group>

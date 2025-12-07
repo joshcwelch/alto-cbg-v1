@@ -22,8 +22,10 @@ export default function Board3D() {
 
   return (
     <mesh
+      renderOrder={0}
       position={[0, 0, 0]}
       rotation={[BOARD_TILT, 0, 0]}
+      scale={[6, 4, 1]}
       receiveShadow
     >
       <planeGeometry args={[BOARD_WIDTH, BOARD_HEIGHT]} />
