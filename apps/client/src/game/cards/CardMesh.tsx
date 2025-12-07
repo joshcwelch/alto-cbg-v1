@@ -19,17 +19,12 @@ type Props = ThreeElements["group"] & {
   shadow?: boolean;
 };
 
-function tex(url: string) {
-  // Vite-proof import
-  return new URL(url, import.meta.url).href;
-}
-
 export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut, shadow = true, ...rest }: Props) {
   const rarity: Rarity = visual.rarity ?? "common";
   const state = visual.state ?? "idle";
 
-  const frontTex = useTexture(tex("./textures/card-front.png"));
-  const backTex  = useTexture(tex("./textures/card-back.png"));
+  const frontTex = useTexture(new URL("./textures/card-front.png", import.meta.url).href);
+  const backTex  = useTexture(new URL("./textures/card-back.png", import.meta.url).href);
 
   // Ensure sRGB and mipmap settings
   useEffect(() => {
@@ -70,7 +65,7 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
   );
 
   // Geometry: thin box so we get real edges + proper back
-  const geo = useMemo(() => new THREE.BoxGeometry(CARD_W, CARD_H, THICKNESS, 1, 1, 1), []);
+  const geo = useMemo(() => new THREE.BoxGeometry(CARD_W, CARD_H, THICKNESS), []);
   // Assign AO UV2
   useMemo(() => {
     (geo as any).attributes.uv2 = (geo as any).attributes.uv;
