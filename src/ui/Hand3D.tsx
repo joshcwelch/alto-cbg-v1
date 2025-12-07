@@ -3,8 +3,8 @@ import CardMesh from "./CardMesh";
 
 const spacing = 1.6;
 const handHeightOffset = -1.8;
-const handDepth = 2.2;
-const handTilt = -0.12;
+const handDepth = 1.9;
+const handTilt = -0.15;
 
 export default function Hand3D() {
   const hand = useGameStore(s => s.hand);

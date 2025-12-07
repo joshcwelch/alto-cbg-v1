@@ -22,7 +22,7 @@ export default function Board() {
         <div className="board-canvas-frame">
           <Canvas
             shadows
-            camera={{ position: [0, 5, 9], fov: 32 }}
+            camera={{ position: [0, 8, 12], fov: 32 }}
             onCreated={({ camera }) => {
               camera.lookAt(0, 0, 0);
             }}

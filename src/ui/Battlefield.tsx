@@ -6,12 +6,11 @@ type LaneKey = "top" | "middle" | "bottom";
 
 const laneOrder: LaneKey[] = ["top", "middle", "bottom"];
 const laneZ: Record<LaneKey, number> = {
-  top: -1.25,
+  top: -1.1,
   middle: 0,
-  bottom: 1.25
+  bottom: 1.1
 };
 const spacing = 1.6;
-const BOARD_TILT = -0.42;
 const laneWidth = 10;
 const laneHeight = 1;
 
@@ -35,8 +34,8 @@ export default function Battlefield() {
         {laneOrder.map(lane => (
           <mesh
             key={`lane-${lane}`}
-            position={[0, 0.051, laneZ[lane]]}
-            rotation={[BOARD_TILT, 0, 0]}
+            position={[0, 0.01, laneZ[lane]]}
+            rotation={[0, 0, 0]}
             renderOrder={1}
           >
             <planeGeometry args={[laneWidth, laneHeight]} />
@@ -53,13 +52,13 @@ export default function Battlefield() {
         return laneUnits.map((u, idx) => (
           <group
             key={u.uid}
-            position={[startX + idx * spacing, 0.08, laneZ[lane]]}
+            position={[startX + idx * spacing, 0.08, laneZ[lane] + 0.05]}
           >
             <CardMesh
               card={u.base}
-              scale={1.05}
+              scale={1.0}
               position={[0, 0, 0]}
-              rotation={[-0.25, 0, 0]}
+              rotation={[-0.28, 0, 0]}
               enableHover={false}
               renderOrder={10}
             />
