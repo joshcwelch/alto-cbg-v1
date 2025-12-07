@@ -30,6 +30,7 @@ type CardMeshProps = {
   enableHover?: boolean;
   renderOrder?: number;
   onClick?: (e: ThreeEvent<MouseEvent>) => void;
+  forceBack?: boolean;
 };
 
 export default function CardMesh({
@@ -40,7 +41,8 @@ export default function CardMesh({
   isFaceUp = true,
   enableHover = true,
   renderOrder = 1,
-  onClick
+  onClick,
+  forceBack = false
 }: CardMeshProps) {
   const { gl } = useThree();
   const frontFrame = useTexture("/src/assets/cards/card-front.png");
@@ -53,19 +55,26 @@ export default function CardMesh({
   const frontMaterialRef = useRef<MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
 
-  useCursor(enableHover && hovered);
+  const hoverEnabled = enableHover && !forceBack;
+
+  useCursor(hoverEnabled && hovered);
 
   useTextureConfig([frontFrame, backFrame, artTex], gl.capabilities.getMaxAnisotropy());
-  useFrameHover(hoverRef, shadowRef, frontMaterialRef, enableHover ? hovered : false);
-  useFrameFlip(cardRef, isFaceUp);
+  useFrameHover(hoverRef, shadowRef, frontMaterialRef, hoverEnabled ? hovered : false);
+  const faceUpForFlip = forceBack ? true : isFaceUp;
+  useFrameFlip(cardRef, faceUpForFlip);
+
+  const showFront = !forceBack;
+  const backPlaneRotation: [number, number, number] = forceBack ? [0, 0, 0] : [0, Math.PI, 0];
+  const backPlaneZ = showFront ? BACK_Z : FRAME_Z;
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <group
         ref={hoverRef}
-        onClick={onClick}
+        onClick={hoverEnabled ? onClick : undefined}
         onPointerOver={
-          enableHover
+          hoverEnabled
             ? e => {
                 e.stopPropagation();
                 setHovered(true);
@@ -73,7 +82,7 @@ export default function CardMesh({
             : undefined
         }
         onPointerOut={
-          enableHover
+          hoverEnabled
             ? e => {
                 e.stopPropagation();
                 setHovered(false);
@@ -99,33 +108,41 @@ export default function CardMesh({
         </mesh>
 
         <group ref={cardRef}>
-          {/* art window */}
-          <mesh position={[0, 0, ART_Z]} renderOrder={renderOrder}>
-            <planeGeometry args={[ART_WIDTH, ART_HEIGHT]} />
-            <meshStandardMaterial
-              map={artTex}
-              side={DoubleSide}
-              roughness={0.45}
-              metalness={0.02}
-            />
-          </mesh>
+          {showFront && (
+            <mesh position={[0, 0, ART_Z]} renderOrder={renderOrder}>
+              <planeGeometry args={[ART_WIDTH, ART_HEIGHT]} />
+              <meshStandardMaterial
+                map={artTex}
+                side={DoubleSide}
+                roughness={0.45}
+                metalness={0.02}
+              />
+            </mesh>
+          )}
 
-          {/* front frame */}
-          <mesh castShadow receiveShadow position={[0, 0, FRAME_Z]} renderOrder={renderOrder}>
-            <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
-            <meshStandardMaterial
-              ref={frontMaterialRef}
-              map={frontFrame}
-              side={DoubleSide}
-              roughness={0.35}
-              metalness={0.05}
-              emissive="#2ec2ff"
-              emissiveIntensity={0}
-            />
-          </mesh>
+          {showFront && (
+            <mesh castShadow receiveShadow position={[0, 0, FRAME_Z]} renderOrder={renderOrder}>
+              <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
+              <meshStandardMaterial
+                ref={frontMaterialRef}
+                map={frontFrame}
+                side={DoubleSide}
+                roughness={0.35}
+                metalness={0.05}
+                emissive="#2ec2ff"
+                emissiveIntensity={0}
+              />
+            </mesh>
+          )}
 
-          {/* back frame */}
-          <mesh castShadow receiveShadow position={[0, 0, BACK_Z]} rotation={[0, Math.PI, 0]} renderOrder={renderOrder}>
+          {/* back frame (always rendered; front-facing when forceBack=true) */}
+          <mesh
+            castShadow
+            receiveShadow
+            position={[0, 0, backPlaneZ]}
+            rotation={backPlaneRotation}
+            renderOrder={renderOrder}
+          >
             <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
             <meshStandardMaterial
               map={backFrame}

@@ -12,6 +12,7 @@ type Store = GameState & {
   playCard: (cardId: string) => void;
   endTurn: () => void;
   syncHand: (newHand: CardDef[]) => void;
+  syncEnemyHand: (newHand: CardDef[]) => void;
   openingHandDealt: boolean;
 };
 
@@ -25,6 +26,10 @@ function uid() {
 export const useGameStore = create<Store>((set, get) => {
   const syncHand = (newHand: CardDef[]) => {
     set({ hand: newHand });
+  };
+
+  const syncEnemyHand = (newHand: CardDef[]) => {
+    set({ enemyHand: newHand });
   };
 
   const dealOpeningHand = () => {
@@ -46,13 +51,23 @@ export const useGameStore = create<Store>((set, get) => {
     ...createInitialState(),
     openingHandDealt: false,
     syncHand,
+    syncEnemyHand,
 
     newGame: () => {
       const deckIds = buildStarterDeck();
       const deck = shuffle(toCardDefs(deckIds));
+      const enemyDeckIds = buildStarterDeck();
+      const enemyDeck = shuffle(toCardDefs(enemyDeckIds));
+
+      const enemyDrawCount = Math.min(5, enemyDeck.length);
+      const enemyOpeningHand = enemyDeck.slice(0, enemyDrawCount);
+      const enemyRemainingDeck = enemyDeck.slice(enemyDrawCount);
+
       set({
         ...createInitialState(),
         deck,
+        enemyDeck: enemyRemainingDeck,
+        enemyHand: enemyOpeningHand,
         openingHandDealt: false
       });
       // draw starting hand (5 like HS) exactly once per game start
