@@ -29,12 +29,24 @@ export default function Board() {
         className="board-stage"
         style={{
           position: "relative",
-          width: "min(96vw, 1400px)",
-          aspectRatio: "2048 / 1152"
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          aspectRatio: "2048 / 1152",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
         }}
       >
         <BoardBG />
-        <div className="board-canvas-frame" style={{ position: "absolute", inset: 0 }}>
+        <div
+          className="board-canvas-frame"
+          style={{
+            position: "absolute",
+            inset: 0
+          }}
+        >
           <Canvas
             shadows
             gl={{ alpha: true }}

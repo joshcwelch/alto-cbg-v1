@@ -5,10 +5,11 @@ import CardMesh from "./CardMesh";
 type LaneKey = "top" | "middle" | "bottom";
 
 const laneOrder: LaneKey[] = ["top", "middle", "bottom"];
+const laneSpacing = 1;
 const laneZ: Record<LaneKey, number> = {
-  top: -0.9,
+  top: -laneSpacing,
   middle: 0,
-  bottom: 0.9
+  bottom: laneSpacing
 };
 const spacing = 1.6;
 const laneWidth = 10;
