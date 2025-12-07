@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^9.121.2",
     "@react-three/fiber": "^9.0.0",
+    "@react-three/postprocessing": "^2.18.0",
     "framer-motion": "^12.23.25",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
