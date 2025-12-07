@@ -1,12 +1,10 @@
 import { ContactShadows, Environment } from "@react-three/drei";
-import Battlefield from "./Battlefield";
 import Hand3D from "./Hand3D";
 
 export default function GameScene() {
   return (
     <>
       <Environment preset="apartment" />
-      <Battlefield />
       <Hand3D />
       <ContactShadows
         opacity={0.35}
