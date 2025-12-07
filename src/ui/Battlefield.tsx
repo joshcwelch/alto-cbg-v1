@@ -5,10 +5,10 @@ import CardMesh from "./CardMesh";
 type LaneKey = "top" | "middle" | "bottom";
 
 const laneOrder: LaneKey[] = ["top", "middle", "bottom"];
-const laneY: Record<LaneKey, number> = {
-  top: 1.5,
+const laneZ: Record<LaneKey, number> = {
+  top: -1.25,
   middle: 0,
-  bottom: -1.5
+  bottom: 1.25
 };
 const spacing = 1.6;
 const BOARD_TILT = -0.42;
@@ -32,10 +32,10 @@ export default function Battlefield() {
   return (
     <group>
       <group renderOrder={1}>
-        {laneOrder.map((lane, idx) => (
+        {laneOrder.map(lane => (
           <mesh
             key={`lane-${lane}`}
-            position={[0, laneY[lane], 0]}
+            position={[0, 0.051, laneZ[lane]]}
             rotation={[BOARD_TILT, 0, 0]}
             renderOrder={1}
           >
@@ -53,15 +53,15 @@ export default function Battlefield() {
         return laneUnits.map((u, idx) => (
           <group
             key={u.uid}
-            position={[startX + idx * spacing, laneY[lane], 0]}
+            position={[startX + idx * spacing, 0.08, laneZ[lane]]}
           >
             <CardMesh
               card={u.base}
-              scale={1.2}
-              position={[0, 0.06, 0]}
+              scale={1.05}
+              position={[0, 0, 0]}
               rotation={[-0.25, 0, 0]}
               enableHover={false}
-              renderOrder={5}
+              renderOrder={10}
             />
           </group>
         ));
