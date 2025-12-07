@@ -1,8 +1,8 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
-import { EffectComposer as ThreeEffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { EffectComposer as ThreeEffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { Vector2 } from "three";
 import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
@@ -49,7 +49,7 @@ export default function Board() {
 
 function PostProcessing() {
   const { gl, scene, camera, size } = useThree();
-  const composer = useRef<ThreeEffectComposer>();
+  const composer = useRef<ThreeEffectComposer>(null);
 
   useEffect(() => {
     const renderPass = new RenderPass(scene, camera);
