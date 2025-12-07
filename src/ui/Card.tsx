@@ -2,13 +2,16 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useGameStore } from "../state/useGameStore";
 import type { CardDef } from "../core/cardTypes";
+import { LANE_HEIGHT_RATIO } from "./boardAnchors";
 
 const CARD_ASPECT = 915 / 1390;
 const CARD_PADDING_MIN = 10;
 const CARD_PADDING_MAX = 18;
 
 function computeCardSize(viewportHeight: number) {
-  const cardHeight = Math.min(Math.max(viewportHeight * 0.22, 140), 260);
+  const laneHeight = viewportHeight * LANE_HEIGHT_RATIO;
+  const target = laneHeight * 0.92;
+  const cardHeight = Math.min(Math.max(target, 148), Math.max(laneHeight * 1.05, 228));
   const cardWidth = cardHeight * CARD_ASPECT;
   return { cardHeight, cardWidth };
 }
@@ -35,15 +38,25 @@ export default function Card({ card }: { card: CardDef }) {
   return (
     <motion.div
       layout
+      whileHover={{
+        scale: 1.03,
+        y: -12,
+        zIndex: 4,
+        filter: "drop-shadow(0 14px 32px rgba(0,0,0,0.45))",
+        transition: { type: "spring", stiffness: 320, damping: 28 }
+      }}
+      whileTap={{ scale: 1.1, y: -18, zIndex: 6 }}
       onClick={() => canPlay && playCard(card.id)}
       style={{
         width: `${size.cardWidth}px`,
         height: `${size.cardHeight}px`,
-        background: canPlay ? "#ffffff" : "#d9dde6",
+        background: canPlay
+          ? "linear-gradient(145deg, #f5f7fb 0%, #e5ecf9 50%, #d7e3ff 100%)"
+          : "linear-gradient(145deg, #c7cedc 0%, #bfc7d8 60%, #aeb7cb 100%)",
         borderRadius: 12,
         padding,
         position: "relative",
-        boxShadow: "0 6px 14px rgba(0,0,0,0.4)",
+        boxShadow: "0 10px 26px rgba(0,0,0,0.4)",
         cursor: canPlay ? "pointer" : "not-allowed",
         border: "2px solid #2a2f45",
         display: "flex",

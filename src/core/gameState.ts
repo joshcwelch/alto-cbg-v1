@@ -24,5 +24,5 @@ export const createInitialState = (): GameState => ({
   enemyDeck: [],
   enemyHand: [],
   battlefield: [],
-  maxBoardSlots: 7
+  maxBoardSlots: 5
 });
