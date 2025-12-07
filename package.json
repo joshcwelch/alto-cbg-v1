@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.121.2",
+    "@react-three/fiber": "^9.0.0",
     "framer-motion": "^12.23.25",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "three": "^0.170.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

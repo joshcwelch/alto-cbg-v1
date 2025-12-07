@@ -6,6 +6,8 @@ export interface CardDef {
   mana: number;
   attack: number;
   health: number;
+  // image used for 3D/texture rendering
+  artSrc: string;
   text?: string;
 }
 
