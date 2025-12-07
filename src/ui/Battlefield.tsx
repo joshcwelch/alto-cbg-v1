@@ -5,13 +5,14 @@ import CardMesh from "./CardMesh";
 type LaneKey = "top" | "middle" | "bottom";
 
 const laneOrder: LaneKey[] = ["top", "middle", "bottom"];
-const laneSpacing = 1;
+const laneSpacing = 0.9;
 const laneZ: Record<LaneKey, number> = {
   top: -laneSpacing,
   middle: 0,
   bottom: laneSpacing
 };
-const spacing = 1.6;
+const SPACING = 1.6;
+const ROW_Y = 0.2;
 const laneWidth = 10;
 const laneHeight = 1;
 
@@ -48,18 +49,20 @@ export default function Battlefield() {
         const laneUnits = lanes[lane];
         if (laneUnits.length === 0) return null;
 
-        const startX = -(laneUnits.length - 1) * spacing * 0.5;
-
         return laneUnits.map((u, idx) => (
           <group
             key={u.uid}
-            position={[startX + idx * spacing, 0.15, laneZ[lane]]}
+            position={[
+              (idx - (laneUnits.length - 1) / 2) * SPACING,
+              ROW_Y,
+              laneZ[lane]
+            ]}
           >
             <CardMesh
               card={u.base}
-              scale={0.9}
+              scale={1}
               position={[0, 0, 0]}
-              rotation={[-0.15, 0, 0]}
+              rotation={[0, 0, 0]}
               enableHover={false}
               renderOrder={10}
             />

@@ -1,25 +1,25 @@
 import { useGameStore } from "../state/useGameStore";
 import CardMesh from "./CardMesh";
 
-const spacing = 1.6;
-const handHeightOffset = -1.8;
-const handDepth = 1.9;
-const handTilt = -0.15;
+const ROW_Y = -2.2;
+const SPACING = 1.4;
 
 export default function Hand3D() {
   const hand = useGameStore(s => s.hand);
-  const startX = hand.length > 0 ? -(hand.length - 1) * spacing * 0.5 : 0;
 
   return (
-    <group position={[0, handHeightOffset, handDepth]} rotation={[handTilt, 0, 0]}>
+    <group>
       {hand.map((card, i) => (
-        <group key={`${card.id}-${i}`} position={[startX + i * spacing, 0, 0]}>
+        <group
+          key={`${card.id}-${i}`}
+          position={[(i - (hand.length - 1) / 2) * SPACING, ROW_Y, 0]}
+        >
           <CardMesh
             card={card}
             isFaceUp
             renderOrder={20}
-            scale={1.0}
-            rotation={[-0.12, 0, 0]}
+            scale={1}
+            rotation={[0, 0, 0]}
           />
         </group>
       ))}

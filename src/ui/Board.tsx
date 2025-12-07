@@ -41,7 +41,7 @@ export default function Board() {
       >
         <BoardBG />
         <div
-          className="board-canvas-frame"
+        className="board-canvas-frame"
           style={{
             position: "absolute",
             inset: 0
@@ -49,8 +49,9 @@ export default function Board() {
         >
           <Canvas
             shadows
+            orthographic
             gl={{ alpha: true }}
-            camera={{ position: [0, 0, 10], fov: 30 }}
+            camera={{ zoom: 100, position: [0, 0, 10] }}
           >
             <ambientLight intensity={0.65} />
             <directionalLight
