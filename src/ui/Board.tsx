@@ -1,14 +1,10 @@
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
-import { EffectComposer as ThreeEffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { Vector2 } from "three";
+import { Canvas } from "@react-three/fiber";
+import { useEffect } from "react";
 import GameScene from "./GameScene";
 import EndTurnButton from "./EndTurnButton";
 import ManaBar from "./ManaBar";
 import { useGameStore } from "../state/useGameStore";
-import FixedCamera from "./FixedCamera";
+import BoardBG from "./BoardBG";
 
 export default function Board() {
   const newGame = useGameStore(s => s.newGame);
@@ -18,13 +14,11 @@ export default function Board() {
   }, [newGame]);
 
   return (
-    <div className="board-shell">
-      <div className="board-stage">
-        <div className="board-canvas-frame">
-          <Canvas shadows>
-            <FixedCamera />
-            <color attach="background" args={["#0f1624"]} />
-            <fog attach="fog" args={["#0a0f1e", 7, 20]} />
+    <div className="board-shell" style={{ position: "relative", width: "100%", height: "100%" }}>
+      <BoardBG />
+      <div className="board-stage" style={{ position: "absolute", inset: 0 }}>
+        <div className="board-canvas-frame" style={{ position: "absolute", inset: 0 }}>
+          <Canvas shadows gl={{ alpha: true }} camera={{ position: [0, 0, 10], fov: 30 }}>
             <ambientLight intensity={0.65} />
             <directionalLight
               castShadow
@@ -37,7 +31,6 @@ export default function Board() {
             <directionalLight position={[-4, 9, -6]} intensity={0.55} />
             <pointLight position={[0, 6, 0]} intensity={0.3} distance={15} />
             <GameScene />
-            <PostProcessing />
           </Canvas>
         </div>
       </div>
@@ -45,35 +38,4 @@ export default function Board() {
       <EndTurnButton />
     </div>
   );
-}
-
-function PostProcessing() {
-  const { gl, scene, camera, size } = useThree();
-  const composer = useRef<ThreeEffectComposer>(null);
-
-  useEffect(() => {
-    const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(
-      new Vector2(size.width, size.height),
-      0.35,
-      0.6,
-      0.5
-    );
-
-    const comp = new ThreeEffectComposer(gl);
-    comp.addPass(renderPass);
-    comp.addPass(bloomPass);
-    comp.setSize(size.width, size.height);
-    composer.current = comp;
-
-    return () => {
-      comp.dispose();
-    };
-  }, [gl, scene, camera, size.width, size.height]);
-
-  useFrame(() => {
-    composer.current?.render();
-  }, 1);
-
-  return null;
 }
