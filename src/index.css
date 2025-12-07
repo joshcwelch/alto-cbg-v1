@@ -196,8 +196,28 @@ button {
   background: transparent !important;
 }
 
+.card-html-root {
+  position: static !important;
+  transform: none !important;
+  will-change: auto !important;
+  pointer-events: none !important;
+}
+
 .card-overlay {
   pointer-events: none;
   box-shadow: none !important;
   filter: none !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.html-card {
+  position: static !important;
+  transform: none !important;
+  background: transparent !important;
+  pointer-events: none;
+}
+
+.html-card * {
+  transform: none !important;
 }

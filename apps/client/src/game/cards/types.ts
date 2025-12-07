@@ -5,6 +5,9 @@ export type CardVisual = {
   id: string;
   name?: string;
   cost?: number;
+  attack?: number;
+  health?: number;
+  text?: string;
   rarity?: Rarity;
   state?: CardState;
   highlight?: Highlight;
