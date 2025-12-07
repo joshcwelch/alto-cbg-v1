@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# ALTO — Crystalbound Battlegrounds
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ALTO is a custom-built 3D-enhanced tactical card battler made with React, TypeScript, Vite, Zustand, and React Three Fiber. It blends a traditional lane-based card game structure with modern presentation using 3D card meshes and a stylized fantasy theme.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Core Gameplay
+- Turn-based system
+- Lane-based board with three combat lanes
+- Mana system (“Alt Shards”), max 10
+- Player hand with card draw
+- Playing unit cards onto the board
+- ATK / HP stats and future combat logic
+- End Turn button and turn progression
 
-## React Compiler
+### Visual & UI Systems
+- 3D card meshes with custom fantasy card frames
+- Static board background art rendered in 2D
+- 3D hand of cards positioned using React Three Fiber
+- Lane highlighting
+- Future additions: card animations, battle effects, hover highlights
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Engine / Architecture
+- Zustand game store for synchronous game state
+- Pure game logic in src/core (rules, turn system, card definitions)
+- Presentation layer in src/ui (3D, layout, hand, scene)
+- Clean separation between state, rules, and rendering
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React 18
+- TypeScript
+- Vite
+- Zustand
+- React Three Fiber
+- Three.js
+- @react-three/drei
+- ESLint / Prettier
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Install dependencies:
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+yaml
+Copy code
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Run development server:
+npm run dev
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+rust
+Copy code
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Build for production:
+npm run build
+
+nginx
+Copy code
+
+The dev server runs at http://localhost:5173
+
+## Project Structure
+
+src/
+core/ Game rules, card types, deck logic, turn system
+state/ Zustand store and selectors
+ui/ React and 3D scene components
+assets/ Card art, board art, icons, textures
+
+markdown
+Copy code
+
+## Roadmap
+
+- Card abilities
+- Hover and selection animations
+- Drag-to-play system
+- Combat resolution effects
+- Deck builder
+- AI opponent prototype
+- Multiplayer support (future)
+
+## License
+
+All custom artwork is copyright by Joshua Welch.   
+Code is MIT licensed unless modified.
