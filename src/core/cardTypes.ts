@@ -11,12 +11,15 @@ export interface CardDef {
   description?: string;
 }
 
-export interface UnitOnBoard {
+export type PlayerId = "player" | "enemy";
+
+export interface BattlefieldUnit {
   uid: string;        // unique instance for this battle
-  base: CardDef;      // reference to card stats
-  damage: number;     // damage taken
-  exhausted: boolean; // prevents attacking the turn it is played (HS style)
-  slot: number;       // board slot index (0..maxSlots-1)
+  cardId: CardID;     // reference to card stats
+  owner: PlayerId;    // which side controls the unit
+  lane: number;       // board lane index (0..NUM_LANES-1)
+  damage: number;     // damage taken (so hp can be derived)
+  exhausted: boolean; // prevents acting the turn it is played (HS style)
 }
 
 export const __DEBUG = "CardTypes Loaded";

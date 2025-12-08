@@ -234,8 +234,11 @@ export default function CardMesh({
   useEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
-    console.assert(Array.isArray(mesh.material) && (mesh.material as THREE.Material[])[4]?.map, "Front face (4) has no texture map");
-    console.assert((mesh.material as THREE.Material[])[5]?.map, "Back face (5) has no texture map");
+    const materials = Array.isArray(mesh.material) ? (mesh.material as THREE.Material[]) : [];
+    const front = materials[4] as THREE.MeshStandardMaterial | undefined;
+    const back = materials[5] as THREE.MeshStandardMaterial | undefined;
+    console.assert(Boolean(front?.map), "Front face (4) has no texture map");
+    console.assert(Boolean(back?.map), "Back face (5) has no texture map");
   }, [mats]);
 
   return (
