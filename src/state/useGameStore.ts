@@ -10,6 +10,8 @@ type Store = GameState & {
   newGame: () => void;
   draw: (n?: number) => void;
   playCard: (cardId: string, lane: number, playerId: PlayerId) => void;
+  playEnemyCard: (cardId: string, lane: number) => void;
+  autoEnemyPlay: () => void;
   endTurn: () => void;
   syncHand: (newHand: CardDef[]) => void;
   syncEnemyHand: (newHand: CardDef[]) => void;
@@ -97,12 +99,13 @@ export const useGameStore = create<Store>((set, get) => {
     },
 
     playCard: (cardId: string, lane: number, playerId: PlayerId) => {
-      const { hand, playerMana, battlefieldUnits, maxBoardSlots } = get();
+      const { hand, enemyHand, playerMana, battlefieldUnits, maxBoardSlots } = get();
       if (lane < 0 || lane >= maxBoardSlots) return;
-      const idx = hand.findIndex(c => c.id === cardId);
+      const sourceHand = playerId === "player" ? hand : enemyHand;
+      const idx = sourceHand.findIndex(c => c.id === cardId);
       if (idx === -1) return;
 
-      const card = hand[idx];
+      const card = sourceHand[idx];
 
       // rule checks
       if (playerId === "player" && card.cost > playerMana) return; // not enough mana
@@ -121,15 +124,28 @@ export const useGameStore = create<Store>((set, get) => {
 
       set({
         playerMana: playerId === "player" ? playerMana - card.cost : playerMana,
-        hand: hand.filter((_, i) => i !== idx),
+        hand: playerId === "player" ? hand.filter((_, i) => i !== idx) : hand,
+        enemyHand: playerId === "enemy" ? enemyHand.filter((_, i) => i !== idx) : enemyHand,
         battlefieldUnits: updatedUnits,
         draggingCardId: null,
         dragPreviewLane: null
       });
     },
+    playEnemyCard: (cardId: string, lane: number) => get().playCard(cardId, lane, "enemy"),
 
     setDragState: (cardId: string | null) => set({ draggingCardId: cardId }),
     setDragPreviewLane: (slot: number | null) => set({ dragPreviewLane: slot }),
+
+    autoEnemyPlay: () => {
+      const { enemyHand, maxBoardSlots, battlefieldUnits } = get();
+      if (enemyHand.length === 0) return;
+      const openLane = Array.from({ length: maxBoardSlots }, (_, i) => i).find(
+        lane => battlefieldUnits.every(u => !(u.owner === "enemy" && u.lane === lane))
+      );
+      if (openLane == null) return;
+      const firstCard = enemyHand[0];
+      get().playEnemyCard(firstCard.id, openLane);
+    },
 
     endTurn: () => {
       const next = endTurnRule(get());

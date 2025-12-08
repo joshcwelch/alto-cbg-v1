@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { Plane, Vector3 } from "three";
 import { useGameStore } from "../state/useGameStore";
@@ -20,6 +20,29 @@ type DragInfo = {
   lane: number | null;
 };
 
+type ReturnAnim = {
+  index: number;
+  id: string;
+  start: [number, number];
+  end: [number, number];
+  current: [number, number];
+  startedAt: number;
+  duration: number;
+  onComplete?: () => void;
+};
+
+function computeCardBase(idx: number, handLength: number, spacing: number, centerY: number) {
+  const n = handLength;
+  const mid = (n - 1) / 2;
+  const theta = n <= 1 ? 0 : (-FAN_ANGLE / 2) + (FAN_ANGLE * (idx / (n - 1)));
+  const baseX = (idx - mid) * spacing;
+  const liftFalloff = mid === 0 ? 1 : 1 - Math.abs((idx - mid) / mid);
+  const lift = liftFalloff * spacing * FAN_LIFT;
+  const baseY = centerY + lift;
+  const baseRotation: [number, number, number] = [HAND_TILT, 0, -theta];
+  return { baseX, baseY, baseRotation };
+}
+
 export default function Hand3DPlayer() {
   const hand = useGameStore(s => s.hand);
   const battlefieldUnits = useGameStore(s => s.battlefieldUnits);
@@ -31,6 +54,11 @@ export default function Hand3DPlayer() {
   const anchors = useAnchors();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [dragging, setDragging] = useState<DragInfo | null>(null);
+  const [returnAnim, setReturnAnim] = useState<ReturnAnim | null>(null);
+  const draggingRef = useRef<DragInfo | null>(null);
+  useEffect(() => {
+    draggingRef.current = dragging;
+  }, [dragging]);
 
   const { spacing, centerY, boardCenterY } = useMemo(() => {
     const handCenterRatio = anchors.playerHand.center;
@@ -48,13 +76,42 @@ export default function Hand3DPlayer() {
 
   const boardPlane = useMemo(() => new Plane(new Vector3(0, 0, 1), 0), []);
 
-  const endDrag = (play?: { toBoard: boolean; lane: number | null; id: string }) => {
-    if (play && play.toBoard && play.lane !== null && isLaneOpen(play.lane, "player", battlefieldUnits)) {
-      playCard(play.id, play.lane, "player");
+  const finishDrag = (drag: DragInfo, baseX: number, baseY: number) => {
+    draggingRef.current = null;
+    const canPlay = drag.toBoard
+      && drag.lane !== null
+      && isLaneOpen(drag.lane, "player", battlefieldUnits);
+
+    if (canPlay && drag.lane !== null) {
+      const lanePos = lanePositions[drag.lane];
+      setDragging(null);
+      setDragState(null);
+      setDragPreviewLane(null);
+      setReturnAnim({
+        index: drag.index,
+        id: drag.id,
+        start: [drag.pos[0], drag.pos[1]],
+        end: [lanePos.x, lanePos.y],
+        current: [drag.pos[0], drag.pos[1]],
+        startedAt: performance.now(),
+        duration: 140,
+        onComplete: () => playCard(drag.id, drag.lane!, "player")
+      });
+      return;
     }
+
     setDragging(null);
     setDragState(null);
     setDragPreviewLane(null);
+    setReturnAnim({
+      index: drag.index,
+      id: drag.id,
+      start: [drag.pos[0], drag.pos[1]],
+      end: [baseX, baseY],
+      current: [drag.pos[0], drag.pos[1]],
+      startedAt: performance.now(),
+      duration: 200
+    });
   };
 
   const resolveDragPosition = (clientX: number, clientY: number, ray?: { intersectPlane: (p: Plane, v: Vector3) => Vector3 | null }) => {
@@ -71,12 +128,74 @@ export default function Hand3DPlayer() {
     return { world, screenRatio, lane };
   };
 
+  // global pointer listeners so drag continues even if cursor leaves the card
+  useEffect(() => {
+    if (!dragging) return;
+    const handleMove = (e: PointerEvent) => {
+      const active = draggingRef.current;
+      if (!active) return;
+      const { world, screenRatio, lane } = resolveDragPosition(e.clientX, e.clientY);
+      const toBoard = screenRatio > BOARD_THRESHOLD;
+      const laneTarget = toBoard ? lane : null;
+      setDragging(prev => (prev && prev.index === active.index
+        ? { ...prev, pos: [world.x, world.y], toBoard, lane: laneTarget }
+        : prev));
+      setDragPreviewLane(laneTarget);
+    };
+    const handleUp = () => {
+      const active = draggingRef.current;
+      if (!active) return;
+      const { baseX, baseY } = computeCardBase(active.index, hand.length, spacing, centerY);
+      finishDrag(active, baseX, baseY);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+  }, [centerY, dragging, finishDrag, hand.length, lanePositions, resolveDragPosition, spacing, setDragPreviewLane]);
+
+  // ease a card back to hand when released in an invalid spot
+  useEffect(() => {
+    if (!returnAnim) return;
+    let raf: number;
+    const step = () => {
+      setReturnAnim(prev => {
+        if (!prev) return null;
+        const now = performance.now();
+        const t = Math.min(1, (now - prev.startedAt) / prev.duration);
+        const eased = 1 - (1 - t) * (1 - t);
+        const x = prev.start[0] + (prev.end[0] - prev.start[0]) * eased;
+        const y = prev.start[1] + (prev.end[1] - prev.start[1]) * eased;
+        if (t >= 1) {
+          prev.onComplete?.();
+          return null;
+        }
+        return { ...prev, current: [x, y] };
+      });
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [returnAnim]);
+
   return (
     <group>
       {hand.map((card, i) => {
         const isDragging = dragging?.index === i;
-        const hoverActive = hoveredIdx === i && !isDragging;
-        const state: CardState = isDragging ? "drag" : hoverActive ? "hover" : "idle";
+        const hoverActive = hoveredIdx === i && !isDragging && returnAnim?.index !== i;
+
+        const { baseX, baseY, baseRotation } = computeCardBase(i, hand.length, spacing, centerY);
+
+        const isReturning = returnAnim?.index === i;
+        const position: [number, number, number] = isDragging
+          ? [dragging.pos[0], dragging.pos[1], 0]
+          : isReturning
+            ? [returnAnim.current[0], returnAnim.current[1], 0]
+          : [baseX, baseY, 0];
+        const rotation: [number, number, number] = (isDragging || isReturning) ? [0, 0, 0] : baseRotation;
+        const state: CardState = (isDragging || isReturning) ? "drag" : hoverActive ? "hover" : "idle";
         const visual: CardVisual = {
           id: card.id,
           name: card.name,
@@ -89,20 +208,6 @@ export default function Hand3DPlayer() {
           state,
           owner: "player",
         };
-
-        const n = hand.length;
-        const mid = (n - 1) / 2;
-        const theta = n <= 1 ? 0 : (-FAN_ANGLE / 2) + (FAN_ANGLE * (i / (n - 1)));
-        const baseX = (i - mid) * spacing;
-        const liftFalloff = mid === 0 ? 1 : 1 - Math.abs((i - mid) / mid);
-        const lift = liftFalloff * spacing * FAN_LIFT;
-        const baseY = centerY + lift;
-        const baseRotation: [number, number, number] = [HAND_TILT, 0, -theta];
-
-        const position: [number, number, number] = isDragging
-          ? [dragging.pos[0], dragging.pos[1], 0]
-          : [baseX, baseY, 0];
-        const rotation: [number, number, number] = isDragging ? [0, 0, 0] : baseRotation;
 
         return (
           <group
@@ -118,6 +223,7 @@ export default function Hand3DPlayer() {
               onPointerOut={() => setHoveredIdx(null)}
               onPointerDown={e => {
                 e.stopPropagation();
+                setReturnAnim(null);
                 const { world, screenRatio, lane } = resolveDragPosition(e.clientX, e.clientY, (e as any).ray);
                 const toBoard = screenRatio > BOARD_THRESHOLD;
                 const laneTarget = toBoard ? lane : null;
@@ -137,7 +243,7 @@ export default function Hand3DPlayer() {
               onPointerUp={e => {
                 if (!dragging || dragging.index !== i) return;
                 e.stopPropagation();
-                endDrag({ toBoard: dragging.toBoard, lane: dragging.lane, id: card.id });
+                finishDrag(dragging, baseX, baseY);
               }}
             />
           </group>
