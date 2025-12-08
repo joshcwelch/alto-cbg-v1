@@ -7,7 +7,7 @@ import { useAnchors } from "./boardAnchors";
 import { computeSlotCenters } from "./slotMath";
 
 const HAND_TILT = -0.08;
-const MAX_FAN_ANGLE = 0.34; // radians
+const FAN_ARC = 0.34; // radians, total spread of the hand
 const BOARD_THRESHOLD = 0.55; // % of screen height (from bottom) to start snapping
 
 type DragInfo = {
@@ -18,7 +18,7 @@ type DragInfo = {
   slot: number | null;
 };
 
-export default function Hand3D() {
+export default function Hand3DPlayer() {
   const hand = useGameStore(s => s.hand);
   const maxSlots = useGameStore(s => s.maxBoardSlots);
   const playCardToSlot = useGameStore(s => s.playCardToSlot);
@@ -85,14 +85,16 @@ export default function Hand3D() {
           rarity: "common",
           foil: card.cost >= 4,
           state,
+          owner: "player",
         };
 
-        const idxFromCenter = i - (hand.length - 1) / 2;
-        const spread = Math.max(1, hand.length - 1);
-        const angle = (idxFromCenter / spread) * MAX_FAN_ANGLE;
-        const baseX = idxFromCenter * spacing;
-        const baseY = centerY - Math.abs(idxFromCenter) * spacing * 0.08;
-        const baseRotation: [number, number, number] = [HAND_TILT, 0, angle];
+        const n = hand.length;
+        const theta = n <= 1 ? 0 : (-FAN_ARC / 2) + (FAN_ARC * (i / (n - 1)));
+        const arcRadius = n > 1 ? ((n - 1) * spacing) / FAN_ARC : spacing * 1.2;
+        const baseX = Math.sin(theta) * arcRadius;
+        const arcLift = arcRadius * (1 - Math.cos(theta));
+        const baseY = centerY + arcLift;
+        const baseRotation: [number, number, number] = [HAND_TILT, 0, theta * 0.85];
 
         const position: [number, number, number] = isDragging
           ? [dragging.pos[0], dragging.pos[1], 0]

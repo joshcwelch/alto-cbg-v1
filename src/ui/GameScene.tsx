@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Board3D from "./Board3D";
-import EnemyHand3D from "./EnemyHand3D";
-import Hand3D from "./Hand3D";
+import Hand3DEnemy from "./Hand3DEnemy";
+import Hand3DPlayer from "./Hand3DPlayer";
 
 export default function GameScene() {
   return (
@@ -10,8 +10,8 @@ export default function GameScene() {
       <directionalLight position={[3, 5, 6]} intensity={0.9} />
       <Suspense fallback={null}>
         <Board3D />
-        <EnemyHand3D />
-        <Hand3D />
+        <Hand3DEnemy />
+        <Hand3DPlayer />
       </Suspense>
     </group>
   );
