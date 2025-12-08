@@ -197,16 +197,22 @@ button {
 }
 
 .card-name {
-  font-size: clamp(10px, 1.4vh, 18px);
+  font-size: clamp(12px, 1.6vh, 18px);
+  color: #fdfdff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.55);
 }
 
 .card-text {
-  font-size: clamp(9px, 1.2vh, 16px);
+  font-size: clamp(11px, 1.4vh, 16px);
   white-space: pre-wrap;
+  color: #eef4ff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
 }
 
 .card-stats {
-  font-size: clamp(10px, 1.2vh, 14px);
+  font-size: clamp(12px, 1.4vh, 16px);
+  color: #fefefe;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.55);
 }
 
 .card-html-root {

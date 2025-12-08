@@ -31,36 +31,40 @@ function CardHtmlOverlay({ visual }: { visual: CardVisual }) {
     position: "relative",
     width: "100%",
     height: "100%",
-    color: "#0c1424",
-    fontWeight: 800
+    color: "#f7fbff",
+    fontWeight: 800,
+    textShadow: "0 2px 4px rgba(0,0,0,0.65)",
+    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.45))"
   };
 
   const costStyle: React.CSSProperties = {
     position: "absolute",
     top: "5%",
     left: "6%",
-    width: "18%",
-    height: "14%",
+    width: "20%",
+    height: "16%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "18px",
-    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+    fontSize: "clamp(22px, 2.6vh, 28px)",
+    color: "#f8fbff",
+    textShadow: "0 3px 6px rgba(0,0,0,0.65)"
   };
 
   const nameStyle: React.CSSProperties = {
     position: "absolute",
-    top: "18%",
-    left: "22%",
-    width: "56%",
-    height: "12%",
+    top: "17%",
+    left: "18%",
+    width: "64%",
+    height: "14%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "14px",
+    fontSize: "clamp(16px, 2.2vh, 22px)",
     lineHeight: 1.2,
     textAlign: "center",
-    textShadow: "0 1px 2px rgba(0,0,0,0.25)"
+    color: "#fdfdff",
+    textShadow: "0 3px 6px rgba(0,0,0,0.65)"
   };
 
   const textStyle: React.CSSProperties = {
@@ -68,42 +72,45 @@ function CardHtmlOverlay({ visual }: { visual: CardVisual }) {
     top: "32%",
     left: "16%",
     width: "68%",
-    height: "38%",
+    height: "36%",
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "center",
-    fontSize: "12px",
-    lineHeight: 1.35,
+    fontSize: "clamp(13px, 1.9vh, 16px)",
+    lineHeight: 1.4,
     textAlign: "center",
-    color: "#0f1a2a",
+    color: "#eef4ff",
     wordBreak: "break-word",
-    overflow: "hidden"
+    overflow: "hidden",
+    textShadow: "0 2px 4px rgba(0,0,0,0.55)"
   };
 
   const attackStyle: React.CSSProperties = {
     position: "absolute",
-    bottom: "6%",
+    bottom: "5%",
     left: "7%",
-    width: "18%",
+    width: "20%",
     height: "14%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "16px",
-    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+    fontSize: "clamp(20px, 2.4vh, 24px)",
+    color: "#fefefe",
+    textShadow: "0 3px 6px rgba(0,0,0,0.65)"
   };
 
   const healthStyle: React.CSSProperties = {
     position: "absolute",
-    bottom: "6%",
+    bottom: "5%",
     right: "7%",
-    width: "18%",
+    width: "20%",
     height: "14%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "16px",
-    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+    fontSize: "clamp(20px, 2.4vh, 24px)",
+    color: "#fefefe",
+    textShadow: "0 3px 6px rgba(0,0,0,0.65)"
   };
 
   return (
@@ -254,7 +261,7 @@ export default function CardMesh({
             position={[0, 0, THICKNESS / 2 + 0.001]}
             occlude={false}
             distanceFactor={1}
-            style={{ width: `${CARD_W * 100}px`, height: `${CARD_H * 100}px`, pointerEvents: "none" }}
+            style={{ width: `${CARD_W * 220}px`, height: `${CARD_H * 220}px`, pointerEvents: "none" }}
           >
             <CardHtmlOverlay visual={visual} />
           </Html>
