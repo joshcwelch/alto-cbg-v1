@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import UnitMesh, { UNIT_H, UNIT_W } from "../../apps/client/src/game/units/UnitMesh";
@@ -17,9 +17,20 @@ type BoardRow3DProps = {
   units: (BattlefieldUnit & { card: CardDef })[];
   side: "player" | "enemy";
   highlightSlot?: number | null;
+  selectedAttackerId?: string | null;
+  onUnitClick?: (unit: BattlefieldUnit & { card: CardDef }) => void;
+  isPlayersTurn?: boolean;
 };
 
-function BoardRow3D({ units, lanePositions, side, highlightSlot }: BoardRow3DProps) {
+function BoardRow3D({
+  units,
+  lanePositions,
+  side,
+  highlightSlot,
+  selectedAttackerId,
+  onUnitClick,
+  isPlayersTurn
+}: BoardRow3DProps) {
   const tilt = side === "enemy" ? ENEMY_BOARD_TILT : PLAYER_BOARD_TILT;
   const flipY = side === "enemy" ? Math.PI : 0;
   const renderOrder = side === "enemy" ? 14 : 12;
@@ -35,12 +46,15 @@ function BoardRow3D({ units, lanePositions, side, highlightSlot }: BoardRow3DPro
       {lanePositions.map((lanePos, idx) => {
         const unit = unitsByLane.get(idx) ?? null;
         const position: [number, number, number] = [lanePos.x, lanePos.y, lanePos.z];
+        const isSelected = side === "player" && unit?.uid === selectedAttackerId;
+        const canAct = unit && side === "player" && isPlayersTurn && !unit.exhausted;
 
         return (
           <group
             key={unit ? unit.uid : `${side}-slot-${idx}`}
             position={position}
             rotation={[tilt, flipY, 0]}
+            onPointerDown={unit ? (e => { e.stopPropagation(); onUnitClick?.(unit); }) : undefined}
           >
             {highlightSlot === idx && !unit && (
               <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 1}>
@@ -49,11 +63,25 @@ function BoardRow3D({ units, lanePositions, side, highlightSlot }: BoardRow3DPro
               </mesh>
             )}
             {unit && (
-              <UnitMesh
-                card={unit.card}
-                owner={unit.owner}
-                renderOrder={renderOrder}
-              />
+              <>
+                {isSelected && (
+                  <mesh position={[0, -0.025, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 2}>
+                    <ringGeometry args={[UNIT_W * 0.28, UNIT_W * 0.42, 32]} />
+                    <meshBasicMaterial color="#6df4ff" transparent opacity={0.55} />
+                  </mesh>
+                )}
+                {!canAct && side === "player" && (
+                  <mesh position={[0, -0.026, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 3}>
+                    <circleGeometry args={[UNIT_W * 0.48, 32]} />
+                    <meshBasicMaterial color="#000000" transparent opacity={0.16} />
+                  </mesh>
+                )}
+                <UnitMesh
+                  card={unit.card}
+                  owner={unit.owner}
+                  renderOrder={renderOrder}
+                />
+              </>
             )}
           </group>
         );
@@ -66,9 +94,15 @@ export default function Board3D() {
   const battlefieldUnits = useGameStore(s => s.battlefieldUnits);
   const dragPreview = useGameStore(s => s.dragPreviewLane);
   const draggingCardId = useGameStore(s => s.draggingCardId);
+  const selectedAttackerId = useGameStore(s => s.selectedAttackerId);
+  const setSelectedAttacker = useGameStore(s => s.setSelectedAttacker);
+  const attackUnit = useGameStore(s => s.attackUnit);
+  const turn = useGameStore(s => s.turn);
+  const winner = useGameStore(s => s.winner);
   const anchors = useAnchors();
   const viewport = useThree(state => state.viewport);
   const [highlightedLane, setHighlightedLane] = useState<number | null>(null);
+  const isPlayersTurn = turn === "player" && !winner;
 
   const playerCenterY = useMemo(
     () => (0.5 - anchors.playerBoard.center) * viewport.height,
@@ -115,6 +149,21 @@ export default function Board3D() {
     }
     setHighlightedLane(isLaneOpen(dragPreview, "player", battlefieldUnits) ? dragPreview : null);
   }, [battlefieldUnits, dragPreview]);
+
+  const handleUnitClick = useCallback((unit: BattlefieldUnit & { card: CardDef }) => {
+    if (!isPlayersTurn) return;
+    if (unit.owner === "player") {
+      if (unit.exhausted) {
+        setSelectedAttacker(null);
+        return;
+      }
+      setSelectedAttacker(selectedAttackerId === unit.uid ? null : unit.uid);
+      return;
+    }
+    if (selectedAttackerId) {
+      attackUnit(selectedAttackerId, { type: "unit", targetUid: unit.uid });
+    }
+  }, [attackUnit, isPlayersTurn, selectedAttackerId, setSelectedAttacker]);
 
   const isDragging = draggingCardId != null;
   const laneHighlightOpacities = useMemo(() => {
@@ -163,12 +212,18 @@ export default function Board3D() {
         side="enemy"
         units={enemyUnits}
         lanePositions={lanePositionsEnemy}
+        selectedAttackerId={selectedAttackerId}
+        onUnitClick={handleUnitClick}
+        isPlayersTurn={isPlayersTurn}
       />
       <BoardRow3D
         side="player"
         units={playerUnits}
         lanePositions={lanePositionsPlayer}
         highlightSlot={highlightedLane}
+        selectedAttackerId={selectedAttackerId}
+        onUnitClick={handleUnitClick}
+        isPlayersTurn={isPlayersTurn}
       />
     </group>
   );
