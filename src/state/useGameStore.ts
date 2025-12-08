@@ -16,6 +16,7 @@ type Store = GameState & {
   playCard: (cardId: string, lane: number, playerId: PlayerId) => boolean;
   playEnemyCard: (cardId: string, lane: number) => boolean;
   attackUnit: (attackerUid: string, target: AttackTarget) => boolean;
+  useHeroPower: (playerId: PlayerId) => boolean;
   autoEnemyTurn: () => void;
   endTurn: () => void;
   syncHand: (newHand: CardDef[]) => void;
@@ -30,6 +31,10 @@ type Store = GameState & {
 };
 
 const STARTING_HAND = { player: 3, enemy: 4 };
+const HERO_POWERS = {
+  Tharos: { name: "Flame Shot", cost: 2, text: "Deal 1 damage to the enemy hero." },
+  Lyra: { name: "Radiant Heal", cost: 2, text: "Restore 2 Health to your hero." }
+} as const;
 
 function toCardDefs(ids: string[]): CardDef[] {
   return ids.map(id => CARDS[id]);
@@ -98,6 +103,8 @@ export const useGameStore = create<Store>((set, get) => {
 
       set({
         ...createInitialState(),
+        playerHero: "Tharos",
+        enemyHero: "Lyra",
         deck: remainingDeck,
         hand: playerOpeningHand,
         enemyDeck: enemyRemainingDeck,
@@ -222,6 +229,41 @@ export const useGameStore = create<Store>((set, get) => {
       return true;
     },
 
+    useHeroPower: (playerId: PlayerId) => {
+      const state = get();
+      if (state.winner || state.turn !== playerId) return false;
+
+      const hero = playerId === "player" ? state.playerHero : state.enemyHero;
+      const heroPower = HERO_POWERS[hero as keyof typeof HERO_POWERS];
+      if (!heroPower) return false;
+
+      const usedKey = playerId === "player" ? "playerHeroPowerUsed" : "enemyHeroPowerUsed";
+      const manaKey = playerId === "player" ? "playerMana" : "enemyMana";
+
+      if (state[usedKey] || state[manaKey] < heroPower.cost) return false;
+
+      let playerHealth = state.playerHealth;
+      let enemyHealth = state.enemyHealth;
+
+      if (hero === "Tharos") {
+        enemyHealth = Math.max(0, enemyHealth - 1);
+      } else if (hero === "Lyra") {
+        playerHealth = Math.min(30, playerHealth + 2);
+      }
+
+      const winner = resolveWinner(playerHealth, enemyHealth);
+
+      set({
+        [usedKey]: true,
+        [manaKey]: state[manaKey] - heroPower.cost,
+        playerHealth,
+        enemyHealth,
+        winner
+      });
+
+      return true;
+    },
+
     setDragState: (cardId: string | null) => set({ draggingCardId: cardId }),
     setDragPreviewLane: (slot: number | null) => set({ dragPreviewLane: slot }),
 
@@ -242,6 +284,17 @@ export const useGameStore = create<Store>((set, get) => {
         const chosen = playable.sort((a, b) => (b.attack - a.attack) || (b.cost - a.cost))[0];
         const played = get().playEnemyCard(chosen.id, openLane);
         if (!played) break;
+      }
+
+      // Try hero power if available
+      const maybeHeroPower = get();
+      if (
+        !maybeHeroPower.winner &&
+        !maybeHeroPower.enemyHeroPowerUsed &&
+        maybeHeroPower.enemyMana >= HERO_POWERS.Lyra.cost &&
+        maybeHeroPower.enemyHealth < 28
+      ) {
+        get().useHeroPower("enemy");
       }
 
       let attackSafety = 0;

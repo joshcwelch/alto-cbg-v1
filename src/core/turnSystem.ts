@@ -23,6 +23,7 @@ export function startTurn(state: GameState, player: PlayerId): GameState {
   const maxKey = isPlayer ? "maxMana" : "enemyMaxMana";
   const deckKey = isPlayer ? "deck" : "enemyDeck";
   const handKey = isPlayer ? "hand" : "enemyHand";
+  const heroPowerKey = isPlayer ? "playerHeroPowerUsed" : "enemyHeroPowerUsed";
 
   const currentMax = state[maxKey];
   const newMax = Math.min(10, currentMax + 1);
@@ -35,6 +36,7 @@ export function startTurn(state: GameState, player: PlayerId): GameState {
     [manaKey]: newMax,
     [deckKey]: remainingDeck,
     [handKey]: [...hand, ...drawn],
+    [heroPowerKey]: false,
     battlefieldUnits: readyUnits(state, player)
   } as GameState;
 }

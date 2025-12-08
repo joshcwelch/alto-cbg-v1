@@ -27,11 +27,14 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
   }, []);
 
   const frameTex = useTexture(frameUrl);
+  const artTex = useTexture(card.artSrc);
 
   useEffect(() => {
     frameTex.colorSpace = THREE.SRGBColorSpace;
     frameTex.needsUpdate = true;
-  }, [frameTex]);
+    artTex.colorSpace = THREE.SRGBColorSpace;
+    artTex.needsUpdate = true;
+  }, [artTex, frameTex]);
 
   const mat = useMemo(
     () =>
@@ -79,6 +82,13 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
   return (
     <Billboard follow lockX lockY {...groupProps}>
       <mesh ref={meshRef} geometry={geo} material={mats} castShadow receiveShadow renderOrder={renderOrder} />
+      <mesh
+        position={[0, 0, UNIT_THICKNESS / 2 + 0.0005]}
+        renderOrder={renderOrder + 0.1}
+      >
+        <planeGeometry args={[UNIT_W * 0.88, UNIT_H * 0.74]} />
+        <meshBasicMaterial map={artTex} toneMapped={false} />
+      </mesh>
       <Text
         position={[-UNIT_W * 0.34, -UNIT_H * 0.36, UNIT_THICKNESS / 2 + 0.006]}
         fontSize={0.16}

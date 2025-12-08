@@ -11,6 +11,7 @@ const HAND_TILT = -0.08;
 const FAN_ANGLE = 0.34; // radians, total spread of the hand
 const FAN_LIFT = 0.55;   // scales vertical lift relative to spacing
 const BOARD_THRESHOLD = 0.4; // % of screen height (from bottom) to start snapping
+const HAND_DROP = 0.08; // push the hand lower toward screen bottom (ratio of viewport height)
 
 type DragInfo = {
   index: number;
@@ -75,7 +76,7 @@ export default function Hand3DPlayer() {
     const handCenterRatio = anchors.playerHand.center;
     const boardCenterRatio = anchors.playerBoard.center;
     const spacingWorld = viewport.width * anchors.cardSpacing;
-    const centerYWorld = (0.5 - handCenterRatio) * viewport.height;
+    const centerYWorld = (0.5 - handCenterRatio) * viewport.height - viewport.height * HAND_DROP * 0.5;
     const boardCenterWorld = (0.5 - boardCenterRatio) * viewport.height;
     return { spacing: spacingWorld, centerY: centerYWorld, boardCenterY: boardCenterWorld };
   }, [anchors.cardSpacing, anchors.playerBoard.center, anchors.playerHand.center, viewport.height, viewport.width]);
@@ -199,13 +200,16 @@ export default function Hand3DPlayer() {
         const hoverActive = hoveredIdx === i && !isDragging && returnAnim?.index !== i && isPlayersTurn;
 
         const { baseX, baseY, baseRotation } = computeCardBase(i, hand.length, spacing, centerY);
+        const mid = (hand.length - 1) / 2;
+        const stackRank = hand.length - Math.abs(i - mid); // center gets highest render order
+        const renderOrder = isDragging ? 40 : 20 + stackRank;
 
         const isReturning = returnAnim?.index === i;
         const position: [number, number, number] = isDragging
           ? [dragging.pos[0], dragging.pos[1], 0]
           : isReturning
             ? [returnAnim.current[0], returnAnim.current[1], 0]
-          : [baseX, baseY, 0];
+          : [baseX, baseY, stackRank * 0.0008];
         const rotation: [number, number, number] = (isDragging || isReturning) ? [0, 0, 0] : baseRotation;
         const state: CardState = !isPlayersTurn
           ? "disabled"
@@ -233,10 +237,10 @@ export default function Hand3DPlayer() {
             position={position}
             rotation={rotation}
           >
-              <CardMesh
-                visual={visual}
-                renderOrder={isDragging ? 30 : 20}
-                shadow={false}
+            <CardMesh
+              visual={visual}
+              renderOrder={renderOrder}
+              shadow={false}
                 onPointerOver={() => !isDragging && isPlayersTurn && setHoveredIdx(i)}
                 onPointerOut={() => setHoveredIdx(null)}
                 onPointerDown={e => {
