@@ -3,21 +3,21 @@ import { CARDS, buildStarterDeck } from "../core/cardsDb";
 import type { GameState } from "../core/gameState";
 import { createInitialState } from "../core/gameState";
 import { endTurn as endTurnRule } from "../core/turnSystem";
-import type { CardDef, UnitOnBoard } from "../core/cardTypes";
+import type { BattlefieldUnit, CardDef, PlayerId } from "../core/cardTypes";
 import { shuffle } from "../utils/shuffle";
 
 type Store = GameState & {
   newGame: () => void;
   draw: (n?: number) => void;
-  playCardToSlot: (cardId: string, slotIndex: number) => void;
+  playCard: (cardId: string, lane: number, playerId: PlayerId) => void;
   endTurn: () => void;
   syncHand: (newHand: CardDef[]) => void;
   syncEnemyHand: (newHand: CardDef[]) => void;
   openingHandDealt: boolean;
   draggingCardId: string | null;
-  dragPreviewSlot: number | null;
+  dragPreviewLane: number | null;
   setDragState: (cardId: string | null) => void;
-  setDragPreviewSlot: (slot: number | null) => void;
+  setDragPreviewLane: (slot: number | null) => void;
 };
 
 function toCardDefs(ids: string[]): CardDef[] {
@@ -55,7 +55,7 @@ export const useGameStore = create<Store>((set, get) => {
     ...createInitialState(),
     openingHandDealt: false,
     draggingCardId: null,
-    dragPreviewSlot: null,
+    dragPreviewLane: null,
     syncHand,
     syncEnemyHand,
 
@@ -75,7 +75,8 @@ export const useGameStore = create<Store>((set, get) => {
         enemyDeck: enemyRemainingDeck,
         enemyHand: enemyOpeningHand,
         openingHandDealt: false,
-        battlefield: Array<UnitOnBoard | null>(5).fill(null)
+        draggingCardId: null,
+        dragPreviewLane: null
       });
       // draw starting hand (5 like HS) exactly once per game start
       dealOpeningHand();
@@ -95,40 +96,40 @@ export const useGameStore = create<Store>((set, get) => {
       });
     },
 
-    playCardToSlot: (cardId: string, slotIndex: number) => {
-      const { hand, playerMana, battlefield, maxBoardSlots } = get();
-      if (slotIndex < 0 || slotIndex >= maxBoardSlots) return;
+    playCard: (cardId: string, lane: number, playerId: PlayerId) => {
+      const { hand, playerMana, battlefieldUnits, maxBoardSlots } = get();
+      if (lane < 0 || lane >= maxBoardSlots) return;
       const idx = hand.findIndex(c => c.id === cardId);
       if (idx === -1) return;
 
       const card = hand[idx];
 
       // rule checks
-      if (card.cost > playerMana) return;                        // not enough mana
-      if (battlefield[slotIndex]) return;                        // slot occupied
+      if (playerId === "player" && card.cost > playerMana) return; // not enough mana
+      if (battlefieldUnits.some(u => u.lane === lane && u.owner === playerId)) return; // lane occupied
 
-      const unit: UnitOnBoard = {
+      const unit: BattlefieldUnit = {
         uid: uid(),
-        base: card,
+        cardId: card.id,
+        owner: playerId,
+        lane,
         damage: 0,
-        exhausted: true,  // summoning sickness placeholder
-        slot: slotIndex
+        exhausted: true
       };
 
-      const nextBoard = battlefield.slice();
-      nextBoard[slotIndex] = unit;
+      const updatedUnits = battlefieldUnits.concat(unit);
 
       set({
-        playerMana: playerMana - card.cost,
+        playerMana: playerId === "player" ? playerMana - card.cost : playerMana,
         hand: hand.filter((_, i) => i !== idx),
-        battlefield: nextBoard,
+        battlefieldUnits: updatedUnits,
         draggingCardId: null,
-        dragPreviewSlot: null
+        dragPreviewLane: null
       });
     },
 
     setDragState: (cardId: string | null) => set({ draggingCardId: cardId }),
-    setDragPreviewSlot: (slot: number | null) => set({ dragPreviewSlot: slot }),
+    setDragPreviewLane: (slot: number | null) => set({ dragPreviewLane: slot }),
 
     endTurn: () => {
       const next = endTurnRule(get());
