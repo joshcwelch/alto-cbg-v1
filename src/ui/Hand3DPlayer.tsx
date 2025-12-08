@@ -49,6 +49,8 @@ export default function Hand3DPlayer() {
   const playCard = useGameStore(s => s.playCard);
   const setDragState = useGameStore(s => s.setDragState);
   const setDragPreviewLane = useGameStore(s => s.setDragPreviewLane);
+  const turn = useGameStore(s => s.turn);
+  const winner = useGameStore(s => s.winner);
   const viewport = useThree(state => state.viewport);
   const size = useThree(state => state.size);
   const anchors = useAnchors();
@@ -56,9 +58,18 @@ export default function Hand3DPlayer() {
   const [dragging, setDragging] = useState<DragInfo | null>(null);
   const [returnAnim, setReturnAnim] = useState<ReturnAnim | null>(null);
   const draggingRef = useRef<DragInfo | null>(null);
+  const isPlayersTurn = turn === "player" && !winner;
   useEffect(() => {
     draggingRef.current = dragging;
   }, [dragging]);
+
+  useEffect(() => {
+    if (isPlayersTurn) return;
+    setDragging(null);
+    setReturnAnim(null);
+    setDragState(null);
+    setDragPreviewLane(null);
+  }, [isPlayersTurn, setDragPreviewLane, setDragState]);
 
   const { spacing, centerY, boardCenterY } = useMemo(() => {
     const handCenterRatio = anchors.playerHand.center;
@@ -185,7 +196,7 @@ export default function Hand3DPlayer() {
     <group>
       {hand.map((card, i) => {
         const isDragging = dragging?.index === i;
-        const hoverActive = hoveredIdx === i && !isDragging && returnAnim?.index !== i;
+        const hoverActive = hoveredIdx === i && !isDragging && returnAnim?.index !== i && isPlayersTurn;
 
         const { baseX, baseY, baseRotation } = computeCardBase(i, hand.length, spacing, centerY);
 
@@ -196,7 +207,13 @@ export default function Hand3DPlayer() {
             ? [returnAnim.current[0], returnAnim.current[1], 0]
           : [baseX, baseY, 0];
         const rotation: [number, number, number] = (isDragging || isReturning) ? [0, 0, 0] : baseRotation;
-        const state: CardState = (isDragging || isReturning) ? "drag" : hoverActive ? "hover" : "idle";
+        const state: CardState = !isPlayersTurn
+          ? "disabled"
+          : (isDragging || isReturning)
+            ? "drag"
+            : hoverActive
+              ? "hover"
+              : "idle";
         const visual: CardVisual = {
           id: card.id,
           name: card.name,
@@ -216,24 +233,25 @@ export default function Hand3DPlayer() {
             position={position}
             rotation={rotation}
           >
-            <CardMesh
-              visual={visual}
-              renderOrder={isDragging ? 30 : 20}
-              shadow={false}
-              onPointerOver={() => !isDragging && setHoveredIdx(i)}
-              onPointerOut={() => setHoveredIdx(null)}
-              onPointerDown={e => {
-                e.stopPropagation();
-                setReturnAnim(null);
-                const { world, screenRatio, lane } = resolveDragPosition(e.clientX, e.clientY, (e as any).ray);
-                const toBoard = screenRatio > BOARD_THRESHOLD;
-                const laneTarget = toBoard ? lane : null;
+              <CardMesh
+                visual={visual}
+                renderOrder={isDragging ? 30 : 20}
+                shadow={false}
+                onPointerOver={() => !isDragging && isPlayersTurn && setHoveredIdx(i)}
+                onPointerOut={() => setHoveredIdx(null)}
+                onPointerDown={e => {
+                  if (!isPlayersTurn) return;
+                  e.stopPropagation();
+                  setReturnAnim(null);
+                  const { world, screenRatio, lane } = resolveDragPosition(e.clientX, e.clientY, (e as any).ray);
+                  const toBoard = screenRatio > BOARD_THRESHOLD;
+                  const laneTarget = toBoard ? lane : null;
                 setDragging({ index: i, id: card.id, pos: [world.x, world.y], toBoard, lane: laneTarget });
                 setDragState(card.id);
                 setDragPreviewLane(laneTarget);
               }}
               onPointerMove={e => {
-                if (!dragging || dragging.index !== i) return;
+                if (!isPlayersTurn || !dragging || dragging.index !== i) return;
                 e.stopPropagation();
                 const { world, screenRatio, lane } = resolveDragPosition(e.clientX, e.clientY, (e as any).ray);
                 const toBoard = screenRatio > BOARD_THRESHOLD;
