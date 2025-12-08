@@ -6,6 +6,6 @@ export function endTurn(state: GameState): GameState {
     ...state,
     maxMana: newMax,
     playerMana: newMax,
-    battlefield: state.battlefield.map(u => ({ ...u, exhausted: false }))
+    battlefield: state.battlefield.map(u => u ? { ...u, exhausted: false } : null)
   };
 }

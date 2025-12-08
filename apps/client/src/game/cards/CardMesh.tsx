@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { ThreeElements } from "@react-three/fiber";
 import type { CardVisual } from "./types";
 
-const CARD_ASPECT = 1390 / 915;
+export const CARD_ASPECT = 1390 / 915;
 export const CARD_W = 1.2;
 export const CARD_H = CARD_W * CARD_ASPECT;
 const THICKNESS = 0.028;
@@ -27,18 +27,22 @@ function CardHtmlOverlay({ visual }: { visual: CardVisual }) {
         borderRadius: "12px",
         pointerEvents: "none",
         background: "transparent",
+        overflow: "hidden"
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800 }}>
-        <span className="cost">{cost ?? ""}</span>
-        <span className="name">{name ?? ""}</span>
+        <span className="card-stats cost">{cost ?? ""}</span>
+        <span className="card-name">{name ?? ""}</span>
       </div>
-      <div className="rules" style={{ flex: 1, fontSize: "12px", lineHeight: 1.35, color: "#0f1a2a" }}>
+      <div
+        className="card-text"
+        style={{ flex: 1, lineHeight: 1.35, color: "#0f1a2a", wordBreak: "break-word", overflow: "hidden" }}
+      >
         {text ?? ""}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800 }}>
-        <span className="atk">{attack != null ? `ATK ${attack}` : ""}</span>
-        <span className="hp">{health != null ? `HP ${health}` : ""}</span>
+        <span className="card-stats atk">{attack != null ? `ATK ${attack}` : ""}</span>
+        <span className="card-stats hp">{health != null ? `HP ${health}` : ""}</span>
       </div>
     </div>
   );
@@ -53,6 +57,7 @@ type Props = ThreeElements["group"] & {
 };
 
 export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut, shadow = true, ...rest }: Props) {
+  const { renderOrder = 0, ...groupProps } = rest;
   const state = visual.state ?? "idle";
 
   const frontTex = useTexture(new URL("./textures/card-front.png", import.meta.url).href);
@@ -113,11 +118,12 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
   }, []);
 
   const cardGroup = useRef<THREE.Group>(null!);
+  const animGroup = useRef<THREE.Group>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
 
   // Animation states (idle/hover/drag/played)
   useFrame((_, dt) => {
-    const g = cardGroup.current;
+    const g = animGroup.current;
     if (!g) return;
 
     const targetLift =
@@ -148,21 +154,23 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
   }, [mats]);
 
   return (
-    <group ref={cardGroup} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} {...rest}>
-      {/* Main card body */}
-      <mesh ref={meshRef} geometry={geo} material={mats} castShadow={shadow} receiveShadow={false} />
-      <Html
-        className="card-html-root"
-        transform
-        occlude={false}
-        position={[0, 0, THICKNESS / 2 + 0.001]}
-        rotation={[0, 0, 0]}
-        center
-        zIndexRange={[100, 100]}
-        style={{ pointerEvents: "none" }}
-      >
-        <CardHtmlOverlay visual={visual} />
-      </Html>
+    <group ref={cardGroup} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} {...groupProps}>
+      <group ref={animGroup}>
+        {/* Main card body */}
+        <mesh ref={meshRef} geometry={geo} material={mats} castShadow={shadow} receiveShadow={false} renderOrder={renderOrder} />
+        <Html
+          className="card-html-root"
+          transform={false}
+          occlude={false}
+          position={[0, 0, THICKNESS / 2 + 0.001]}
+          rotation={[0, 0, 0]}
+          center
+          zIndexRange={[100, 100]}
+          style={{ pointerEvents: "none", background: "transparent", transform: "none" }}
+        >
+          <CardHtmlOverlay visual={visual} />
+        </Html>
+      </group>
     </group>
   );
 }
