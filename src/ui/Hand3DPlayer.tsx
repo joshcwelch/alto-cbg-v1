@@ -7,7 +7,8 @@ import { useAnchors } from "./boardAnchors";
 import { computeSlotCenters } from "./slotMath";
 
 const HAND_TILT = -0.08;
-const FAN_ARC = 0.34; // radians, total spread of the hand
+const FAN_ANGLE = 0.34; // radians, total spread of the hand
+const FAN_LIFT = 0.55;   // scales vertical lift relative to spacing
 const BOARD_THRESHOLD = 0.55; // % of screen height (from bottom) to start snapping
 
 type DragInfo = {
@@ -89,12 +90,13 @@ export default function Hand3DPlayer() {
         };
 
         const n = hand.length;
-        const theta = n <= 1 ? 0 : (-FAN_ARC / 2) + (FAN_ARC * (i / (n - 1)));
-        const arcRadius = n > 1 ? ((n - 1) * spacing) / FAN_ARC : spacing * 1.2;
-        const baseX = Math.sin(theta) * arcRadius;
-        const arcLift = arcRadius * (1 - Math.cos(theta));
-        const baseY = centerY + arcLift;
-        const baseRotation: [number, number, number] = [HAND_TILT, 0, theta * 0.85];
+        const mid = (n - 1) / 2;
+        const theta = n <= 1 ? 0 : (-FAN_ANGLE / 2) + (FAN_ANGLE * (i / (n - 1)));
+        const baseX = (i - mid) * spacing;
+        const liftFalloff = mid === 0 ? 1 : 1 - Math.abs((i - mid) / mid);
+        const lift = liftFalloff * spacing * FAN_LIFT;
+        const baseY = centerY + lift;
+        const baseRotation: [number, number, number] = [HAND_TILT, 0, theta];
 
         const position: [number, number, number] = isDragging
           ? [dragging.pos[0], dragging.pos[1], 0]

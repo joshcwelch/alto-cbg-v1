@@ -12,37 +12,108 @@ const THICKNESS = 0.028;
 
 function CardHtmlOverlay({ visual }: { visual: CardVisual }) {
   const { name, cost, attack, health, text } = visual;
+  const rootStyle: React.CSSProperties = {
+    position: "static",
+    transform: "none",
+    margin: 0,
+    padding: 0,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    background: "transparent"
+  };
+
+  const layerStyle: React.CSSProperties = {
+    position: "relative",
+    width: "100%",
+    height: "100%",
+    color: "#0c1424",
+    fontWeight: 800
+  };
+
+  const costStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "5%",
+    left: "6%",
+    width: "18%",
+    height: "14%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+  };
+
+  const nameStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "18%",
+    left: "22%",
+    width: "56%",
+    height: "12%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    lineHeight: 1.2,
+    textAlign: "center",
+    textShadow: "0 1px 2px rgba(0,0,0,0.25)"
+  };
+
+  const textStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "32%",
+    left: "16%",
+    width: "68%",
+    height: "38%",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    fontSize: "12px",
+    lineHeight: 1.35,
+    textAlign: "center",
+    color: "#0f1a2a",
+    wordBreak: "break-word",
+    overflow: "hidden"
+  };
+
+  const attackStyle: React.CSSProperties = {
+    position: "absolute",
+    bottom: "6%",
+    left: "7%",
+    width: "18%",
+    height: "14%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "16px",
+    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+  };
+
+  const healthStyle: React.CSSProperties = {
+    position: "absolute",
+    bottom: "6%",
+    right: "7%",
+    width: "18%",
+    height: "14%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "16px",
+    textShadow: "0 1px 2px rgba(0,0,0,0.35)"
+  };
+
   return (
-    <div
-      className="html-card card-overlay"
-      style={{
-        width: `${CARD_W * 100}px`,
-        height: `${CARD_H * 100}px`,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        gap: "10px",
-        padding: "14px",
-        color: "#0c1424",
-        borderRadius: "12px",
-        pointerEvents: "none",
-        background: "transparent",
-        overflow: "hidden"
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800 }}>
-        <span className="card-stats cost">{cost ?? ""}</span>
-        <span className="card-name">{name ?? ""}</span>
-      </div>
-      <div
-        className="card-text"
-        style={{ flex: 1, lineHeight: 1.35, color: "#0f1a2a", wordBreak: "break-word", overflow: "hidden" }}
-      >
-        {text ?? ""}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800 }}>
-        <span className="card-stats atk">{attack != null ? `ATK ${attack}` : ""}</span>
-        <span className="card-stats hp">{health != null ? `HP ${health}` : ""}</span>
+    <div className="card-ui card-overlay" style={rootStyle}>
+      <div style={layerStyle}>
+        <div className="card-stats cost" style={costStyle}>{cost ?? ""}</div>
+        <div className="card-name" style={nameStyle}>{name ?? ""}</div>
+        <div className="card-text" style={textStyle}>{text ?? ""}</div>
+        <div className="card-stats atk" style={attackStyle}>{attack != null ? attack : ""}</div>
+        <div className="card-stats hp" style={healthStyle}>{health != null ? health : ""}</div>
       </div>
     </div>
   );
@@ -175,13 +246,12 @@ export default function CardMesh({
         {!shouldHideHtml && (
           <Html
             className="card-html-root"
-            transform={false}
-            occlude={false}
-            position={[0, 0, THICKNESS / 2 + 0.001]}
-            rotation={[0, 0, 0]}
+            transform
             center
-            zIndexRange={[100, 100]}
-            style={{ pointerEvents: "none", background: "transparent", transform: "none" }}
+            position={[0, 0, THICKNESS / 2 + 0.001]}
+            occlude={false}
+            distanceFactor={1}
+            style={{ width: `${CARD_W * 100}px`, height: `${CARD_H * 100}px`, pointerEvents: "none" }}
           >
             <CardHtmlOverlay visual={visual} />
           </Html>
