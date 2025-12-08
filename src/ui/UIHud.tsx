@@ -9,6 +9,7 @@ type UIHudProps = {
 
 type HeroPanelProps = {
   label: string;
+  heroName?: string;
   health: number;
   mana: number;
   maxMana: number;
@@ -16,6 +17,9 @@ type HeroPanelProps = {
   accent: string;
   onClick?: () => void;
   canBeAttacked?: boolean;
+  heroPower?: { name: string; cost: number; text: string };
+  onHeroPower?: () => void;
+  heroPowerDisabled?: boolean;
 };
 
 const ManaPips = ({ mana, maxMana }: { mana: number; maxMana: number }) => {
@@ -47,13 +51,17 @@ const ManaPips = ({ mana, maxMana }: { mana: number; maxMana: number }) => {
 
 const HeroPanel = ({
   label,
+  heroName,
   health,
   mana,
   maxMana,
   align,
   accent,
   onClick,
-  canBeAttacked
+  canBeAttacked,
+  heroPower,
+  onHeroPower,
+  heroPowerDisabled
 }: HeroPanelProps) => (
   <div
     onClick={onClick}
@@ -95,6 +103,7 @@ const HeroPanel = ({
       />
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <div style={{ fontWeight: 800, letterSpacing: 0.6 }}>{label}</div>
+        {heroName && <div style={{ fontSize: 12, opacity: 0.8 }}>{heroName}</div>}
         <div style={{ fontSize: 13, opacity: 0.85 }}>Health: {health}</div>
         <div style={{ fontSize: 13, opacity: 0.85 }}>
           Mana: {mana}/{maxMana}
@@ -115,6 +124,33 @@ const HeroPanel = ({
         {align === "top" ? "Click to attack hero" : "Your hero"}
       </div>
     )}
+    {heroPower && (
+      <button
+        onClick={onHeroPower}
+        disabled={heroPowerDisabled}
+        style={{
+          marginTop: 10,
+          width: "100%",
+          padding: "8px 10px",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.18)",
+          background: heroPowerDisabled
+            ? "linear-gradient(135deg, #3a4a64, #2a3242)"
+            : "linear-gradient(135deg, #74d2ff, #3e9bff)",
+          color: heroPowerDisabled ? "#9eb6d6" : "#081422",
+          fontWeight: 800,
+          cursor: heroPowerDisabled ? "not-allowed" : "pointer",
+          boxShadow: heroPowerDisabled ? "none" : "0 6px 14px rgba(0,0,0,0.3)",
+          textAlign: "left"
+        }}
+      >
+        <div style={{ fontSize: 12, marginBottom: 2, display: "flex", justifyContent: "space-between" }}>
+          <span>{heroPower.name}</span>
+          <span>Cost {heroPower.cost}</span>
+        </div>
+        <div style={{ fontSize: 11, opacity: 0.9, lineHeight: 1.2 }}>{heroPower.text}</div>
+      </button>
+    )}
   </div>
 );
 
@@ -125,6 +161,9 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
   const enemyMaxMana = useGameStore(s => s.enemyMaxMana);
   const playerHealth = useGameStore(s => s.playerHealth);
   const enemyHealth = useGameStore(s => s.enemyHealth);
+  const playerHero = useGameStore(s => s.playerHero);
+  const enemyHero = useGameStore(s => s.enemyHero);
+  const playerHeroPowerUsed = useGameStore(s => s.playerHeroPowerUsed);
   const turn = useGameStore(s => s.turn);
   const turnNumber = useGameStore(s => s.turnNumber);
   const endTurn = useGameStore(s => s.endTurn);
@@ -133,6 +172,13 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
   const selectedId = useGameStore(s => s.selectedAttackerId);
   const battlefieldUnits = useGameStore(s => s.battlefieldUnits);
   const newGame = useGameStore(s => s.newGame);
+  const useHeroPower = useGameStore(s => s.useHeroPower);
+  const playerHeroPower = playerHero === "Tharos"
+    ? { name: "Flame Shot", cost: 2, text: "Deal 1 damage to the enemy hero." }
+    : { name: "Hero Power", cost: 2, text: "Standard hero power." };
+  const enemyHeroPower = enemyHero === "Lyra"
+    ? { name: "Radiant Heal", cost: 2, text: "Restore 2 Health to your hero." }
+    : { name: "Hero Power", cost: 2, text: "Standard hero power." };
 
   const bottomOffset = useMemo(() => Math.max(24, safeBottom * 0.75), [safeBottom]);
   const playerBoardTop = anchors ? anchors.playerBoard.top * 100 : undefined;
@@ -140,6 +186,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
   const hudRowY = playerBoardTop !== undefined && playerBoardHeight !== undefined
     ? playerBoardTop + playerBoardHeight * 0.12
     : undefined;
+  const manaTrayY = hudRowY !== undefined ? hudRowY + 12 : undefined;
 
   const selectedUnit = useMemo(
     () => battlefieldUnits.find(u => u.uid === selectedId),
@@ -227,6 +274,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
       >
         <HeroPanel
           label="Enemy"
+          heroName={enemyHero}
           health={enemyHealth}
           mana={enemyMana}
           maxMana={enemyMaxMana}
@@ -234,6 +282,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
           accent="#52d3ff"
           onClick={canAttackHero ? attackEnemyHero : undefined}
           canBeAttacked={canAttackHero}
+          heroPower={enemyHeroPower}
         />
       </div>
 
@@ -248,12 +297,43 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
       >
         <HeroPanel
           label="You"
+          heroName={playerHero}
           health={playerHealth}
           mana={mana}
           maxMana={maxMana}
           align="bottom"
           accent="#5ee4b8"
+          heroPower={playerHeroPower}
+          onHeroPower={() => useHeroPower("player")}
+          heroPowerDisabled={turn !== "player" || winner != null || playerHeroPowerUsed || mana < 2}
         />
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: manaTrayY === undefined ? `${bottomOffset + 12}px` : undefined,
+          top: manaTrayY !== undefined ? `${manaTrayY}vh` : undefined,
+          left: "50%",
+          transform: "translateX(-50%)",
+          pointerEvents: "none"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "rgba(9,16,26,0.68)",
+            borderRadius: 16,
+            padding: "6px 10px",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 10px 24px rgba(0,0,0,0.32)"
+          }}
+        >
+          <span style={{ color: "#9fb5d4", fontWeight: 700, fontSize: 12, letterSpacing: 0.5 }}>Mana</span>
+          <ManaPips mana={mana} maxMana={maxMana} />
+        </div>
       </div>
 
       <button

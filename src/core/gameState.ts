@@ -1,14 +1,24 @@
 import type { CardDef, BattlefieldUnit, PlayerId } from "./cardTypes";
 
+export interface HeroPower {
+  name: string;
+  cost: number;
+  text: string;
+}
+
 export interface GameState {
   // turn/flow
   turn: PlayerId;
   turnNumber: number;
   winner: PlayerId | "draw" | null;
 
-  // hero health
+  // hero health/power
+  playerHero: string;
+  enemyHero: string;
   playerHealth: number;
   enemyHealth: number;
+  playerHeroPowerUsed: boolean;
+  enemyHeroPowerUsed: boolean;
 
   // mana crystals
   maxMana: number;      // player
@@ -31,8 +41,12 @@ export const createInitialState = (): GameState => ({
   turn: "player",
   turnNumber: 0,
   winner: null,
+  playerHero: "Tharos",
+  enemyHero: "Lyra",
   playerHealth: 30,
   enemyHealth: 30,
+  playerHeroPowerUsed: false,
+  enemyHeroPowerUsed: false,
   maxMana: 0,
   playerMana: 0,
   enemyMaxMana: 0,

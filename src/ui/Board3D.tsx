@@ -11,6 +11,7 @@ import GhostUnitMesh from "./GhostUnitMesh";
 
 const PLAYER_BOARD_TILT = -0.025;
 const ENEMY_BOARD_TILT = 0.02;
+const noopRaycast = () => null;
 
 type BoardRow3DProps = {
   lanePositions: Vector3[];
@@ -57,7 +58,13 @@ function BoardRow3D({
             onPointerDown={unit ? (e => { e.stopPropagation(); onUnitClick?.(unit); }) : undefined}
           >
             {highlightSlot === idx && !unit && (
-              <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 1}>
+              <mesh
+                position={[0, -0.02, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                renderOrder={renderOrder - 1}
+                visible
+                raycast={noopRaycast}
+              >
                 <circleGeometry args={[UNIT_W * 0.55, 48]} />
                 <meshBasicMaterial color="#7fd8ff" transparent opacity={0.28} />
               </mesh>
@@ -65,17 +72,38 @@ function BoardRow3D({
             {unit && (
               <>
                 {isSelected && (
-                  <mesh position={[0, -0.025, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 2}>
+                  <mesh
+                    position={[0, -0.025, 0]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    renderOrder={renderOrder - 2}
+                    raycast={noopRaycast}
+                  >
                     <ringGeometry args={[UNIT_W * 0.28, UNIT_W * 0.42, 32]} />
                     <meshBasicMaterial color="#6df4ff" transparent opacity={0.55} />
                   </mesh>
                 )}
                 {!canAct && side === "player" && (
-                  <mesh position={[0, -0.026, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={renderOrder - 3}>
+                  <mesh
+                    position={[0, -0.026, 0]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    renderOrder={renderOrder - 3}
+                    raycast={noopRaycast}
+                  >
                     <circleGeometry args={[UNIT_W * 0.48, 32]} />
                     <meshBasicMaterial color="#000000" transparent opacity={0.16} />
                   </mesh>
                 )}
+                <mesh
+                  position={[0, 0, 0]}
+                  rotation={[0, 0, 0]}
+                  renderOrder={renderOrder - 4}
+                  onPointerDown={e => { e.stopPropagation(); onUnitClick?.(unit); }}
+                  raycast={undefined}
+                  visible
+                >
+                  <planeGeometry args={[UNIT_W * 1.2, UNIT_H * 1.2]} />
+                  <meshBasicMaterial transparent opacity={0} />
+                </mesh>
                 <UnitMesh
                   card={unit.card}
                   owner={unit.owner}
@@ -182,15 +210,22 @@ export default function Board3D() {
             position={[lanePos.x, lanePos.y, lanePos.z]}
             rotation={[PLAYER_BOARD_TILT, 0, 0]}
           >
-            <mesh position={[0, -0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={10}>
-              <planeGeometry args={[UNIT_W * 1.25, UNIT_H * 1.1]} />
-              <meshBasicMaterial
-                color="#ffffff"
-                transparent
-                opacity={laneHighlightOpacities[idx] ?? 0}
-                depthWrite={false}
-              />
-            </mesh>
+            {laneHighlightOpacities[idx] > 0.02 && (
+              <mesh
+                position={[0, -0.03, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                renderOrder={10}
+                raycast={noopRaycast}
+              >
+                <planeGeometry args={[UNIT_W * 1.25, UNIT_H * 1.1]} />
+                <meshBasicMaterial
+                  color="#ffffff"
+                  transparent
+                  opacity={laneHighlightOpacities[idx] ?? 0}
+                  depthWrite={false}
+                />
+              </mesh>
+            )}
           </group>
         ))}
       </group>
@@ -203,6 +238,7 @@ export default function Board3D() {
             lanePositionsPlayer[highlightedLane].z
           ]}
           rotation={[PLAYER_BOARD_TILT, 0, 0]}
+          raycast={noopRaycast as any}
         >
           <GhostUnitMesh renderOrder={11} />
         </group>
