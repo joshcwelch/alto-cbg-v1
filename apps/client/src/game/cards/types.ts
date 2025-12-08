@@ -15,4 +15,5 @@ export type CardVisual = {
   foil?: boolean;
   backId?: string | null;
   selectable?: boolean;
+  owner?: "player" | "enemy";
 };

@@ -54,11 +54,24 @@ type Props = ThreeElements["group"] & {
   onPointerOver?: () => void;
   onPointerOut?: () => void;
   shadow?: boolean;
+  hideHtml?: boolean;
+  disableAnimation?: boolean;
 };
 
-export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut, shadow = true, ...rest }: Props) {
+export default function CardMesh({
+  visual,
+  onClick,
+  onPointerOver,
+  onPointerOut,
+  shadow = true,
+  hideHtml = false,
+  disableAnimation = false,
+  ...rest
+}: Props) {
   const { renderOrder = 0, ...groupProps } = rest;
   const state = visual.state ?? "idle";
+  const isLocalOwner = visual.owner ? visual.owner === "player" : true;
+  const shouldHideHtml = hideHtml || !isLocalOwner;
 
   const frontTex = useTexture(new URL("./textures/card-front.png", import.meta.url).href);
   const backTex = useTexture(new URL("./textures/card-back.png", import.meta.url).href);
@@ -123,6 +136,7 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
 
   // Animation states (idle/hover/drag/played)
   useFrame((_, dt) => {
+    if (disableAnimation) return;
     const g = animGroup.current;
     if (!g) return;
 
@@ -158,18 +172,20 @@ export default function CardMesh({ visual, onClick, onPointerOver, onPointerOut,
       <group ref={animGroup}>
         {/* Main card body */}
         <mesh ref={meshRef} geometry={geo} material={mats} castShadow={shadow} receiveShadow={false} renderOrder={renderOrder} />
-        <Html
-          className="card-html-root"
-          transform={false}
-          occlude={false}
-          position={[0, 0, THICKNESS / 2 + 0.001]}
-          rotation={[0, 0, 0]}
-          center
-          zIndexRange={[100, 100]}
-          style={{ pointerEvents: "none", background: "transparent", transform: "none" }}
-        >
-          <CardHtmlOverlay visual={visual} />
-        </Html>
+        {!shouldHideHtml && (
+          <Html
+            className="card-html-root"
+            transform={false}
+            occlude={false}
+            position={[0, 0, THICKNESS / 2 + 0.001]}
+            rotation={[0, 0, 0]}
+            center
+            zIndexRange={[100, 100]}
+            style={{ pointerEvents: "none", background: "transparent", transform: "none" }}
+          >
+            <CardHtmlOverlay visual={visual} />
+          </Html>
+        )}
       </group>
     </group>
   );
