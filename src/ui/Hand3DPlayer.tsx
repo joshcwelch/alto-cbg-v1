@@ -96,7 +96,7 @@ export default function Hand3DPlayer() {
         const liftFalloff = mid === 0 ? 1 : 1 - Math.abs((i - mid) / mid);
         const lift = liftFalloff * spacing * FAN_LIFT;
         const baseY = centerY + lift;
-        const baseRotation: [number, number, number] = [HAND_TILT, 0, theta];
+        const baseRotation: [number, number, number] = [HAND_TILT, 0, -theta];
 
         const position: [number, number, number] = isDragging
           ? [dragging.pos[0], dragging.pos[1], 0]
