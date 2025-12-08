@@ -78,12 +78,13 @@ export default function Hand3DPlayer() {
 
   const finishDrag = (drag: DragInfo, baseX: number, baseY: number) => {
     draggingRef.current = null;
-    const canPlay = drag.toBoard
-      && drag.lane !== null
-      && isLaneOpen(drag.lane, "player", battlefieldUnits);
+    const targetLane = drag.lane !== null && isLaneOpen(drag.lane, "player", battlefieldUnits)
+      ? drag.lane
+      : null;
+    const canPlay = drag.toBoard && targetLane !== null;
 
-    if (canPlay && drag.lane !== null) {
-      const lanePos = lanePositions[drag.lane];
+    if (canPlay && targetLane !== null) {
+      const lanePos = lanePositions[targetLane];
       setDragging(null);
       setDragState(null);
       setDragPreviewLane(null);
@@ -95,7 +96,7 @@ export default function Hand3DPlayer() {
         current: [drag.pos[0], drag.pos[1]],
         startedAt: performance.now(),
         duration: 140,
-        onComplete: () => playCard(drag.id, drag.lane!, "player")
+        onComplete: () => playCard(drag.id, targetLane, "player")
       });
       return;
     }

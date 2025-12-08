@@ -1,9 +1,10 @@
 import { Vector3 } from "three";
 import { computeSlotCenters, BOARD_AREA_RATIO } from "../../ui/slotMath";
+import { UNIT_W } from "../../apps/client/src/game/units/UnitMesh";
 import type { BattlefieldUnit, PlayerId } from "../../core/cardTypes";
 
 export const NUM_LANES = 7;
-const SNAP_RATIO = 0.6;          // how close (as a % of lane spacing) a drop must be to count
+const SNAP_RADIUS = UNIT_W * 1.2; // expanded hitbox around each lane center
 
 export function createLanePositions(viewportWidth: number, centerY: number): Vector3[] {
   const centers = computeSlotCenters(NUM_LANES, viewportWidth, BOARD_AREA_RATIO);
@@ -24,10 +25,7 @@ export function getClosestLane(worldPosition: Vector3, lanes: Vector3[]): number
     }
   });
 
-  const spacing = lanes.length > 1 ? Math.abs(lanes[1].x - lanes[0].x) : 1;
-  const snapDistance = spacing * SNAP_RATIO;
-
-  return bestDist <= snapDistance ? bestIdx : null;
+  return bestDist <= SNAP_RADIUS ? bestIdx : null;
 }
 
 export function isLaneOpen(index: number, owner: PlayerId, units: BattlefieldUnit[]): boolean {

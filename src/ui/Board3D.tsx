@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
-import UnitMesh, { UNIT_W } from "../../apps/client/src/game/units/UnitMesh";
+import UnitMesh, { UNIT_H, UNIT_W } from "../../apps/client/src/game/units/UnitMesh";
 import type { BattlefieldUnit, CardDef } from "../core/cardTypes";
 import { useGameStore } from "../state/useGameStore";
 import { useAnchors } from "./boardAnchors";
 import { createLanePositions, isLaneOpen } from "../game/board/LaneSystem";
 import { CARDS } from "../core/cardsDb";
+import GhostUnitMesh from "./GhostUnitMesh";
 
 const PLAYER_BOARD_TILT = -0.025;
 const ENEMY_BOARD_TILT = 0.02;
@@ -64,8 +65,10 @@ function BoardRow3D({ units, lanePositions, side, highlightSlot }: BoardRow3DPro
 export default function Board3D() {
   const battlefieldUnits = useGameStore(s => s.battlefieldUnits);
   const dragPreview = useGameStore(s => s.dragPreviewLane);
+  const draggingCardId = useGameStore(s => s.draggingCardId);
   const anchors = useAnchors();
   const viewport = useThree(state => state.viewport);
+  const [highlightedLane, setHighlightedLane] = useState<number | null>(null);
 
   const playerCenterY = useMemo(
     () => (0.5 - anchors.playerBoard.center) * viewport.height,
@@ -105,13 +108,57 @@ export default function Board3D() {
       .filter((u): u is BattlefieldUnit & { card: CardDef } => Boolean(u));
   }, [battlefieldUnits]);
 
-  const highlightSlot = useMemo(() => {
-    if (dragPreview == null) return null;
-    return isLaneOpen(dragPreview, "player", battlefieldUnits) ? dragPreview : null;
+  useEffect(() => {
+    if (dragPreview == null) {
+      setHighlightedLane(null);
+      return;
+    }
+    setHighlightedLane(isLaneOpen(dragPreview, "player", battlefieldUnits) ? dragPreview : null);
   }, [battlefieldUnits, dragPreview]);
+
+  const isDragging = draggingCardId != null;
+  const laneHighlightOpacities = useMemo(() => {
+    return lanePositionsPlayer.map((_, idx) => {
+      if (!isDragging) return 0;
+      return highlightedLane === idx ? 0.4 : 0.15;
+    });
+  }, [highlightedLane, isDragging, lanePositionsPlayer]);
 
   return (
     <group>
+      <group>
+        {lanePositionsPlayer.map((lanePos, idx) => (
+          <group
+            key={`lane-highlight-${idx}`}
+            position={[lanePos.x, lanePos.y, lanePos.z]}
+            rotation={[PLAYER_BOARD_TILT, 0, 0]}
+          >
+            <mesh position={[0, -0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={10}>
+              <planeGeometry args={[UNIT_W * 1.25, UNIT_H * 1.1]} />
+              <meshBasicMaterial
+                color="#ffffff"
+                transparent
+                opacity={laneHighlightOpacities[idx] ?? 0}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {highlightedLane != null && (
+        <group
+          position={[
+            lanePositionsPlayer[highlightedLane].x,
+            lanePositionsPlayer[highlightedLane].y,
+            lanePositionsPlayer[highlightedLane].z
+          ]}
+          rotation={[PLAYER_BOARD_TILT, 0, 0]}
+        >
+          <GhostUnitMesh renderOrder={11} />
+        </group>
+      )}
+
       <BoardRow3D
         side="enemy"
         units={enemyUnits}
@@ -121,7 +168,7 @@ export default function Board3D() {
         side="player"
         units={playerUnits}
         lanePositions={lanePositionsPlayer}
-        highlightSlot={highlightSlot}
+        highlightSlot={highlightedLane}
       />
     </group>
   );
