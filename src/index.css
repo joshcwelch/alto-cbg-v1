@@ -196,6 +196,19 @@ button {
   background: transparent !important;
 }
 
+.card-name {
+  font-size: clamp(10px, 1.4vh, 18px);
+}
+
+.card-text {
+  font-size: clamp(9px, 1.2vh, 16px);
+  white-space: pre-wrap;
+}
+
+.card-stats {
+  font-size: clamp(10px, 1.2vh, 14px);
+}
+
 .card-html-root {
   position: static !important;
   transform: none !important;
@@ -209,6 +222,10 @@ button {
   filter: none !important;
   position: static !important;
   transform: none !important;
+}
+
+.unit-html-root {
+  pointer-events: none !important;
 }
 
 .html-card {

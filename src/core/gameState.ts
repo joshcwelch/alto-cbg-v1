@@ -10,7 +10,7 @@ export interface GameState {
   hand: CardDef[];
   enemyDeck: CardDef[];
   enemyHand: CardDef[];
-  battlefield: UnitOnBoard[]; // your side only (for now)
+  battlefield: (UnitOnBoard | null)[]; // indexed board slots (player side for now)
 
   // config
   maxBoardSlots: number;
@@ -23,6 +23,6 @@ export const createInitialState = (): GameState => ({
   hand: [],
   enemyDeck: [],
   enemyHand: [],
-  battlefield: [],
+  battlefield: Array<UnitOnBoard | null>(5).fill(null),
   maxBoardSlots: 5
 });
