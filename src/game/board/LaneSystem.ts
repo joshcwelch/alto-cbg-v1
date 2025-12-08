@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import { computeSlotCenters, BOARD_AREA_RATIO } from "../../ui/slotMath";
-import { UNIT_W } from "../../apps/client/src/game/units/UnitMesh";
+import { UNIT_W } from "../../../apps/client/src/game/units/UnitMesh";
 import type { BattlefieldUnit, PlayerId } from "../../core/cardTypes";
 
 export const NUM_LANES = 7;
