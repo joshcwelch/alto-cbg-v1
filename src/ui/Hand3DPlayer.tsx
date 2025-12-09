@@ -11,7 +11,8 @@ const HAND_TILT = -0.08;
 const FAN_ANGLE = 0.34; // radians, total spread of the hand
 const FAN_LIFT = 0.55;   // scales vertical lift relative to spacing
 const BOARD_THRESHOLD = 0.4; // % of screen height (from bottom) to start snapping
-const HAND_DROP = 0.08; // push the hand lower toward screen bottom (ratio of viewport height)
+const HAND_DROP = 0.18; // push the hand lower toward screen bottom (ratio of viewport height)
+const PLAYER_OVERLAP = 0.72; // tighter spacing so the fan overlaps like the enemy hand
 
 type DragInfo = {
   index: number;
@@ -75,7 +76,7 @@ export default function Hand3DPlayer() {
   const { spacing, centerY, boardCenterY } = useMemo(() => {
     const handCenterRatio = anchors.playerHand.center;
     const boardCenterRatio = anchors.playerBoard.center;
-    const spacingWorld = viewport.width * anchors.cardSpacing;
+    const spacingWorld = viewport.width * anchors.cardSpacing * PLAYER_OVERLAP;
     const centerYWorld = (0.5 - handCenterRatio) * viewport.height - viewport.height * HAND_DROP * 0.5;
     const boardCenterWorld = (0.5 - boardCenterRatio) * viewport.height;
     return { spacing: spacingWorld, centerY: centerYWorld, boardCenterY: boardCenterWorld };
