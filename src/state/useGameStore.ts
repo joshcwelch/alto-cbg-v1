@@ -5,12 +5,20 @@ import { createInitialState } from "../core/gameState";
 import { startTurn as startTurnRule } from "../core/turnSystem";
 import type { BattlefieldUnit, CardDef, PlayerId } from "../core/cardTypes";
 import { shuffle } from "../utils/shuffle";
+import type { HeroRuntimeState, MatchState } from "../game/state/matchState";
+import { createHeroRuntimeState } from "../game/state/matchState";
+import { HERO_REGISTRY } from "../game/heroes/heroRegistry";
+import { HeroId } from "../game/heroes/heroTypes";
+import { eventBus } from "../game/events/eventBus";
+import { executeHeroPower } from "../game/heroes/heroAbilities";
+import { getProfile, getSelectedDeck } from "../game/profile/playerProfile";
 
 type AttackTarget =
   | { type: "unit"; targetUid: string }
   | { type: "hero"; playerId: PlayerId };
 
 type Store = GameState & {
+  heroStates: Record<PlayerId, HeroRuntimeState>;
   newGame: () => void;
   draw: (n?: number, playerId?: PlayerId) => void;
   playCard: (cardId: string, lane: number, playerId: PlayerId) => boolean;
@@ -31,11 +39,6 @@ type Store = GameState & {
 };
 
 const STARTING_HAND = { player: 3, enemy: 4 };
-const HERO_POWERS = {
-  Tharos: { name: "Flame Shot", cost: 2, text: "Deal 1 damage to the enemy hero." },
-  Lyra: { name: "Radiant Heal", cost: 2, text: "Restore 2 Health to your hero." }
-} as const;
-
 function toCardDefs(ids: string[]): CardDef[] {
   return ids.map(id => CARDS[id]);
 }
@@ -47,6 +50,13 @@ function findOpenLane(owner: PlayerId, units: BattlefieldUnit[], maxBoardSlots: 
   return Array.from({ length: maxBoardSlots }, (_, lane) => lane).find(
     lane => units.every(u => !(u.owner === owner && u.lane === lane))
   ) ?? null;
+}
+
+function getUnitStats(unit: BattlefieldUnit) {
+  const def = CARDS[unit.cardId];
+  const attack = def ? def.attack + (unit.attackBuff ?? 0) : unit.attackBuff ?? 0;
+  const maxHealth = def ? def.health + (unit.healthBuff ?? 0) : (unit.healthBuff ?? 0);
+  return { attack, maxHealth };
 }
 
 function resolveWinner(playerHealth: number, enemyHealth: number): PlayerId | "draw" | null {
@@ -63,22 +73,48 @@ export const useGameStore = create<Store>((set, get) => {
   const syncEnemyHand = (newHand: CardDef[]) => set({ enemyHand: newHand });
 
   const beginTurn = (who: PlayerId) => {
-    set(state => ({
-      ...startTurnRule(state, who),
-      selectedAttackerId: null,
-      draggingCardId: null,
-      dragPreviewLane: null
-    }));
+    set(state => {
+      const next = startTurnRule(state, who) as MatchState;
+      const manaKey = who === "player" ? "playerMana" : "enemyMana";
+      const heroStates = state.heroStates ?? {
+        player: createHeroRuntimeState(HeroId.EMBER_THAROS),
+        enemy: createHeroRuntimeState(HeroId.VOID_LYRA)
+      };
+      const runtime = heroStates[who];
+      const refreshedHeroState: HeroRuntimeState = {
+        ...runtime,
+        oncePerTurn: {},
+        ultimateReady: runtime.ultimateReady || next[manaKey] >= 10
+      };
+      return {
+        ...next,
+        heroStates: { ...heroStates, [who]: refreshedHeroState },
+        selectedAttackerId: null,
+        draggingCardId: null,
+        dragPreviewLane: null
+      };
+    });
   };
 
-  const removeDeadUnits = (units: BattlefieldUnit[]) =>
-    units.filter(u => {
-      const def = CARDS[u.cardId];
-      return def && u.damage < def.health;
+  const removeDeadUnits = (units: BattlefieldUnit[], state: MatchState) => {
+    const remaining: BattlefieldUnit[] = [];
+    units.forEach(u => {
+      const { maxHealth } = getUnitStats(u);
+      if (u.damage < maxHealth) {
+        remaining.push(u);
+      } else {
+        eventBus.emit("UNIT_DIED", { playerId: u.owner, unit: u }, state);
+      }
     });
+    return remaining;
+  };
 
   return {
     ...createInitialState(),
+    heroStates: {
+      player: createHeroRuntimeState(HeroId.EMBER_THAROS),
+      enemy: createHeroRuntimeState(HeroId.VOID_LYRA)
+    },
     openingHandDealt: false,
     draggingCardId: null,
     dragPreviewLane: null,
@@ -88,10 +124,17 @@ export const useGameStore = create<Store>((set, get) => {
     setSelectedAttacker: uid => set({ selectedAttackerId: uid }),
 
     newGame: () => {
-      const deckIds = buildStarterDeck();
+      const profile = getProfile();
+      const playerHeroId = profile.selectedHeroId ?? HeroId.EMBER_THAROS;
+      const enemyHeroId = playerHeroId === HeroId.EMBER_THAROS ? HeroId.VOID_LYRA : HeroId.EMBER_THAROS;
+
+      const playerHeroDef = HERO_REGISTRY[playerHeroId];
+      const enemyHeroDef = HERO_REGISTRY[enemyHeroId];
+
+      const deckMeta = getSelectedDeck();
+      const deckIds = deckMeta?.cards?.length ? deckMeta.cards : buildStarterDeck();
       const deck = shuffle(toCardDefs(deckIds));
-      const enemyDeckIds = buildStarterDeck();
-      const enemyDeck = shuffle(toCardDefs(enemyDeckIds));
+      const enemyDeck = shuffle(toCardDefs(buildStarterDeck()));
 
       const playerDraw = Math.min(STARTING_HAND.player, deck.length);
       const enemyDraw = Math.min(STARTING_HAND.enemy, enemyDeck.length);
@@ -101,10 +144,14 @@ export const useGameStore = create<Store>((set, get) => {
       const enemyOpeningHand = enemyDeck.slice(0, enemyDraw);
       const enemyRemainingDeck = enemyDeck.slice(enemyDraw);
 
-      set({
+      const baseState: MatchState = {
         ...createInitialState(),
-        playerHero: "Tharos",
-        enemyHero: "Lyra",
+        playerHero: playerHeroDef?.name ?? "Tharos",
+        enemyHero: enemyHeroDef?.name ?? "Lyra",
+        heroStates: {
+          player: createHeroRuntimeState(playerHeroId),
+          enemy: createHeroRuntimeState(enemyHeroId)
+        },
         deck: remainingDeck,
         hand: playerOpeningHand,
         enemyDeck: enemyRemainingDeck,
@@ -113,8 +160,9 @@ export const useGameStore = create<Store>((set, get) => {
         draggingCardId: null,
         dragPreviewLane: null,
         selectedAttackerId: null
-      });
+      };
 
+      set(baseState);
       beginTurn("player");
     },
 
@@ -153,16 +201,29 @@ export const useGameStore = create<Store>((set, get) => {
       if (card.cost > manaPool) return false; // not enough mana
       if (battlefieldUnits.some(u => u.lane === lane && u.owner === playerId)) return false; // lane occupied
 
+      const heroState = (state as MatchState).heroStates?.[playerId];
+      const empowered = Boolean(heroState?.passiveState.nextEmpoweredSummon);
       const unit: BattlefieldUnit = {
         uid: uid(),
         cardId: card.id,
         owner: playerId,
         lane,
         damage: 0,
-        exhausted: true
+        exhausted: empowered ? false : true,
+        attackBuff: empowered ? 3 : 0,
+        rush: empowered
       };
 
       const updatedUnits = battlefieldUnits.concat(unit);
+      const nextHeroStates = heroState
+        ? {
+            ...(state as MatchState).heroStates,
+            [playerId]: {
+              ...heroState,
+              passiveState: { ...heroState.passiveState, nextEmpoweredSummon: false }
+            }
+          }
+        : (state as MatchState).heroStates;
 
       set({
         playerMana: isPlayer ? playerMana - card.cost : playerMana,
@@ -170,6 +231,7 @@ export const useGameStore = create<Store>((set, get) => {
         hand: isPlayer ? hand.filter((_, i) => i !== idx) : hand,
         enemyHand: isPlayer ? enemyHand : enemyHand.filter((_, i) => i !== idx),
         battlefieldUnits: updatedUnits,
+        heroStates: nextHeroStates,
         draggingCardId: null,
         dragPreviewLane: null
       });
@@ -178,15 +240,14 @@ export const useGameStore = create<Store>((set, get) => {
     playEnemyCard: (cardId: string, lane: number) => get().playCard(cardId, lane, "enemy"),
 
     attackUnit: (attackerUid: string, target: AttackTarget) => {
-      const state = get();
+      const state = get() as MatchState;
       if (state.winner) return false;
       const attacker = state.battlefieldUnits.find(u => u.uid === attackerUid);
       if (!attacker) return false;
       if (attacker.owner !== state.turn) return false;
       if (attacker.exhausted) return false;
 
-      const attackerCard = CARDS[attacker.cardId];
-      if (!attackerCard) return false;
+      const attackerStats = getUnitStats(attacker);
 
       let nextUnits = state.battlefieldUnits.slice();
       let playerHealth = state.playerHealth;
@@ -195,72 +256,50 @@ export const useGameStore = create<Store>((set, get) => {
       if (target.type === "unit") {
         const defender = nextUnits.find(u => u.uid === target.targetUid);
         if (!defender || defender.owner === attacker.owner) return false;
-        const defenderCard = CARDS[defender.cardId];
-        if (!defenderCard) return false;
+        const defenderStats = getUnitStats(defender);
 
         nextUnits = nextUnits.map(u => {
           if (u.uid === attacker.uid) {
-            return { ...u, damage: u.damage + defenderCard.attack, exhausted: true };
+            return { ...u, damage: u.damage + defenderStats.attack, exhausted: true };
           }
           if (u.uid === defender.uid) {
-            return { ...u, damage: u.damage + attackerCard.attack };
+            return { ...u, damage: u.damage + attackerStats.attack };
           }
           return u;
         });
-        nextUnits = removeDeadUnits(nextUnits);
+        nextUnits = removeDeadUnits(nextUnits, { ...state, battlefieldUnits: nextUnits });
       } else {
         if (target.playerId === attacker.owner) return false;
+        const damage = attackerStats.attack;
         if (target.playerId === "enemy") {
-          enemyHealth = Math.max(0, enemyHealth - attackerCard.attack);
+          enemyHealth = Math.max(0, enemyHealth - damage);
+          eventBus.emit("HERO_TAKES_DAMAGE", { playerId: "enemy", amount: damage }, { ...state, enemyHealth });
         } else {
-          playerHealth = Math.max(0, playerHealth - attackerCard.attack);
+          playerHealth = Math.max(0, playerHealth - damage);
+          eventBus.emit("HERO_TAKES_DAMAGE", { playerId: "player", amount: damage }, { ...state, playerHealth });
         }
         nextUnits = nextUnits.map(u => (u.uid === attacker.uid ? { ...u, exhausted: true } : u));
       }
 
       const winner = resolveWinner(playerHealth, enemyHealth);
       set({
+        ...state,
         battlefieldUnits: nextUnits,
         playerHealth,
         enemyHealth,
         selectedAttackerId: null,
         winner
-      });
+      } as MatchState);
       return true;
     },
 
     useHeroPower: (playerId: PlayerId) => {
-      const state = get();
+      const state = get() as MatchState;
       if (state.winner || state.turn !== playerId) return false;
-
-      const hero = playerId === "player" ? state.playerHero : state.enemyHero;
-      const heroPower = HERO_POWERS[hero as keyof typeof HERO_POWERS];
-      if (!heroPower) return false;
-
-      const usedKey = playerId === "player" ? "playerHeroPowerUsed" : "enemyHeroPowerUsed";
-      const manaKey = playerId === "player" ? "playerMana" : "enemyMana";
-
-      if (state[usedKey] || state[manaKey] < heroPower.cost) return false;
-
-      let playerHealth = state.playerHealth;
-      let enemyHealth = state.enemyHealth;
-
-      if (hero === "Tharos") {
-        enemyHealth = Math.max(0, enemyHealth - 1);
-      } else if (hero === "Lyra") {
-        playerHealth = Math.min(30, playerHealth + 2);
-      }
-
-      const winner = resolveWinner(playerHealth, enemyHealth);
-
-      set({
-        [usedKey]: true,
-        [manaKey]: state[manaKey] - heroPower.cost,
-        playerHealth,
-        enemyHealth,
-        winner
-      });
-
+      const heroId = state.heroStates[playerId]?.heroId ?? HeroId.EMBER_THAROS;
+      const updated = executeHeroPower(playerId, heroId, state, eventBus);
+      if (updated === state) return false;
+      set(updated);
       return true;
     },
 
@@ -287,13 +326,10 @@ export const useGameStore = create<Store>((set, get) => {
       }
 
       // Try hero power if available
-      const maybeHeroPower = get();
-      if (
-        !maybeHeroPower.winner &&
-        !maybeHeroPower.enemyHeroPowerUsed &&
-        maybeHeroPower.enemyMana >= HERO_POWERS.Lyra.cost &&
-        maybeHeroPower.enemyHealth < 28
-      ) {
+      const maybeHeroPower = get() as MatchState;
+      const enemyHeroId = maybeHeroPower.heroStates.enemy?.heroId ?? HeroId.VOID_LYRA;
+      const heroPowerCost = HERO_REGISTRY[enemyHeroId]?.heroPower.cost ?? 0;
+      if (!maybeHeroPower.winner && !maybeHeroPower.enemyHeroPowerUsed && maybeHeroPower.enemyMana >= heroPowerCost) {
         get().useHeroPower("enemy");
       }
 
