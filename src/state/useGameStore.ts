@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { CARDS, buildStarterDeck } from "../core/cardsDb";
-import type { GameState } from "../core/gameState";
 import { createInitialState } from "../core/gameState";
 import { startTurn as startTurnRule } from "../core/turnSystem";
 import type { BattlefieldUnit, CardDef, PlayerId } from "../core/cardTypes";
@@ -12,13 +11,13 @@ import { HeroId } from "../game/heroes/heroTypes";
 import { eventBus } from "../game/events/eventBus";
 import { executeHeroPower } from "../game/heroes/heroAbilities";
 import { getProfile, getSelectedDeck } from "../game/profile/playerProfile";
+import { createEmptyBoardRuntime, syncBoardRuntime } from "../game/units/unitTokens";
 
 type AttackTarget =
   | { type: "unit"; targetUid: string }
   | { type: "hero"; playerId: PlayerId };
 
-type Store = GameState & {
-  heroStates: Record<PlayerId, HeroRuntimeState>;
+type Store = MatchState & {
   newGame: () => void;
   draw: (n?: number, playerId?: PlayerId) => void;
   playCard: (cardId: string, lane: number, playerId: PlayerId) => boolean;
@@ -68,6 +67,8 @@ function resolveWinner(playerHealth: number, enemyHealth: number): PlayerId | "d
   return null;
 }
 
+const withBoard = (state: MatchState): MatchState => syncBoardRuntime(state);
+
 export const useGameStore = create<Store>((set, get) => {
   const syncHand = (newHand: CardDef[]) => set({ hand: newHand });
   const syncEnemyHand = (newHand: CardDef[]) => set({ enemyHand: newHand });
@@ -86,13 +87,13 @@ export const useGameStore = create<Store>((set, get) => {
         oncePerTurn: {},
         ultimateReady: runtime.ultimateReady || next[manaKey] >= 10
       };
-      return {
+      return withBoard({
         ...next,
         heroStates: { ...heroStates, [who]: refreshedHeroState },
         selectedAttackerId: null,
         draggingCardId: null,
         dragPreviewLane: null
-      };
+      });
     });
   };
 
@@ -115,6 +116,7 @@ export const useGameStore = create<Store>((set, get) => {
       player: createHeroRuntimeState(HeroId.EMBER_THAROS),
       enemy: createHeroRuntimeState(HeroId.VOID_LYRA)
     },
+    board: createEmptyBoardRuntime(),
     openingHandDealt: false,
     draggingCardId: null,
     dragPreviewLane: null,
@@ -152,6 +154,7 @@ export const useGameStore = create<Store>((set, get) => {
           player: createHeroRuntimeState(playerHeroId),
           enemy: createHeroRuntimeState(enemyHeroId)
         },
+        board: createEmptyBoardRuntime(),
         deck: remainingDeck,
         hand: playerOpeningHand,
         enemyDeck: enemyRemainingDeck,
@@ -162,7 +165,7 @@ export const useGameStore = create<Store>((set, get) => {
         selectedAttackerId: null
       };
 
-      set(baseState);
+      set(withBoard(baseState));
       beginTurn("player");
     },
 
@@ -225,7 +228,8 @@ export const useGameStore = create<Store>((set, get) => {
           }
         : (state as MatchState).heroStates;
 
-      set({
+      const nextState: MatchState = withBoard({
+        ...state,
         playerMana: isPlayer ? playerMana - card.cost : playerMana,
         enemyMana: isPlayer ? enemyMana : enemyMana - card.cost,
         hand: isPlayer ? hand.filter((_, i) => i !== idx) : hand,
@@ -234,7 +238,10 @@ export const useGameStore = create<Store>((set, get) => {
         heroStates: nextHeroStates,
         draggingCardId: null,
         dragPreviewLane: null
-      });
+      } as MatchState);
+
+      set(nextState);
+      eventBus.emit("UNIT_SUMMONED", { unitId: unit.uid, playerId }, nextState);
       return true;
     },
     playEnemyCard: (cardId: string, lane: number) => get().playCard(cardId, lane, "enemy"),
@@ -248,6 +255,12 @@ export const useGameStore = create<Store>((set, get) => {
       if (attacker.exhausted) return false;
 
       const attackerStats = getUnitStats(attacker);
+      const damageEvents: { unitId: string; delta: number; playerId: PlayerId }[] = [];
+      const applyDamage = (unit: BattlefieldUnit, delta: number) => {
+        if (delta <= 0) return unit;
+        damageEvents.push({ unitId: unit.uid, delta, playerId: unit.owner });
+        return { ...unit, damage: unit.damage + delta };
+      };
 
       let nextUnits = state.battlefieldUnits.slice();
       let playerHealth = state.playerHealth;
@@ -260,10 +273,10 @@ export const useGameStore = create<Store>((set, get) => {
 
         nextUnits = nextUnits.map(u => {
           if (u.uid === attacker.uid) {
-            return { ...u, damage: u.damage + defenderStats.attack, exhausted: true };
+            return applyDamage({ ...u, exhausted: true }, defenderStats.attack);
           }
           if (u.uid === defender.uid) {
-            return { ...u, damage: u.damage + attackerStats.attack };
+            return applyDamage(u, attackerStats.attack);
           }
           return u;
         });
@@ -282,7 +295,7 @@ export const useGameStore = create<Store>((set, get) => {
       }
 
       const winner = resolveWinner(playerHealth, enemyHealth);
-      set({
+      const nextState: MatchState = withBoard({
         ...state,
         battlefieldUnits: nextUnits,
         playerHealth,
@@ -290,6 +303,8 @@ export const useGameStore = create<Store>((set, get) => {
         selectedAttackerId: null,
         winner
       } as MatchState);
+      set(nextState);
+      damageEvents.forEach(evt => eventBus.emit("UNIT_DAMAGED", evt, nextState));
       return true;
     },
 
@@ -297,7 +312,7 @@ export const useGameStore = create<Store>((set, get) => {
       const state = get() as MatchState;
       if (state.winner || state.turn !== playerId) return false;
       const heroId = state.heroStates[playerId]?.heroId ?? HeroId.EMBER_THAROS;
-      const updated = executeHeroPower(playerId, heroId, state, eventBus);
+      const updated = withBoard(executeHeroPower(playerId, heroId, state, eventBus));
       if (updated === state) return false;
       set(updated);
       return true;

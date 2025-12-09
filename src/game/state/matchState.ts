@@ -2,6 +2,7 @@ import type { BattlefieldUnit, PlayerId } from "../../core/cardTypes";
 import { createInitialState, type GameState } from "../../core/gameState";
 import { startTurn } from "../../core/turnSystem";
 import { HeroId } from "../heroes/heroTypes";
+import type { UnitTokenRuntime } from "../units/unitTypes";
 
 export interface HeroPassiveState {
   voidCharges: number;
@@ -18,12 +19,17 @@ export interface HeroRuntimeState {
   ultimateReady: boolean;
 }
 
+export interface BoardRuntime {
+  unitsByPlayer: Record<PlayerId, UnitTokenRuntime[]>;
+}
+
 export interface MatchState extends GameState {
   heroStates: Record<PlayerId, HeroRuntimeState>;
   openingHandDealt?: boolean;
   draggingCardId?: string | null;
   dragPreviewLane?: number | null;
   selectedAttackerId?: string | null;
+  board: BoardRuntime;
 }
 
 export const createHeroRuntimeState = (heroId: HeroId): HeroRuntimeState => ({
@@ -46,6 +52,12 @@ export const createInitialMatchState = (playerHero: HeroId, enemyHero: HeroId): 
   heroStates: {
     player: createHeroRuntimeState(playerHero),
     enemy: createHeroRuntimeState(enemyHero)
+  },
+  board: {
+    unitsByPlayer: {
+      player: [],
+      enemy: []
+    }
   }
 });
 
@@ -54,5 +66,6 @@ export const startTurnWithHeroes = (state: MatchState, player: PlayerId): MatchS
   const next = startTurn(state, player) as MatchState;
   // preserve hero runtime data explicitly for clarity
   next.heroStates = state.heroStates;
+  next.board = state.board;
   return next;
 };

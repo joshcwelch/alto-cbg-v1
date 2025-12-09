@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import boardPng from "../assets/board/board.png";
+import BoardOverlay from "./overlay/BoardOverlay";
 
 type GameRootProps = PropsWithChildren<{
   canvasContent?: ReactNode;
@@ -20,6 +21,7 @@ export default function GameRoot({ children, canvasContent }: GameRootProps) {
           >
             {canvasContent}
           </Canvas>
+          <BoardOverlay />
           <div id="ui-root">{children}</div>
         </div>
       </div>
