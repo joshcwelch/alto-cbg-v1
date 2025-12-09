@@ -70,6 +70,7 @@ const summonUnit = (
   };
 
   bus?.emit("SUMMON_UNIT", { playerId: player, unit }, nextState);
+  bus?.emit("UNIT_SUMMONED", { unitId: unit.uid, playerId: player }, nextState);
   return nextState;
 };
 
@@ -182,6 +183,8 @@ export function executeHeroPower(
       const target = enemyUnits[0];
       updatedUnits = updatedUnits.map(u => (u.uid === target.uid ? { ...u, damage: u.damage + 1, attackBuff: (u.attackBuff ?? 0) + 1 } : u));
       damageApplied = true;
+      bus?.emit("UNIT_DAMAGED", { unitId: target.uid, delta: 1, playerId: target.owner }, { ...nextState, battlefieldUnits: updatedUnits });
+      bus?.emit("UNIT_BUFFED", { unitId: target.uid, playerId: target.owner, atkDelta: 1, hpDelta: 0 }, { ...nextState, battlefieldUnits: updatedUnits });
     } else {
       const healthKey = player === "player" ? "enemyHealth" : "playerHealth";
       nextState = { ...nextState, [healthKey]: Math.max(0, nextState[healthKey] - 1) } as MatchState;
@@ -244,6 +247,7 @@ export function executeHeroUltimate(
     if (nextState[manaKey] < cost) return nextState;
     const units = nextState.battlefieldUnits.map(u => {
       if (u.owner !== player) return u;
+      bus?.emit("UNIT_BUFFED", { unitId: u.uid, playerId: u.owner, atkDelta: 2, hpDelta: 1 }, nextState);
       return {
         ...u,
         attackBuff: (u.attackBuff ?? 0) + 2,

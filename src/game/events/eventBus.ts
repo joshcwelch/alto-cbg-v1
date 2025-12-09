@@ -8,7 +8,12 @@ export type EventBusType =
   | "HERO_TAKES_DAMAGE"
   | "HERO_POWER_CAST"
   | "HERO_ULTIMATE_CAST"
-  | "SUMMON_UNIT";
+  | "SUMMON_UNIT"
+  | "UNIT_SUMMONED"
+  | "UNIT_DAMAGED"
+  | "UNIT_HEALED"
+  | "UNIT_BUFFED"
+  | "UNIT_STATUS_CHANGED";
 
 export type EventPayloadMap = {
   UNIT_DIED: { playerId: PlayerId; unit: BattlefieldUnit };
@@ -16,6 +21,11 @@ export type EventPayloadMap = {
   HERO_POWER_CAST: { playerId: PlayerId; heroId: HeroId };
   HERO_ULTIMATE_CAST: { playerId: PlayerId; heroId: HeroId };
   SUMMON_UNIT: { playerId: PlayerId; unit: BattlefieldUnit };
+  UNIT_SUMMONED: { unitId: string; playerId: PlayerId };
+  UNIT_DAMAGED: { unitId: string; delta: number; playerId: PlayerId };
+  UNIT_HEALED: { unitId: string; delta: number; playerId: PlayerId };
+  UNIT_BUFFED: { unitId: string; playerId: PlayerId; atkDelta: number; hpDelta: number };
+  UNIT_STATUS_CHANGED: { unitId: string; playerId: PlayerId; status: string; on: boolean };
 };
 
 type Handler<T extends EventBusType> = (payload: EventPayloadMap[T], matchState?: MatchState) => void;
@@ -26,7 +36,12 @@ class EventBus {
     HERO_TAKES_DAMAGE: [],
     HERO_POWER_CAST: [],
     HERO_ULTIMATE_CAST: [],
-    SUMMON_UNIT: []
+    SUMMON_UNIT: [],
+    UNIT_SUMMONED: [],
+    UNIT_DAMAGED: [],
+    UNIT_HEALED: [],
+    UNIT_BUFFED: [],
+    UNIT_STATUS_CHANGED: []
   };
 
   on<T extends EventBusType>(type: T, handler: Handler<T>) {
@@ -34,6 +49,11 @@ class EventBus {
     if (!this.listeners[type].includes(handler as Handler<EventBusType>)) {
       this.listeners[type].push(handler as Handler<EventBusType>);
     }
+  }
+
+  off(type: EventBusType, handler: Handler<EventBusType>) {
+    const list = this.listeners[type] as Handler<EventBusType>[];
+    this.listeners[type] = list.filter(h => h !== handler) as any;
   }
 
   emit<T extends EventBusType>(type: T, payload: EventPayloadMap[T], matchState?: MatchState) {

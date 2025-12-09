@@ -1,0 +1,10 @@
+.board-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.board-overlay .unit-token {
+  pointer-events: auto;
+}

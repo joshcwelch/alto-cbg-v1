@@ -5,6 +5,7 @@ import { executeHeroPower, executeHeroUltimate } from "../heroes/heroAbilities";
 import type { MatchState } from "./matchState";
 import { eventBus } from "../events/eventBus";
 import { useGameStore } from "../../state/useGameStore";
+import { syncBoardRuntime } from "../units/unitTokens";
 
 const getHeroIdForPlayer = (state: MatchState, playerId: PlayerId): HeroId => {
   return state.heroStates[playerId]?.heroId ?? HeroId.EMBER_THAROS;
@@ -30,7 +31,7 @@ export const useHeroPower = (playerId: PlayerId): boolean => {
   const hero = HERO_REGISTRY[heroId];
   if (!hero) return false;
   if (!canUseHeroPower(playerId)) return false;
-  const updated = executeHeroPower(playerId, heroId, state, eventBus);
+  const updated = syncBoardRuntime(executeHeroPower(playerId, heroId, state, eventBus));
   useGameStore.setState(updated);
   return true;
 };
@@ -51,7 +52,7 @@ export const useUltimate = (playerId: PlayerId): boolean => {
   const state = useGameStore.getState() as MatchState;
   const heroId = getHeroIdForPlayer(state, playerId);
   if (!canUseUltimate(playerId)) return false;
-  const updated = executeHeroUltimate(playerId, heroId, state, eventBus);
+  const updated = syncBoardRuntime(executeHeroUltimate(playerId, heroId, state, eventBus));
   const heroState = updated.heroStates[playerId];
   updated.heroStates[playerId] = { ...heroState, ultimateReady: false };
   useGameStore.setState(updated);
