@@ -47,6 +47,15 @@ export const CARDS: Record<string, CardDef> = {
     description: "Commands the vanguard.",
     artSrc: "/src/assets/cards/sunlance-champion.png"
   },
+  "VOID_HUSK": {
+    id: "VOID_HUSK",
+    name: "Husk",
+    cost: 1,
+    attack: 1,
+    health: 1,
+    description: "Void-born husk.",
+    artSrc: "/src/assets/cards/beacon-monk.png"
+  },
 };
 
 export function buildStarterDeck(): string[] {

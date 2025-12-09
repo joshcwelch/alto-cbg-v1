@@ -20,6 +20,10 @@ export interface BattlefieldUnit {
   lane: number;       // board lane index (0..NUM_LANES-1)
   damage: number;     // damage taken (so hp can be derived)
   exhausted: boolean; // prevents acting the turn it is played (HS style)
+  attackBuff?: number;
+  healthBuff?: number;
+  rush?: boolean;
+  tags?: string[];
 }
 
 export const __DEBUG = "CardTypes Loaded";
