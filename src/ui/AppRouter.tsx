@@ -11,8 +11,12 @@ import HeroDeckListScene from "./scenes/HeroDeckListScene";
 import { HeroId } from "../game/heroes/heroTypes";
 import { HERO_REGISTRY } from "../game/heroes/heroRegistry";
 import { getProfile } from "../game/profile/playerProfile";
+import Home, { type ScrollRequest } from "../pages/Home";
+import Play from "../pages/Play";
 
 type RouteMatch =
+  | { name: "site-home" }
+  | { name: "site-play" }
   | { name: "loading" }
   | { name: "main-menu" }
   | { name: "select-faction" }
@@ -28,37 +32,43 @@ type RouterContextValue = {
   navigate: (path: string) => void;
 };
 
-const RouterContext = createContext<RouterContextValue>({ path: "/loading", navigate: () => undefined });
+const RouterContext = createContext<RouterContextValue>({ path: "/", navigate: () => undefined });
 
 export const useAppNavigation = () => useContext(RouterContext);
 
 const parseRoute = (path: string): RouteMatch => {
-  const clean = path || "/loading";
-  if (clean.startsWith("/hero-menu/")) {
-    const heroId = clean.replace("/hero-menu/", "") as HeroId;
+  const clean = path || "/";
+  const rawBase = clean.split("#")[0] || "/";
+  const base = rawBase.length > 1 && rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
+  if (base === "/" || base === "") return { name: "site-home" };
+  if (base === "/play") return { name: "site-play" };
+  if (base === "/loading") return { name: "loading" };
+  if (base.startsWith("/hero-menu/")) {
+    const heroId = base.replace("/hero-menu/", "") as HeroId;
     return { name: "hero-menu", params: { heroId } };
   }
-  if (clean.startsWith("/manage-decks/")) {
-    const heroId = clean.replace("/manage-decks/", "") as HeroId;
+  if (base.startsWith("/manage-decks/")) {
+    const heroId = base.replace("/manage-decks/", "") as HeroId;
     return { name: "manage-decks", params: { heroId } };
   }
-  if (clean.startsWith("/hero-decks/")) {
-    const heroId = clean.replace("/hero-decks/", "") as HeroId;
+  if (base.startsWith("/hero-decks/")) {
+    const heroId = base.replace("/hero-decks/", "") as HeroId;
     return { name: "hero-decks", params: { heroId } };
   }
-  if (clean.startsWith("/select-hero/")) {
-    const id = decodeURIComponent(clean.replace("/select-hero/", ""));
+  if (base.startsWith("/select-hero/")) {
+    const id = decodeURIComponent(base.replace("/select-hero/", ""));
     return { name: "select-hero", params: { id } };
   }
-  if (clean === "/main-menu") return { name: "main-menu" };
-  if (clean === "/select-faction") return { name: "select-faction" };
-  if (clean === "/collection") return { name: "collection" };
-  if (clean === "/match") return { name: "match" };
-  return { name: "loading" };
+  if (base === "/main-menu") return { name: "main-menu" };
+  if (base === "/select-faction") return { name: "select-faction" };
+  if (base === "/collection") return { name: "collection" };
+  if (base === "/match") return { name: "match" };
+  return { name: "site-home" };
 };
 
 export default function AppRouter() {
-  const [path, setPath] = useState<string>(window.location.pathname || "/loading");
+  const [path, setPath] = useState<string>(window.location.pathname || "/");
+  const [scrollRequest, setScrollRequest] = useState<ScrollRequest | null>(null);
 
   const navigate = useCallback(
     (nextPath: string) => {
@@ -78,9 +88,31 @@ export default function AppRouter() {
   const match = useMemo(() => parseRoute(path), [path]);
   const profile = getProfile();
   const currentHeroId = profile.selectedHeroId ?? HeroId.VOID_LYRA;
+  const requestSectionScroll = useCallback(
+    (target: string) => {
+      setScrollRequest({ id: target, at: Date.now() });
+      if (path !== "/") {
+        navigate("/");
+      }
+    },
+    [navigate, path]
+  );
 
   let screen: ReactNode = null;
   switch (match.name) {
+    case "site-home":
+      screen = (
+        <Home
+          onNavigatePlay={() => navigate("/play")}
+          onRequestScroll={requestSectionScroll}
+          scrollRequest={scrollRequest}
+          onScrollHandled={() => setScrollRequest(null)}
+        />
+      );
+      break;
+    case "site-play":
+      screen = <Play onNavigateHome={() => navigate("/")} onRequestSection={requestSectionScroll} />;
+      break;
     case "loading":
       screen = <LoadingScene onContinue={() => navigate("/main-menu")} />;
       break;
