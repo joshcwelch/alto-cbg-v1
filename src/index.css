@@ -29,8 +29,9 @@ html, body, #root {
 }
 
 #game-root {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
@@ -46,16 +47,15 @@ html, body, #root {
 
 .board-frame {
   position: relative;
-  width: min(96vw, 1880px);
-  max-width: 1920px;
+  width: 100%;
   height: 100%;
 }
 
 .board-bg {
   position: absolute;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   background-size: cover;
   background-position: center;
