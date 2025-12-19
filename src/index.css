@@ -7,7 +7,25 @@ html, body, #root {
   height: 100%;
   background: #0b1220;
   color: #e5eaf7;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: "IM Fell English", "Times New Roman", serif;
+}
+
+@font-face {
+  font-family: "IM Fell English";
+  src:
+    url("/assets/fonts/IM_Fell_English/IMFellEnglish-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IM Fell English";
+  src:
+    url("/assets/fonts/IM_Fell_English/IMFellEnglish-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
 }
 
 #game-root {
@@ -36,12 +54,15 @@ html, body, #root {
 .board-bg {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
   background-size: cover;
   background-position: center;
   z-index: 0;
+  max-width: none;
+  max-height: none;
+  display: block;
 }
 
 @supports not (object-fit: cover) {

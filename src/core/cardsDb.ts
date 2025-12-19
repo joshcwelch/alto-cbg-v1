@@ -9,7 +9,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 1,
     health: 2,
     description: "Peaceful starter.",
-    artSrc: "/src/assets/cards/beacon-monk.png"
+    artSrc: "/assets/cards/beacon-monk.png"
   },
   "SUNLANCE_SCOUT": {
     id: "SUNLANCE_SCOUT",
@@ -18,7 +18,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 2,
     health: 2,
     description: "Quick to the front.",
-    artSrc: "/src/assets/cards/sunlance-scout.png"
+    artSrc: "/assets/cards/sunlance-scout.png"
   },
   "CRYSTAL_ACOLYTE": {
     id: "CRYSTAL_ACOLYTE",
@@ -27,7 +27,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 3,
     health: 3,
     description: "Supports the crystal choir.",
-    artSrc: "/src/assets/cards/crystal-acolyte.png"
+    artSrc: "/assets/cards/crystal-acolyte.png"
   },
   "SERAPHIC_WARDEN": {
     id: "SERAPHIC_WARDEN",
@@ -36,7 +36,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 4,
     health: 5,
     description: "Shields allies with radiant zeal.",
-    artSrc: "/src/assets/cards/seraphic-warden.png"
+    artSrc: "/assets/cards/seraphic-warden.png"
   },
   "SUNLANCE_CHAMPION": {
     id: "SUNLANCE_CHAMPION",
@@ -45,7 +45,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 6,
     health: 5,
     description: "Commands the vanguard.",
-    artSrc: "/src/assets/cards/sunlance-champion.png"
+    artSrc: "/assets/cards/sunlance-champion.png"
   },
   "VOID_HUSK": {
     id: "VOID_HUSK",
@@ -54,7 +54,7 @@ export const CARDS: Record<string, CardDef> = {
     attack: 1,
     health: 1,
     description: "Void-born husk.",
-    artSrc: "/src/assets/cards/beacon-monk.png"
+    artSrc: "/assets/cards/beacon-monk.png"
   },
 };
 

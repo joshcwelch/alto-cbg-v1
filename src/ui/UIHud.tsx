@@ -8,6 +8,8 @@ type UIHudProps = {
   anchors?: BoardAnchors;
 };
 
+const GRAVEYARD_IMAGE_URL = "/assets/ui/graveyard-the-void.png";
+
 const ManaPips = ({ mana, maxMana }: { mana: number; maxMana: number }) => {
   const total = Math.max(1, maxMana || mana || 1);
   return (
@@ -40,8 +42,8 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
   const maxMana = useGameStore(s => s.maxMana);
   const turn = useGameStore(s => s.turn);
   const turnNumber = useGameStore(s => s.turnNumber);
-  const endTurn = useGameStore(s => s.endTurn);
   const winner = useGameStore(s => s.winner);
+  const endTurn = useGameStore(s => s.endTurn);
   const attackUnit = useGameStore(s => s.attackUnit);
   const selectedId = useGameStore(s => s.selectedAttackerId);
   const battlefieldUnits = useGameStore(s => s.battlefieldUnits);
@@ -54,6 +56,10 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
     ? playerBoardTop + playerBoardHeight * 0.12
     : undefined;
   const manaTrayY = hudRowY !== undefined ? hudRowY + 12 : undefined;
+  const midGapCenter = anchors
+    ? anchors.enemyBoard.top + anchors.enemyBoard.height + anchors.boardGap / 2
+    : undefined;
+  const midGapY = midGapCenter !== undefined ? midGapCenter * 100 : undefined;
 
   const selectedUnit = useMemo(
     () => battlefieldUnits.find(u => u.uid === selectedId),
@@ -82,6 +88,11 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
       ? "Your Turn"
       : "Enemy Turn";
 
+  const canEndTurn = turn === "player" && !winner;
+  const endTurnAsset = canEndTurn
+    ? "/assets/ui/end-turn-active.png"
+    : "/assets/ui/end-turn-inactive.png";
+
   return (
     <div
       style={{
@@ -90,6 +101,23 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         pointerEvents: "none"
       }}
     >
+      {midGapY !== undefined && (
+        <img
+          src={GRAVEYARD_IMAGE_URL}
+          alt=""
+          style={{
+            position: "absolute",
+            top: `${midGapY}vh`,
+            left: "45%",
+            transform: "translate(-50%, -50%)",
+            width: "clamp(86px, 7.5vw, 140px)",
+            height: "auto",
+            pointerEvents: "none",
+            zIndex: 1,
+            filter: "drop-shadow(0 12px 20px rgba(8, 6, 18, 0.55))"
+          }}
+        />
+      )}
       <div
         style={{
           position: "absolute",
@@ -188,36 +216,38 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
 
       <button
         onClick={endTurn}
-        disabled={turn !== "player" || Boolean(winner)}
+        disabled={!canEndTurn}
         style={{
           position: "absolute",
           top: "50%",
           right: "clamp(22px, 3vw, 46px)",
           transform: "translateY(-50%)",
           pointerEvents: "auto",
-          padding: "16px 26px",
-          borderRadius: 28,
-          background: "linear-gradient(180deg, #8ae5ff 0%, #4ac4ff 55%, #2c9bff 100%)",
-          border: "2px solid rgba(255,255,255,0.16)",
-          color: "#0a1a2e",
-          fontWeight: 900,
-          fontSize: 16,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          boxShadow: "0 12px 26px rgba(0,0,0,0.35), 0 0 16px rgba(100,210,255,0.6)",
-          cursor: turn === "player" && !winner ? "pointer" : "not-allowed",
-          opacity: turn === "player" && !winner ? 1 : 0.6,
-          transition: "transform 120ms ease, box-shadow 160ms ease"
+          border: "none",
+          background: "transparent",
+          padding: 0,
+          cursor: canEndTurn ? "pointer" : "not-allowed"
         }}
         onMouseDown={e => {
-          if (turn !== "player" || winner) return;
+          if (!canEndTurn) return;
           (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-48%) scale(0.98)";
         }}
         onMouseUp={e => {
           (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-50%)";
         }}
       >
-        End Turn
+        <img
+          src={endTurnAsset}
+          alt="End Turn"
+          draggable={false}
+          style={{
+            width: "clamp(160px, 18vw, 260px)",
+            height: "auto",
+            display: "block",
+            filter: canEndTurn ? "drop-shadow(0 10px 18px rgba(0,0,0,0.45))" : "none",
+            opacity: canEndTurn ? 1 : 0.82
+          }}
+        />
       </button>
 
       {winner && (
