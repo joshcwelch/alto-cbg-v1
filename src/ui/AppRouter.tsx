@@ -40,8 +40,9 @@ const parseRoute = (path: string): RouteMatch => {
   const clean = path || "/";
   const rawBase = clean.split("#")[0] || "/";
   const base = rawBase.length > 1 && rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
-  if (base === "/" || base === "") return { name: "site-home" };
-  if (base === "/play") return { name: "site-play" };
+  if (base === "/" || base === "") return { name: "loading" };
+  if (base === "/site") return { name: "site-home" };
+  if (base === "/play" || base === "/site/play") return { name: "site-play" };
   if (base === "/loading") return { name: "loading" };
   if (base.startsWith("/hero-menu/")) {
     const heroId = base.replace("/hero-menu/", "") as HeroId;
@@ -91,8 +92,8 @@ export default function AppRouter() {
   const requestSectionScroll = useCallback(
     (target: string) => {
       setScrollRequest({ id: target, at: Date.now() });
-      if (path !== "/") {
-        navigate("/");
+      if (path !== "/site") {
+        navigate("/site");
       }
     },
     [navigate, path]
@@ -103,7 +104,7 @@ export default function AppRouter() {
     case "site-home":
       screen = (
         <Home
-          onNavigatePlay={() => navigate("/play")}
+          onNavigatePlay={() => navigate("/site/play")}
           onRequestScroll={requestSectionScroll}
           scrollRequest={scrollRequest}
           onScrollHandled={() => setScrollRequest(null)}
@@ -111,7 +112,7 @@ export default function AppRouter() {
       );
       break;
     case "site-play":
-      screen = <Play onNavigateHome={() => navigate("/")} onRequestSection={requestSectionScroll} />;
+      screen = <Play onNavigateHome={() => navigate("/site")} onRequestSection={requestSectionScroll} />;
       break;
     case "loading":
       screen = <LoadingScene onContinue={() => navigate("/main-menu")} />;
