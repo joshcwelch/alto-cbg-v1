@@ -1,10 +1,7 @@
-import "./App.css";
-import AppRouter from "./ui/AppRouter";
+import Viewport from "./Viewport";
 
-export default function App() {
-  return (
-    <div className="app-shell">
-      <AppRouter />
-    </div>
-  );
-}
+const App = () => {
+  return <Viewport />;
+};
+
+export default App;

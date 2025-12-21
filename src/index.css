@@ -1,309 +1,390 @@
-* { box-sizing: border-box; }
-
-html, body, #root {
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #0b1220;
-  color: #e5eaf7;
-  font-family: "IM Fell English", "Times New Roman", serif;
-  cursor: url("/assets/ui/cursor-pointer-64.png") 16 16, auto;
-}
-
-body.cursor-grab,
-body.cursor-grab #root,
-body.cursor-grab .GameRoot,
-body.cursor-grab .game-canvas,
-body.cursor-grab .game-canvas canvas {
-  cursor: url("/assets/ui/cursor-open-hand-64.png") 16 16, auto;
-}
-
-body.cursor-grabbing,
-body.cursor-grabbing #root,
-body.cursor-grabbing .GameRoot,
-body.cursor-grabbing .game-canvas,
-body.cursor-grabbing .game-canvas canvas {
-  cursor: url("/assets/ui/cursor-grabbing-hand-64.png") 16 16, auto;
 }
 
 @font-face {
   font-family: "IM Fell English";
-  src:
-    url("/assets/fonts/IM_Fell_English/IMFellEnglish-Regular.ttf") format("truetype");
-  font-weight: 400;
+  src: url("/assets/fonts/IM_Fell_English/IMFellEnglish-Regular.ttf") format("truetype");
   font-style: normal;
+  font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
   font-family: "IM Fell English";
-  src:
-    url("/assets/fonts/IM_Fell_English/IMFellEnglish-Italic.ttf") format("truetype");
-  font-weight: 400;
+  src: url("/assets/fonts/IM_Fell_English/IMFellEnglish-Italic.ttf") format("truetype");
   font-style: italic;
+  font-weight: 400;
   font-display: swap;
 }
 
-.Viewport {
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-BoldItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-ExtraBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-ExtraBoldItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-SemiBoldItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-MediumItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-LightItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-ExtraLight.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  src: url("/assets/fonts/Spectral_SC/SpectralSC-ExtraLightItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+}
+
+html {
+  background-color: #050505;
+}
+
+body {
+  background-color: #050505;
+  font-family: "IM Fell English", "Palatino Linotype", "Book Antiqua", serif;
+  overflow: hidden;
+}
+
+#root {
   position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse at center,
-      rgba(30, 36, 56, 0.9) 0%,
-      rgba(10, 12, 20, 1) 70%
-    );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
 }
 
-.GameRoot {
+.viewport {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #050606;
+  background-image: url("/assets/ui/global-bg.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 1536px 1024px;
+}
+
+.game-root {
   position: absolute;
   width: 1536px;
   height: 1024px;
-  left: 50%;
-  top: 50%;
-  transform-origin: center center;
+  transform-origin: top left;
+  cursor: none;
 }
 
-.board-layer {
-  position: absolute;
-  inset: 0;
-  width: 1536px;
-  height: 1024px;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-}
-
-.board-frame {
+.board-stage {
   position: relative;
   width: 1536px;
   height: 1024px;
+  background-color: #0e0a08;
+  background-image: url("/assets/board/board.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 1536px 1024px;
+  font-family: "Spectral SC", "IM Fell English", "Palatino Linotype", "Book Antiqua", serif;
 }
 
-.board-bg {
+
+.menu-stamp {
   position: absolute;
-  inset: 0;
-  width: 1536px;
-  height: 1024px;
-  object-fit: cover;
-  background-size: cover;
-  background-position: center;
-  z-index: 0;
-  max-width: none;
-  max-height: none;
-  display: block;
+  left: 0;
+  top: 0;
 }
 
-@supports not (object-fit: cover) {
-  .board-bg {
-    background-size: cover;
-    background-position: center;
-  }
-}
-
-.game-canvas {
+.ability-frame {
   position: absolute;
-  inset: 0;
-  width: 1536px;
-  height: 1024px;
-  z-index: 2;
-  display: block;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
 }
 
-.game-canvas canvas {
-  width: 1536px;
-  height: 1024px;
-  display: block;
-}
-
-#ui-root {
+.graveyard-portal {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 137px;
+  height: 181px;
+  object-fit: contain;
   pointer-events: none;
-  z-index: 5;
-}
-
-.board-layout {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows:
-    var(--slot-hand-enemy)
-    var(--slot-gap-tight)
-    var(--slot-board-lane)
-    var(--slot-mid-gap)
-    var(--slot-board-lane)
-    var(--slot-gap-tight)
-    var(--slot-hand-player);
-  padding-top: var(--frame-padding-top);
-  padding-bottom: var(--frame-padding-bottom);
-  align-content: center;
-  justify-items: center;
-  row-gap: 0;
-  column-gap: 0;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.board-ambient {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(120% 100% at 50% 50%, rgba(255,203,128,0.22) 0%, rgba(146,186,218,0.06) 60%, rgba(8,16,32,0.85) 100%),
-    linear-gradient(180deg, rgba(18,34,60,0.8) 0%, rgba(10,18,34,0.2) 50%, rgba(8,12,22,0.85) 100%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.board-layout::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(120,210,255,0.16) 88%, rgba(120,210,255,0.3) 100%);
-  mix-blend-mode: screen;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.slot {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.slot.hand-enemy {
-  align-items: flex-start;
+  filter: drop-shadow(-6px 8px 8px rgba(0, 0, 0, 0.55));
   z-index: 3;
 }
 
-.slot.board-row {
-  align-items: center;
-  z-index: 4;
-}
-
-.slot.board-row.enemy-lane {
-  filter: drop-shadow(0 -6px 22px rgba(0,0,0,0.32));
-}
-
-.slot.board-row.player-lane {
-  filter: drop-shadow(0 10px 28px rgba(0,0,0,0.34));
-}
-
-.slot.board-row.player-lane::before {
-  content: "";
+.hero-slot {
   position: absolute;
-  inset: -6% 5%;
-  border-radius: 26px;
-  background: radial-gradient(80% 120% at 50% 80%, rgba(140,220,255,0.2) 0%, rgba(80,140,186,0.12) 48%, rgba(0,0,0,0) 78%);
-  pointer-events: none;
-  z-index: 1;
+  width: 284px;
+  height: 284px;
+  overflow: hidden;
 }
 
-.slot.hand-player {
-  align-items: flex-end;
-  z-index: 5;
+.hero-slot__portrait {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 284px;
+  height: 284px;
+  object-fit: cover;
 }
 
-.slot.spacer {
-  pointer-events: none;
-}
-
-.slot.spacer.tight {
-  height: var(--slot-gap-tight);
-}
-
-.slot.mid-gap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-
-.midfield-glow {
-  width: 100%;
-  max-width: 96%;
-  height: 100%;
-  border-radius: 28px;
-  background:
-    radial-gradient(80% 120% at 50% 50%, rgba(255,198,128,0.12) 0%, rgba(110,160,196,0.08) 48%, rgba(16,28,46,0) 76%),
-    radial-gradient(120% 80% at 50% 52%, rgba(46,116,180,0.08) 0%, rgba(14,24,40,0.6) 90%);
-  box-shadow: 0 0 60px rgba(0,0,0,0.45) inset, 0 10px 32px rgba(0,0,0,0.32);
-  filter: blur(0.3px);
+.hero-slot__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 284px;
+  height: 284px;
+  object-fit: contain;
   pointer-events: none;
 }
 
-button {
-  font-family: inherit;
-}
-
-.card-overlay,
-.card-overlay .name,
-.card-overlay .cost,
-.card-overlay .atk,
-.card-overlay .hp,
-.card-overlay .rules {
-  background: transparent !important;
-}
-
-.card-name {
-  font-size: clamp(12px, 16px, 18px);
-  color: #fdfdff;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.55);
-}
-
-.card-text {
-  font-size: clamp(11px, 14px, 16px);
-  white-space: pre-wrap;
-  color: #eef4ff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
-}
-
-.card-stats {
-  font-size: clamp(12px, 14px, 16px);
-  color: #fefefe;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.55);
-}
-
-.card-html-root {
-  position: static !important;
-  transform: none !important;
-  will-change: auto !important;
-  pointer-events: none !important;
-}
-
-.card-overlay {
-  pointer-events: none;
-  box-shadow: none !important;
-  filter: none !important;
-  position: static !important;
-  transform: none !important;
-}
-
-.unit-html-root {
-  pointer-events: none !important;
-}
-
-.html-card {
-  position: static !important;
-  transform: none !important;
-  background: transparent !important;
+.mana-bar {
+  position: absolute;
   pointer-events: none;
 }
 
-.html-card * {
-  transform: none !important;
+.mana-bar__base {
+  display: block;
+  width: 189px;
+  height: 250px;
+  object-fit: contain;
+}
+
+.end-turn-button {
+  position: absolute;
+  width: 240px;
+  height: 88px;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.end-turn-button__art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 240px;
+  height: 88px;
+  object-fit: cover;
+}
+
+.end-turn-button__art.is-hidden {
+  opacity: 0;
+}
+
+.hand-card {
+  position: absolute;
+  width: 180px;
+  height: 270px;
+}
+
+.hand-card__art {
+  position: absolute;
+  left: 24px;
+  top: 42px;
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+}
+
+.hand-card__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 180px;
+  height: 270px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.board-minion {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+}
+
+.board-minion__art {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 196px;
+  height: 196px;
+  object-fit: cover;
+}
+
+.board-minion__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.card-back {
+  position: absolute;
+  width: 140px;
+  height: 210px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.board-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.board-cursor__icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  opacity: 0;
+}
+
+.board-cursor__icon.is-active {
+  opacity: 1;
+}
+
+.cursor-coords {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 160px;
+  height: 54px;
+  padding: 8px 10px;
+  background: rgba(10, 10, 10, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #e6dfd2;
+  font-family: "Spectral SC", "IM Fell English", "Palatino Linotype", "Book Antiqua", serif;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.cursor-coords__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(230, 223, 210, 0.7);
+}
+
+.cursor-coords__value {
+  margin-top: 4px;
+  font-size: 16px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
