@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BOARD_HEIGHT, getBoardScale } from "./boardConfig";
 
 export const BOARD_BASE = { W: 1280, H: 640 };
 export const LANE_HEIGHT_RATIO = 0.19;
@@ -48,9 +49,11 @@ const BASE = {
   }
 };
 
-function computeAnchors(viewportHeight: number): BoardAnchors {
-  const isShort = viewportHeight < 1200;
-  const isTall = viewportHeight > 1440;
+function computeAnchors(viewportWidth: number, viewportHeight: number): BoardAnchors {
+  const scale = getBoardScale(viewportWidth, viewportHeight);
+  const effectiveHeight = BOARD_HEIGHT * scale;
+  const isShort = effectiveHeight < 1200;
+  const isTall = effectiveHeight > 1440;
 
   const handScale = isShort ? 0.9 : isTall ? 1.05 : 1;
 
@@ -66,7 +69,7 @@ function computeAnchors(viewportHeight: number): BoardAnchors {
   const enemyBoardHeight = laneHeight;
   const playerBoardHeight = laneHeight;
 
-  const safeBottomRatio = Math.max(BASE.paddingBottom, BASE.safeBottomPx / viewportHeight);
+  const safeBottomRatio = Math.max(BASE.paddingBottom, BASE.safeBottomPx / effectiveHeight);
   const paddingTop = BASE.paddingTop;
   const paddingBottom = safeBottomRatio;
 
@@ -111,15 +114,16 @@ function computeAnchors(viewportHeight: number): BoardAnchors {
 }
 
 const initialHeight = typeof window !== "undefined" ? window.innerHeight : 1080;
+const initialWidth = typeof window !== "undefined" ? window.innerWidth : 1920;
 
-export const ANCHORS = computeAnchors(initialHeight);
+export const ANCHORS = computeAnchors(initialWidth, initialHeight);
 
 export function useAnchors() {
-  const [anchors, setAnchors] = useState<BoardAnchors>(() => computeAnchors(initialHeight));
+  const [anchors, setAnchors] = useState<BoardAnchors>(() => computeAnchors(initialWidth, initialHeight));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const handle = () => setAnchors(computeAnchors(window.innerHeight));
+    const handle = () => setAnchors(computeAnchors(window.innerWidth, window.innerHeight));
     handle();
     window.addEventListener("resize", handle);
     return () => window.removeEventListener("resize", handle);

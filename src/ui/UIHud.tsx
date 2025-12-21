@@ -101,23 +101,6 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         pointerEvents: "none"
       }}
     >
-      {midGapY !== undefined && (
-        <img
-          src={GRAVEYARD_IMAGE_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            top: `${midGapY}vh`,
-            left: "45%",
-            transform: "translate(-50%, -50%)",
-            width: "clamp(86px, 7.5vw, 140px)",
-            height: "auto",
-            pointerEvents: "none",
-            zIndex: 1,
-            filter: "drop-shadow(0 12px 20px rgba(8, 6, 18, 0.55))"
-          }}
-        />
-      )}
       <div
         style={{
           position: "absolute",
@@ -163,7 +146,8 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         style={{
           position: "absolute",
           top: "28px",
-          left: "clamp(16px, 3vw, 36px)",
+          left: 36,
+          transform: "translateY(30px)",
           pointerEvents: "auto"
         }}
       >
@@ -175,12 +159,31 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         </div>
       </div>
 
+      {midGapY !== undefined && (
+        <img
+          src={GRAVEYARD_IMAGE_URL}
+          alt=""
+          style={{
+            position: "absolute",
+            top: `${midGapY}%`,
+            left: 36,
+            transform: "translateY(-50%)",
+            width: 115,
+            height: "auto",
+            pointerEvents: "none",
+            zIndex: 1,
+            filter: "drop-shadow(0 12px 20px rgba(8, 6, 18, 0.55))"
+          }}
+        />
+      )}
+
       <div
         style={{
           position: "absolute",
           bottom: hudRowY === undefined ? `${bottomOffset}px` : undefined,
-          top: hudRowY !== undefined ? `${hudRowY}vh` : undefined,
-          left: "clamp(18px, 3vw, 44px)",
+          top: hudRowY !== undefined ? `${hudRowY}%` : undefined,
+          left: 44,
+          transform: "translateY(30px)",
           pointerEvents: "auto"
         }}
       >
@@ -191,7 +194,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         style={{
           position: "absolute",
           bottom: manaTrayY === undefined ? `${bottomOffset + 12}px` : undefined,
-          top: manaTrayY !== undefined ? `${manaTrayY}vh` : undefined,
+          top: manaTrayY !== undefined ? `${manaTrayY}%` : undefined,
           left: "50%",
           transform: "translateX(-50%)",
           pointerEvents: "none"
@@ -220,7 +223,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         style={{
           position: "absolute",
           top: "50%",
-          right: "clamp(22px, 3vw, 46px)",
+          right: 46,
           transform: "translateY(-50%)",
           pointerEvents: "auto",
           border: "none",
@@ -241,7 +244,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
           alt="End Turn"
           draggable={false}
           style={{
-            width: "clamp(160px, 18vw, 260px)",
+            width: 260,
             height: "auto",
             display: "block",
             filter: canEndTurn ? "drop-shadow(0 10px 18px rgba(0,0,0,0.45))" : "none",
@@ -265,7 +268,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
             gap: 12
           }}
         >
-          <div style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 900, letterSpacing: 0.8 }}>
+          <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: 0.8 }}>
             {winner === "draw" ? "Draw" : winner === "player" ? "Victory!" : "Defeat"}
           </div>
           <button

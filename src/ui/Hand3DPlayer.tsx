@@ -8,10 +8,10 @@ import { useAnchors } from "./boardAnchors";
 import { createLanePositions, getClosestLane, isLaneOpen } from "../game/board/LaneSystem";
 
 const HAND_TILT = -0.08;
-const FAN_ANGLE = 0.34; // radians, total spread of the hand
-const FAN_LIFT = 0.55;   // scales vertical lift relative to spacing
+const FAN_ANGLE = 0; // no fan spread for player hand
+const FAN_LIFT = 0;  // no vertical lift when fanning is disabled
 const BOARD_THRESHOLD = 0.4; // % of screen height (from bottom) to start snapping
-const HAND_DROP = 0.18; // push the hand lower toward screen bottom (ratio of viewport height)
+const HAND_DROP = 0.32; // push the hand lower toward screen bottom (ratio of viewport height)
 const PLAYER_OVERLAP = 0.72; // tighter spacing so the fan overlaps like the enemy hand
 
 type DragInfo = {
@@ -38,9 +38,7 @@ function computeCardBase(idx: number, handLength: number, spacing: number, cente
   const mid = (n - 1) / 2;
   const theta = n <= 1 ? 0 : (-FAN_ANGLE / 2) + (FAN_ANGLE * (idx / (n - 1)));
   const baseX = (idx - mid) * spacing;
-  const liftFalloff = mid === 0 ? 1 : 1 - Math.abs((idx - mid) / mid);
-  const lift = liftFalloff * spacing * FAN_LIFT;
-  const baseY = centerY + lift;
+  const baseY = centerY;
   const baseRotation: [number, number, number] = [HAND_TILT, 0, -theta];
   return { baseX, baseY, baseRotation };
 }
