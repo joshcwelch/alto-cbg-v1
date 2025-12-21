@@ -1,27 +1,47 @@
-import { useGameStore } from "../state/useGameStore";
+import { useState } from "react";
+import type { BoardPoint } from "./BoardSlots";
+import { useGameContext } from "../GameRoot";
 
-export default function EndTurnButton() {
-  const endTurn = useGameStore(s => s.endTurn);
+type EndTurnButtonProps = {
+  slot: BoardPoint;
+};
+
+const EndTurnButton = ({ slot }: EndTurnButtonProps) => {
+  const { setCursorState } = useGameContext();
+  const [pressed, setPressed] = useState(false);
 
   return (
     <button
-      onClick={endTurn}
-      style={{
-        position: "absolute",
-        right: 20,
-        bottom: 20,
-        padding: "12px 24px",
-        borderRadius: 12,
-        fontSize: 18,
-        background: "#42b7ff",
-        color: "white",
-        cursor: "pointer",
-        border: "none",
-        boxShadow: "0 6px 14px rgba(0,0,0,0.4)",
-        fontWeight: 800
+      className="end-turn-button"
+      type="button"
+      style={{ left: slot.x, top: slot.y }}
+      onPointerEnter={() => setCursorState("hover")}
+      onPointerLeave={() => {
+        setCursorState("default");
+        setPressed(false);
+      }}
+      onPointerDown={() => {
+        setCursorState("dragging");
+        setPressed(true);
+      }}
+      onPointerUp={() => {
+        setCursorState("hover");
+        setPressed(false);
       }}
     >
-      End Turn
+      <img
+        className={`end-turn-button__art ${pressed ? "is-hidden" : ""}`}
+        src="/assets/ui/end-turn-active.png"
+        alt=""
+      />
+      <img
+        className={`end-turn-button__art ${pressed ? "" : "is-hidden"}`}
+        src="/assets/ui/end-turn-inactive.png"
+        alt=""
+      />
+      <span className="sr-only">End Turn</span>
     </button>
   );
-}
+};
+
+export default EndTurnButton;
