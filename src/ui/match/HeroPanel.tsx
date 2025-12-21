@@ -20,7 +20,7 @@ export default function HeroPanel({ playerId, align = "bottom" }: HeroPanelProps
   return (
     <div
       style={{
-        width: "clamp(180px, 16vw, 240px)",
+        width: 192,
         aspectRatio: "675 / 935",
         pointerEvents: "auto",
         position: "relative",
@@ -78,7 +78,7 @@ export default function HeroPanel({ playerId, align = "bottom" }: HeroPanelProps
           padding: "2px 6px",
           color: "#e7f6ff",
           fontWeight: 900,
-          fontSize: "clamp(19px, 2.8vw, 27px)",
+          fontSize: 27,
           textAlign: "center",
           textShadow:
             "0 0 6px rgba(90, 210, 255, 0.9), 0 0 14px rgba(70, 190, 255, 0.75), 0 0 22px rgba(40, 150, 255, 0.55)",

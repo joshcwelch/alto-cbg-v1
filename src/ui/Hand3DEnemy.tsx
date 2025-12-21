@@ -5,7 +5,7 @@ import CardMesh from "../../apps/client/src/game/cards/CardMesh";
 import type { CardVisual } from "../../apps/client/src/game/cards/types";
 import { useAnchors } from "./boardAnchors";
 
-const ENEMY_OVERLAP = 0.85;
+const ENEMY_OVERLAP = 0.72;
 
 export default function Hand3DEnemy() {
   const enemyHand = useGameStore(s => s.enemyHand);
@@ -35,7 +35,7 @@ export default function Hand3DEnemy() {
           <group
             key={`${card.id}-${i}`}
             position={[(i - (enemyHand.length - 1) / 2) * spacing, centerY, 0]}
-            rotation={[0, Math.PI, 0]}
+            rotation={[0, Math.PI, Math.PI]}
           >
             <CardMesh
               visual={visual}

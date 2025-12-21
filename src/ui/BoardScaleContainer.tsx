@@ -1,17 +1,11 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
-
-const BOARD_WIDTH = 1536;
-const BOARD_HEIGHT = 1024;
+import { BOARD_HEIGHT, BOARD_WIDTH, getBoardScale } from "./boardConfig";
 export default function BoardScaleContainer({ children }: PropsWithChildren) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const updateScale = () => {
-      const scaleX = window.innerWidth / BOARD_WIDTH;
-      const scaleY = window.innerHeight / BOARD_HEIGHT;
-      const nextScale = Math.min(scaleX, scaleY);
-      const clamped = Math.max(0.75, Math.min(nextScale, 1.1));
-      setScale(clamped);
+      setScale(getBoardScale(window.innerWidth, window.innerHeight));
     };
 
     updateScale();
