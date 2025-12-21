@@ -84,21 +84,17 @@ const BoardStage = () => {
     []
   );
 
-  const demoDeck: string[] = useMemo(
-    () => [
-      "CELESTIAL_CRYSTAL_ACOLYTE",
-      "CELESTIAL_LIGHTBORN_ADEPT",
-      "CELESTIAL_DAWNWATCH_CLERIC",
-      "EMBER_EMBERFORGED_BERSERKER",
-      "SYLVAN_ROOTSNARL_GUARDIAN",
-      "CELESTIAL_CRYSTAL_ACOLYTE",
-      "CELESTIAL_LIGHTBORN_ADEPT",
-      "CELESTIAL_DAWNWATCH_CLERIC",
-      "EMBER_EMBERFORGED_BERSERKER",
-      "SYLVAN_ROOTSNARL_GUARDIAN",
-    ],
-    []
-  );
+  const playerDeckIds = useMemo(() => {
+    return Object.values(CardRegistry)
+      .filter((card) => card.faction === "VOIDBORN" && card.type === "MINION")
+      .map((card) => card.id);
+  }, []);
+
+  const enemyDeckIds = useMemo(() => {
+    return Object.values(CardRegistry)
+      .filter((card) => card.faction === "EMBER" && card.type === "MINION")
+      .map((card) => card.id);
+  }, []);
 
   const createHand = (deck: string[], owner: string) =>
     deck.slice(0, 5).map((cardId, index) => ({
@@ -108,12 +104,16 @@ const BoardStage = () => {
       rotation: 0,
     }));
 
-  const [handCards, setHandCards] = useState<HandCardData[]>(() => createHand(demoDeck, "player"));
+  const [handCards, setHandCards] = useState<HandCardData[]>(() =>
+    createHand(playerDeckIds, "player")
+  );
   const [playerDrawIndex, setPlayerDrawIndex] = useState(5);
 
   const [playerMinions, setPlayerMinions] = useState<MinionData[]>([]);
   const [enemyMinions, setEnemyMinions] = useState<MinionData[]>([]);
-  const [enemyHand, setEnemyHand] = useState<HandCardData[]>(() => createHand(demoDeck, "enemy"));
+  const [enemyHand, setEnemyHand] = useState<HandCardData[]>(() =>
+    createHand(enemyDeckIds, "enemy")
+  );
   const [enemyDrawIndex, setEnemyDrawIndex] = useState(5);
   const [enemyDrag, setEnemyDrag] = useState<DragVisual | null>(null);
   const [enemyDragPos, setEnemyDragPos] = useState<{ x: number; y: number } | null>(null);
@@ -330,7 +330,7 @@ const BoardStage = () => {
     if (prevTurn === "enemy" && turn === "player") {
       setHandCards((prev) => {
         if (prev.length >= maxHandSize) return prev;
-        const nextCardId = demoDeck[playerDrawIndex % demoDeck.length];
+        const nextCardId = playerDeckIds[playerDrawIndex % playerDeckIds.length];
         const nextId = `hand-${Date.now()}-${playerDrawIndex}`;
         setPlayerDrawIndex((index) => index + 1);
         return [
@@ -347,7 +347,7 @@ const BoardStage = () => {
     if (prevTurn === "player" && turn === "enemy") {
       setEnemyHand((prev) => {
         if (prev.length >= maxHandSize) return prev;
-        const nextCardId = demoDeck[enemyDrawIndex % demoDeck.length];
+        const nextCardId = enemyDeckIds[enemyDrawIndex % enemyDeckIds.length];
         const nextId = `enemy-${Date.now()}-${enemyDrawIndex}`;
         setEnemyDrawIndex((index) => index + 1);
         return [
@@ -362,7 +362,7 @@ const BoardStage = () => {
       });
     }
     prevTurnRef.current = turn;
-  }, [turn, demoDeck, enemyDrawIndex, maxHandSize, playerDrawIndex]);
+  }, [enemyDeckIds, enemyDrawIndex, maxHandSize, playerDeckIds, playerDrawIndex, turn]);
 
 
   useEffect(() => {
