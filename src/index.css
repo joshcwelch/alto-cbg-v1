@@ -164,8 +164,8 @@ body {
   background-color: #050606;
   background-image: url("/assets/ui/global-bg.png");
   background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: 1536px 1024px;
+  background-position: center;
+  background-size: cover;
 }
 
 .game-root {
