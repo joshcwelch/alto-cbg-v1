@@ -15,17 +15,17 @@ const EndTurnButton = ({ slot }: EndTurnButtonProps) => {
       className="end-turn-button"
       type="button"
       style={{ left: slot.x, top: slot.y }}
-      onPointerEnter={() => setCursorState("hover")}
+      onPointerEnter={() => setCursorState("default")}
       onPointerLeave={() => {
         setCursorState("default");
         setPressed(false);
       }}
       onPointerDown={() => {
-        setCursorState("dragging");
+        setCursorState("default");
         setPressed(true);
       }}
       onPointerUp={() => {
-        setCursorState("hover");
+        setCursorState("default");
         setPressed(false);
       }}
     >
