@@ -11,7 +11,7 @@ export const BoardSlots = {
   Hand: { x: 438, y: 785 },
   EnemyHand: { x: 438, y: -285 },
   BoardCenter: { x: 768, y: 512 },
-  AbilityFrame: { x: 1246, y: 700 },
+  AbilityFrame: { x: 1211, y: 700 },
   Graveyard: { x: 98, y: 510 },
   EnemyAbilityFrame: { x: 1211, y: 160 },
 } as const satisfies Record<string, BoardPoint>;
