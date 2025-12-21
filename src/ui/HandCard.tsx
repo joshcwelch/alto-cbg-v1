@@ -5,15 +5,16 @@ type HandCardProps = {
   slot: BoardPoint;
   artSrc: string;
   alt: string;
+  rotation?: number;
 };
 
-const HandCard = ({ slot, artSrc, alt }: HandCardProps) => {
+const HandCard = ({ slot, artSrc, alt, rotation = 0 }: HandCardProps) => {
   const { setCursorState } = useGameContext();
 
   return (
     <div
       className="hand-card"
-      style={{ left: slot.x, top: slot.y }}
+      style={{ left: slot.x, top: slot.y, transform: `rotate(${rotation}deg)` }}
       onPointerEnter={() => setCursorState("hover")}
       onPointerLeave={() => setCursorState("default")}
       onPointerDown={() => setCursorState("dragging")}
