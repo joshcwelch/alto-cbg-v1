@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { BOARD_HEIGHT, getBoardScale } from "./boardConfig";
+import { BOARD_HEIGHT } from "./boardConfig";
 
 export const BOARD_BASE = { W: 1280, H: 640 };
 export const LANE_HEIGHT_RATIO = 0.19;
@@ -34,7 +33,7 @@ export type BoardAnchors = {
 const BASE = {
   enemyHand: 0.1,
   playerHand: 0.15,
-  laneHeight: LANE_HEIGHT_RATIO, // required: lane height scales from viewport height
+  laneHeight: LANE_HEIGHT_RATIO, // required: lane height scales from board height
   midGap: 0.1,      // midfield gap between lanes (8-12% viewport)
   handBoardGap: 0.018,
   slotGap: 0.02,
@@ -49,9 +48,8 @@ const BASE = {
   }
 };
 
-function computeAnchors(viewportWidth: number, viewportHeight: number): BoardAnchors {
-  const scale = getBoardScale(viewportWidth, viewportHeight);
-  const effectiveHeight = BOARD_HEIGHT * scale;
+function computeAnchors(): BoardAnchors {
+  const effectiveHeight = BOARD_HEIGHT;
   const isShort = effectiveHeight < 1200;
   const isTall = effectiveHeight > 1440;
 
@@ -113,21 +111,8 @@ function computeAnchors(viewportWidth: number, viewportHeight: number): BoardAnc
   };
 }
 
-const initialHeight = typeof window !== "undefined" ? window.innerHeight : 1080;
-const initialWidth = typeof window !== "undefined" ? window.innerWidth : 1920;
-
-export const ANCHORS = computeAnchors(initialWidth, initialHeight);
+export const ANCHORS = computeAnchors();
 
 export function useAnchors() {
-  const [anchors, setAnchors] = useState<BoardAnchors>(() => computeAnchors(initialWidth, initialHeight));
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handle = () => setAnchors(computeAnchors(window.innerWidth, window.innerHeight));
-    handle();
-    window.addEventListener("resize", handle);
-    return () => window.removeEventListener("resize", handle);
-  }, []);
-
-  return anchors;
+  return ANCHORS;
 }
