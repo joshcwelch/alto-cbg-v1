@@ -12,25 +12,31 @@ import HeroSlot from "./HeroSlot";
 import ManaBar from "./ManaBar";
 import MenuStamp from "./MenuStamp";
 import { useGameContext } from "../GameRoot";
+import { CardRegistry, HeroPowers } from "../cards/CardRegistry";
 
 type HandCardData = {
   id: string;
+  cardId: string;
   slot: { x: number; y: number };
   rotation: number;
-  art: string;
-  alt: string;
 };
 
 type MinionData = {
   id: string;
+  cardId: string;
   art: string;
   alt: string;
+  attack: number;
+  health: number;
 };
 
 type DragVisual = {
   id: string;
+  cardId: string;
   art: string;
   alt: string;
+  attack: number;
+  health: number;
   start: { x: number; y: number };
   end: { x: number; y: number };
   startTime: number;
@@ -52,6 +58,7 @@ const BoardStage = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [turn, setTurn] = useState<TurnState>("player");
   const [sharedMana, setSharedMana] = useState(1);
+  const [sharedMaxMana, setSharedMaxMana] = useState(1);
   const [turnTimeLeftMs, setTurnTimeLeftMs] = useState(50000);
   const turnTimeoutRef = useRef<number | null>(null);
   const prevTurnRef = useRef<TurnState | null>(null);
@@ -66,54 +73,47 @@ const BoardStage = () => {
     y: number;
   } | null>(null);
 
-  const [handCards, setHandCards] = useState<HandCardData[]>([
-    {
-      id: "hand-1",
-      slot: { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y + 12 },
-      rotation: -12,
-      art: "/assets/cards/sunlance-champion.png",
-      alt: "Sunlance Champion",
-    },
-    {
-      id: "hand-2",
-      slot: { x: BoardSlots.Hand.x + 120, y: BoardSlots.Hand.y + 6 },
-      rotation: -6,
-      art: "/assets/cards/sunlance-scout.png",
-      alt: "Sunlance Scout",
-    },
-    {
-      id: "hand-3",
-      slot: { x: BoardSlots.Hand.x + 240, y: BoardSlots.Hand.y },
+  const cardArtOverrides: Record<string, string> = useMemo(
+    () => ({
+      CELESTIAL_CRYSTAL_ACOLYTE: "/assets/cards/crystal-acolyte.png",
+      CELESTIAL_LIGHTBORN_ADEPT: "/assets/cards/sunlance-scout.png",
+      CELESTIAL_DAWNWATCH_CLERIC: "/assets/cards/beacon-monk.png",
+      EMBER_EMBERFORGED_BERSERKER: "/assets/cards/sunlance-champion.png",
+      SYLVAN_ROOTSNARL_GUARDIAN: "/assets/cards/seraphic-warden.png",
+    }),
+    []
+  );
+
+  const demoDeck: string[] = useMemo(
+    () => [
+      "CELESTIAL_CRYSTAL_ACOLYTE",
+      "CELESTIAL_LIGHTBORN_ADEPT",
+      "CELESTIAL_DAWNWATCH_CLERIC",
+      "EMBER_EMBERFORGED_BERSERKER",
+      "SYLVAN_ROOTSNARL_GUARDIAN",
+      "CELESTIAL_CRYSTAL_ACOLYTE",
+      "CELESTIAL_LIGHTBORN_ADEPT",
+      "CELESTIAL_DAWNWATCH_CLERIC",
+      "EMBER_EMBERFORGED_BERSERKER",
+      "SYLVAN_ROOTSNARL_GUARDIAN",
+    ],
+    []
+  );
+
+  const createHand = (deck: string[], owner: string) =>
+    deck.slice(0, 5).map((cardId, index) => ({
+      id: `${owner}-hand-${index}-${cardId}`,
+      cardId,
+      slot: { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y },
       rotation: 0,
-      art: "/assets/cards/beacon-monk.png",
-      alt: "Beacon Monk",
-    },
-    {
-      id: "hand-4",
-      slot: { x: BoardSlots.Hand.x + 360, y: BoardSlots.Hand.y + 6 },
-      rotation: 6,
-      art: "/assets/cards/crystal-acolyte.png",
-      alt: "Crystal Acolyte",
-    },
-    {
-      id: "hand-5",
-      slot: { x: BoardSlots.Hand.x + 480, y: BoardSlots.Hand.y + 12 },
-      rotation: 12,
-      art: "/assets/cards/seraphic-warden.png",
-      alt: "Seraphic Warden",
-    },
-  ]);
+    }));
+
+  const [handCards, setHandCards] = useState<HandCardData[]>(() => createHand(demoDeck, "player"));
   const [playerDrawIndex, setPlayerDrawIndex] = useState(5);
 
   const [playerMinions, setPlayerMinions] = useState<MinionData[]>([]);
   const [enemyMinions, setEnemyMinions] = useState<MinionData[]>([]);
-  const [enemyHand, setEnemyHand] = useState<MinionData[]>([
-    { id: "enemy-1", art: "/assets/cards/sunlance-champion.png", alt: "Sunlance Champion" },
-    { id: "enemy-2", art: "/assets/cards/sunlance-scout.png", alt: "Sunlance Scout" },
-    { id: "enemy-3", art: "/assets/cards/beacon-monk.png", alt: "Beacon Monk" },
-    { id: "enemy-4", art: "/assets/cards/crystal-acolyte.png", alt: "Crystal Acolyte" },
-    { id: "enemy-5", art: "/assets/cards/seraphic-warden.png", alt: "Seraphic Warden" },
-  ]);
+  const [enemyHand, setEnemyHand] = useState<HandCardData[]>(() => createHand(demoDeck, "enemy"));
   const [enemyDrawIndex, setEnemyDrawIndex] = useState(5);
   const [enemyDrag, setEnemyDrag] = useState<DragVisual | null>(null);
   const [enemyDragPos, setEnemyDragPos] = useState<{ x: number; y: number } | null>(null);
@@ -142,23 +142,12 @@ const BoardStage = () => {
   const minionSize = 130;
   const heroFrameSize = 223;
   const maxHandSize = 7;
-  const drawOrder = useMemo(
-    () => [
-      { art: "/assets/cards/sunlance-champion.png", alt: "Sunlance Champion" },
-      { art: "/assets/cards/sunlance-scout.png", alt: "Sunlance Scout" },
-      { art: "/assets/cards/beacon-monk.png", alt: "Beacon Monk" },
-      { art: "/assets/cards/crystal-acolyte.png", alt: "Crystal Acolyte" },
-      { art: "/assets/cards/seraphic-warden.png", alt: "Seraphic Warden" },
-      { art: "/assets/cards/sunlance-champion.png", alt: "Sunlance Champion" },
-      { art: "/assets/cards/sunlance-scout.png", alt: "Sunlance Scout" },
-      { art: "/assets/cards/beacon-monk.png", alt: "Beacon Monk" },
-      { art: "/assets/cards/crystal-acolyte.png", alt: "Crystal Acolyte" },
-      { art: "/assets/cards/seraphic-warden.png", alt: "Seraphic Warden" },
-    ],
-    []
-  );
   const enemyCardBackSize = { width: 140, height: 210 };
 
+  const getCardDef = (cardId: string) => CardRegistry[cardId];
+  const getCardArt = (cardId: string) =>
+    CardRegistry[cardId]?.art ?? cardArtOverrides[cardId];
+  // TODO: Add art paths for any card IDs not covered by CardRegistry art or overrides.
   const getLaneSlots = (lane: LaneConfig, count: number) => {
     const clamped = Math.max(1, count);
     const gap = 6;
@@ -221,17 +210,30 @@ const BoardStage = () => {
     if (!draggingId) return;
     const handlePointerUp = () => {
       const dragged = handCards.find((card) => card.id === draggingId);
-      if (dragged) {
-        if (isCursorInPlayerLane && playerMinions.length < 7 && insertionIndex !== null) {
+      if (dragged && turn === "player") {
+        const cardDef = getCardDef(dragged.cardId);
+        const canAfford = cardDef?.cost !== undefined && sharedMana >= cardDef.cost;
+        const isMinion = cardDef?.type === "MINION";
+        if (
+          isMinion &&
+          canAfford &&
+          isCursorInPlayerLane &&
+          playerMinions.length < 7 &&
+          insertionIndex !== null
+        ) {
           setPlayerMinions((prev) => {
             const next = [...prev];
             next.splice(insertionIndex, 0, {
               id: `minion-${Date.now()}-${dragged.id}`,
-              art: dragged.art,
-              alt: dragged.alt,
+              cardId: dragged.cardId,
+              art: getCardArt(dragged.cardId) ?? "/assets/cards/sunlance-champion.png",
+              alt: cardDef.name,
+              attack: cardDef.attack ?? 0,
+              health: cardDef.health ?? 0,
             });
             return next;
           });
+          setSharedMana((prev) => Math.max(0, prev - (cardDef.cost ?? 0)));
           setHandCards((prev) => prev.filter((card) => card.id !== draggingId));
         }
       }
@@ -250,6 +252,7 @@ const BoardStage = () => {
   ]);
 
   const handleDragStart = (id: string, slotX: number, slotY: number) => {
+    if (turn !== "player") return;
     setDraggingId(id);
     setDragOffset({ x: cursor.x - slotX, y: cursor.y - slotY });
   };
@@ -317,23 +320,26 @@ const BoardStage = () => {
       roundPendingRef.current = true;
     }
     if (prevTurn === "enemy" && turn === "player" && roundPendingRef.current) {
-      setSharedMana((prev) => Math.min(10, prev + 1));
+      setSharedMaxMana((prev) => {
+        const next = Math.min(10, prev + 1);
+        setSharedMana(next);
+        return next;
+      });
       roundPendingRef.current = false;
     }
     if (prevTurn === "enemy" && turn === "player") {
       setHandCards((prev) => {
         if (prev.length >= maxHandSize) return prev;
-        const nextCard = drawOrder[playerDrawIndex % drawOrder.length];
+        const nextCardId = demoDeck[playerDrawIndex % demoDeck.length];
         const nextId = `hand-${Date.now()}-${playerDrawIndex}`;
         setPlayerDrawIndex((index) => index + 1);
         return [
           ...prev,
           {
             id: nextId,
+            cardId: nextCardId,
             slot: prev[0]?.slot ?? { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y },
             rotation: 0,
-            art: nextCard.art,
-            alt: nextCard.alt,
           },
         ];
       });
@@ -341,14 +347,22 @@ const BoardStage = () => {
     if (prevTurn === "player" && turn === "enemy") {
       setEnemyHand((prev) => {
         if (prev.length >= maxHandSize) return prev;
-        const nextCard = drawOrder[enemyDrawIndex % drawOrder.length];
+        const nextCardId = demoDeck[enemyDrawIndex % demoDeck.length];
         const nextId = `enemy-${Date.now()}-${enemyDrawIndex}`;
         setEnemyDrawIndex((index) => index + 1);
-        return [...prev, { id: nextId, art: nextCard.art, alt: nextCard.alt }];
+        return [
+          ...prev,
+          {
+            id: nextId,
+            cardId: nextCardId,
+            slot: { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y },
+            rotation: 0,
+          },
+        ];
       });
     }
     prevTurnRef.current = turn;
-  }, [turn, drawOrder, enemyDrawIndex, maxHandSize, playerDrawIndex]);
+  }, [turn, demoDeck, enemyDrawIndex, maxHandSize, playerDrawIndex]);
 
 
   useEffect(() => {
@@ -356,6 +370,9 @@ const BoardStage = () => {
     if (enemyHand.length === 0 || enemyMinions.length >= 7 || enemyDrag) return;
     const playTimeout = window.setTimeout(() => {
       const card = enemyHand[0];
+      const cardDef = getCardDef(card.cardId);
+      if (!cardDef || cardDef.type !== "MINION") return;
+      if (sharedMana < cardDef.cost) return;
       const start = getEnemyHandSlot(0);
       const targetSlots = getLaneSlots(enemyLane, enemyMinions.length + 1);
       const target = targetSlots[enemyMinions.length];
@@ -364,10 +381,14 @@ const BoardStage = () => {
         y: target.y + (minionSize - enemyCardBackSize.height) / 2,
       };
       setEnemyHand((prev) => prev.slice(1));
+      setSharedMana((prev) => Math.max(0, prev - cardDef.cost));
       setEnemyDrag({
         id: `enemy-drag-${Date.now()}`,
-        art: card.art,
-        alt: card.alt,
+        cardId: card.cardId,
+        art: getCardArt(card.cardId) ?? "/assets/cards/sunlance-champion.png",
+        alt: cardDef.name,
+        attack: cardDef.attack ?? 0,
+        health: cardDef.health ?? 0,
         start,
         end,
         startTime: performance.now(),
@@ -395,7 +416,14 @@ const BoardStage = () => {
       } else {
         setEnemyMinions((prev) => [
           ...prev,
-          { id: `enemy-minion-${Date.now()}`, art: enemyDrag.art, alt: enemyDrag.alt },
+          {
+            id: `enemy-minion-${Date.now()}`,
+            cardId: enemyDrag.cardId,
+            art: enemyDrag.art,
+            alt: enemyDrag.alt,
+            attack: enemyDrag.attack,
+            health: enemyDrag.health,
+          },
         ]);
         setEnemyDrag(null);
         setEnemyDragPos(null);
@@ -497,31 +525,52 @@ const BoardStage = () => {
           }
         }}
       />
-      <ManaBar current={sharedMana} max={10} />
+      <ManaBar current={sharedMana} max={sharedMaxMana} />
       <EndTurnButton slot={BoardSlots.EndTurn} isActive={turn === "player"} onEndTurn={handleEndTurn} />
       <AbilityFrame
         slot={BoardSlots.AbilityFrame}
         iconSrc="/assets/ui/hero powers/hp-lyra-vt.png"
-        iconAlt="Lyra hero power"
+        iconAlt={playerHeroPower?.name ?? "Lyra hero power"}
       />
       <AbilityFrame
         slot={BoardSlots.EnemyAbilityFrame}
         iconSrc="/assets/ui/hero powers/hp-tharos-ec.png"
-        iconAlt="Tharos hero power"
+        iconAlt={enemyHeroPower?.name ?? "Tharos hero power"}
       />
       <div className="combat-lane combat-lane--enemy" />
       <div className="combat-lane combat-lane--player" />
-      {layoutHand(handCards).map((card) => {
+      {layoutHand(handCards).map((card, index) => {
+        const cardDef = getCardDef(card.cardId);
+        if (!cardDef) {
+          return null;
+        }
         const slot = getHandSlot(card.id, card.slot.x, card.slot.y);
+        const hoverOffsets = [
+          { x: -12, y: -20 },
+          { x: -8, y: -16 },
+          { x: 0, y: -14 },
+          { x: 8, y: -16 },
+          { x: 12, y: -20 },
+          { x: 16, y: -22 },
+          { x: 20, y: -24 },
+        ];
         return (
           <HandCard
             key={card.id}
             slot={slot}
-            artSrc={card.art}
-            alt={card.alt}
+            artSrc={getCardArt(card.cardId) ?? "/assets/cards/sunlance-champion.png"}
+            alt={cardDef.name}
             rotation={draggingId === card.id ? 0 : card.rotation}
             isDragging={draggingId === card.id}
             onDragStart={() => handleDragStart(card.id, card.slot.x, card.slot.y)}
+            name={cardDef.name}
+            text={cardDef.text}
+            cost={cardDef.cost}
+            attack={cardDef.attack}
+            health={cardDef.health}
+            type={cardDef.type}
+            hoverOffset={hoverOffsets[index] ?? { x: 0, y: -18 }}
+            isPlayable={turn === "player" && sharedMana >= cardDef.cost}
           />
         );
       })}
@@ -537,7 +586,12 @@ const BoardStage = () => {
       )}
       <GraveyardPortal center={BoardSlots.Graveyard} />
       {ghostSlot && draggingCard && (
-        <BoardMinion slot={ghostSlot} artSrc={draggingCard.art} alt={draggingCard.alt} isGhost />
+        <BoardMinion
+          slot={ghostSlot}
+          artSrc={getCardArt(draggingCard.cardId) ?? "/assets/cards/sunlance-champion.png"}
+          alt={getCardDef(draggingCard.cardId)?.name ?? "Card"}
+          isGhost
+        />
       )}
       {playerMinionLayout.map((minion) => (
         <BoardMinion
@@ -545,6 +599,8 @@ const BoardStage = () => {
           slot={minion.slot}
           artSrc={minion.art}
           alt={minion.alt}
+          attack={minion.attack}
+          health={minion.health}
           onTargetStart={() => {
             setTargetingFrom({
               id: minion.id,
@@ -560,6 +616,8 @@ const BoardStage = () => {
           slot={minion.slot}
           artSrc={minion.art}
           alt={minion.alt}
+          attack={minion.attack}
+          health={minion.health}
           onTargetEnter={() => {
             if (targetingFrom) {
               setTargetingToId(minion.id);
@@ -600,10 +658,17 @@ const BoardStage = () => {
         </svg>
       )}
 
-      <CursorCoords turn={turn} timeLeftMs={turnTimeLeftMs} mana={sharedMana} manaMax={10} />
+      <CursorCoords
+        turn={turn}
+        timeLeftMs={turnTimeLeftMs}
+        mana={sharedMana}
+        manaMax={sharedMaxMana}
+      />
       <BoardCursor />
     </div>
   );
 };
 
 export default BoardStage;
+  const playerHeroPower = HeroPowers.LYRA_VOID_TITHE;
+  const enemyHeroPower = HeroPowers.THAROS_EMBER_COMMAND;
