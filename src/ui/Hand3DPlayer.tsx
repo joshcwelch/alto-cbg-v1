@@ -71,6 +71,18 @@ export default function Hand3DPlayer() {
     setDragPreviewLane(null);
   }, [isPlayersTurn, setDragPreviewLane, setDragState]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const body = document.body;
+    const isDragging = Boolean(dragging);
+    const isHovering = hoveredIdx !== null && isPlayersTurn;
+    body.classList.toggle("cursor-grabbing", isDragging);
+    body.classList.toggle("cursor-grab", !isDragging && isHovering);
+    return () => {
+      body.classList.remove("cursor-grabbing", "cursor-grab");
+    };
+  }, [dragging, hoveredIdx, isPlayersTurn]);
+
   const { spacing, centerY, boardCenterY } = useMemo(() => {
     const handCenterRatio = anchors.playerHand.center;
     const boardCenterRatio = anchors.playerBoard.center;
@@ -136,7 +148,7 @@ export default function Hand3DPlayer() {
       world.set(x, y, 0);
     }
     const screenRatio = 1 - clientY / size.height;
-    const lane = screenRatio > BOARD_THRESHOLD ? getClosestLane(world, lanePositions) : null;
+    const lane = screenRatio > BOARD_THRESHOLD ? getClosestLane(world, lanePositions, viewport.width) : null;
     return { world, screenRatio, lane };
   };
 

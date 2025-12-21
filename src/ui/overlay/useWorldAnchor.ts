@@ -3,17 +3,27 @@ import type { PlayerId } from "../../core/cardTypes";
 import { computeSlotCenters } from "../slotMath";
 import { useAnchors } from "../boardAnchors";
 import { useGameStore } from "../../state/useGameStore";
-import { BOARD_HEIGHT, BOARD_WIDTH } from "../boardConfig";
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  PLAY_AREA_CENTER_OFFSET,
+  PLAY_AREA_WIDTH,
+  UNIT_TOKEN_RADIUS_PX
+} from "../boardConfig";
 
 export type AnchorPoint = { left: number; top: number; scale?: number };
 
 const VIEWPORT = { width: BOARD_WIDTH, height: BOARD_HEIGHT };
+const PLAY_AREA_RATIO = PLAY_AREA_WIDTH / BOARD_WIDTH;
 
 export default function useWorldAnchor(laneIndex: number, _slotIndex: number, owner: PlayerId = "player"): AnchorPoint {
   const anchors = useAnchors();
   const maxSlots = useGameStore(s => s.maxBoardSlots);
 
-  const slotCenters = useMemo(() => computeSlotCenters(maxSlots, VIEWPORT.width), [maxSlots]);
+  const slotCenters = useMemo(
+    () => computeSlotCenters(maxSlots, VIEWPORT.width, PLAY_AREA_RATIO, PLAY_AREA_CENTER_OFFSET, UNIT_TOKEN_RADIUS_PX),
+    [maxSlots]
+  );
   const clampedLane = Math.max(0, Math.min(maxSlots - 1, laneIndex));
   const left = (slotCenters[clampedLane] ?? 0) + VIEWPORT.width / 2;
   const band = owner === "enemy" ? anchors.enemyBoard : anchors.playerBoard;

@@ -8,3 +8,11 @@
 .board-overlay .unit-token {
   pointer-events: auto;
 }
+
+.lane-debug {
+  position: absolute;
+  left: 250px;
+  width: 1000px;
+  border: 2px solid #39ff6a;
+  box-shadow: 0 0 18px rgba(57, 255, 106, 0.35);
+}

@@ -29,12 +29,37 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
   const frameTex = useTexture(frameUrl);
   const artTex = useTexture(card.artSrc);
 
+  const artMaskTex = useMemo(() => {
+    if (typeof document === "undefined") return null;
+    const size = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.ellipse(size / 2, size / 2, size * 0.36, size * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    return tex;
+  }, []);
+
   useEffect(() => {
     frameTex.colorSpace = THREE.SRGBColorSpace;
     frameTex.needsUpdate = true;
     artTex.colorSpace = THREE.SRGBColorSpace;
     artTex.needsUpdate = true;
-  }, [artTex, frameTex]);
+    if (artMaskTex) {
+      artMaskTex.needsUpdate = true;
+    }
+  }, [artMaskTex, artTex, frameTex]);
 
   const mat = useMemo(
     () =>
@@ -87,7 +112,14 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
         renderOrder={renderOrder + 0.1}
       >
         <planeGeometry args={[UNIT_W * 0.88, UNIT_H * 0.74]} />
-        <meshBasicMaterial map={artTex} toneMapped={false} />
+        <meshBasicMaterial
+          map={artTex}
+          alphaMap={artMaskTex ?? undefined}
+          transparent
+          alphaTest={0.1}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       <Text
         position={[-UNIT_W * 0.34, -UNIT_H * 0.36, UNIT_THICKNESS / 2 + 0.006]}
