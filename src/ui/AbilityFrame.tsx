@@ -2,16 +2,16 @@ import type { BoardPoint } from "./BoardSlots";
 
 type AbilityFrameProps = {
   slot: BoardPoint;
+  iconSrc: string;
+  iconAlt: string;
 };
 
-const AbilityFrame = ({ slot }: AbilityFrameProps) => {
+const AbilityFrame = ({ slot, iconSrc, iconAlt }: AbilityFrameProps) => {
   return (
-    <img
-      className="ability-frame"
-      src="/assets/ui/frames/ability-frame.png"
-      alt=""
-      style={{ left: slot.x, top: slot.y }}
-    />
+    <div className="ability-frame" style={{ left: slot.x, top: slot.y }}>
+      <img className="ability-frame__icon" src={iconSrc} alt={iconAlt} />
+      <img className="ability-frame__frame" src="/assets/ui/frames/ability-frame.png" alt="" />
+    </div>
   );
 };
 

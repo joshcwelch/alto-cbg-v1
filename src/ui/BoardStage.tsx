@@ -31,8 +31,16 @@ const BoardStage = () => {
       />
       <ManaBar slot={BoardSlots.ManaBar} />
       <EndTurnButton slot={BoardSlots.EndTurn} />
-      <AbilityFrame slot={BoardSlots.AbilityFrame} />
-      <AbilityFrame slot={BoardSlots.EnemyAbilityFrame} />
+      <AbilityFrame
+        slot={BoardSlots.AbilityFrame}
+        iconSrc="/assets/ui/hero powers/hp-lyra-vt.png"
+        iconAlt="Lyra hero power"
+      />
+      <AbilityFrame
+        slot={BoardSlots.EnemyAbilityFrame}
+        iconSrc="/assets/ui/hero powers/hp-tharos-ec.png"
+        iconAlt="Tharos hero power"
+      />
       <div className="combat-lane combat-lane--enemy" />
       <div className="combat-lane combat-lane--player" />
       <HandCard slot={{ x: BoardSlots.Hand.x, y: BoardSlots.Hand.y + 12 }} artSrc="/assets/cards/sunlance-champion.png" alt="Sunlance Champion" rotation={-12} />

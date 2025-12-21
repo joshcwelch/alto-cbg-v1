@@ -194,8 +194,26 @@ body {
   position: absolute;
   width: 128px;
   height: 128px;
-  object-fit: contain;
   z-index: 3;
+}
+
+.ability-frame__icon {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.ability-frame__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .combat-lane {
