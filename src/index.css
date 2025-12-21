@@ -4,6 +4,11 @@
   padding: 0;
 }
 
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 @font-face {
   font-family: "IM Fell English";
   src: url("/assets/fonts/IM_Fell_English/IMFellEnglish-Regular.ttf") format("truetype");
@@ -195,6 +200,10 @@ body {
   width: 128px;
   height: 128px;
   z-index: 3;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: none;
 }
 
 .ability-frame__icon {
@@ -214,6 +223,14 @@ body {
   height: 128px;
   object-fit: contain;
   pointer-events: none;
+}
+
+.ability-frame:hover {
+  filter: brightness(1.08);
+}
+
+.ability-frame:active {
+  transform: scale(0.98);
 }
 
 .combat-lane {
@@ -309,6 +326,38 @@ body {
 .mana-bar {
   position: absolute;
   pointer-events: none;
+  left: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.mana-pip {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(88, 170, 255, 0.5);
+  box-shadow: 0 0 8px rgba(40, 90, 160, 0.4);
+  transform: translate(-50%, -50%);
+  opacity: 0.6;
+}
+
+.mana-pip.is-active {
+  opacity: 0.95;
+  box-shadow: 0 0 10px rgba(90, 160, 255, 0.75), 0 0 18px rgba(40, 110, 255, 0.55);
+  animation: mana-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mana-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
 }
 
 .mana-bar__base {
@@ -346,6 +395,11 @@ body {
   width: 180px;
   height: 270px;
   transform-origin: 50% 100%;
+  touch-action: none;
+}
+
+.hand-card.is-dragging {
+  z-index: 6;
 }
 
 .hand-card__art {
@@ -371,6 +425,12 @@ body {
   position: absolute;
   width: 130px;
   height: 130px;
+}
+
+.board-minion.is-ghost {
+  opacity: 0.55;
+  filter: drop-shadow(0 0 8px rgba(90, 140, 255, 0.6));
+  pointer-events: none;
 }
 
 .board-minion__art {
@@ -444,6 +504,7 @@ body {
   object-fit: contain;
   pointer-events: none;
   transform-origin: 50% 100%;
+  z-index: 4;
 }
 
 .board-cursor {
@@ -455,6 +516,16 @@ body {
   pointer-events: none;
   transition: opacity 0.12s ease;
   z-index: 20;
+}
+
+.targeting-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1536px;
+  height: 1024px;
+  pointer-events: none;
+  z-index: 12;
 }
 
 .board-cursor__icon {
@@ -471,13 +542,13 @@ body {
 }
 
 .cursor-coords {
-  position: absolute;
-  left: 16px;
-  top: 16px;
-  width: 160px;
-  height: 54px;
-  padding: 8px 10px;
-  background: rgba(10, 10, 10, 0.7);
+                      position: absolute;
+                      left: 16px;
+                      top: 16px;
+                      width: 180px;
+                      height: 210px;
+                      padding: 8px 10px;
+                      background: rgba(10, 10, 10, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #e6dfd2;
   font-family: "Spectral SC", "IM Fell English", "Palatino Linotype", "Book Antiqua", serif;
@@ -491,6 +562,10 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(230, 223, 210, 0.7);
+}
+
+.cursor-coords__label--secondary {
+  margin-top: 6px;
 }
 
 .cursor-coords__value {

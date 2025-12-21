@@ -11,6 +11,7 @@ const CardBack = ({ slot, rotation = 0 }: CardBackProps) => {
       className="card-back"
       src="/assets/cards/frames/card-back.PNG"
       alt=""
+      draggable={false}
       style={{ left: slot.x, top: slot.y, transform: `rotate(${rotation}deg)` }}
     />
   );
