@@ -9,6 +9,23 @@ html, body, #root {
   background: #0b1220;
   color: #e5eaf7;
   font-family: "IM Fell English", "Times New Roman", serif;
+  cursor: url("/assets/ui/cursor-pointer-64.png") 16 16, auto;
+}
+
+body.cursor-grab,
+body.cursor-grab #root,
+body.cursor-grab .GameRoot,
+body.cursor-grab .game-canvas,
+body.cursor-grab .game-canvas canvas {
+  cursor: url("/assets/ui/cursor-open-hand-64.png") 16 16, auto;
+}
+
+body.cursor-grabbing,
+body.cursor-grabbing #root,
+body.cursor-grabbing .GameRoot,
+body.cursor-grabbing .game-canvas,
+body.cursor-grabbing .game-canvas canvas {
+  cursor: url("/assets/ui/cursor-grabbing-hand-64.png") 16 16, auto;
 }
 
 @font-face {
@@ -56,6 +73,8 @@ html, body, #root {
 .board-layer {
   position: absolute;
   inset: 0;
+  width: 1536px;
+  height: 1024px;
   display: flex;
   justify-content: center;
   align-items: stretch;
@@ -63,15 +82,15 @@ html, body, #root {
 
 .board-frame {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 1536px;
+  height: 1024px;
 }
 
 .board-bg {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 1536px;
+  height: 1024px;
   object-fit: cover;
   background-size: cover;
   background-position: center;

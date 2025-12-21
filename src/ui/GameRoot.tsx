@@ -36,10 +36,11 @@ export default function GameRoot({ children, canvasContent }: GameRootProps) {
               orthographic
               camera={{ zoom: 100, position: [0, 0, 10] }}
               className="game-canvas"
+              style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT }}
               onCreated={({ gl }) => {
                 const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
                 gl.setPixelRatio(dpr);
-                gl.setSize(BOARD_WIDTH, BOARD_HEIGHT, false);
+                gl.setSize(BOARD_WIDTH, BOARD_HEIGHT, true);
               }}
             >
               {canvasContent}

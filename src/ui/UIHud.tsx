@@ -41,7 +41,6 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
   const mana = useGameStore(s => s.playerMana);
   const maxMana = useGameStore(s => s.maxMana);
   const turn = useGameStore(s => s.turn);
-  const turnNumber = useGameStore(s => s.turnNumber);
   const winner = useGameStore(s => s.winner);
   const endTurn = useGameStore(s => s.endTurn);
   const attackUnit = useGameStore(s => s.attackUnit);
@@ -78,16 +77,6 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
     attackUnit(selectedId, { type: "hero", playerId: "enemy" });
   };
 
-  const turnLabel = winner
-    ? winner === "draw"
-      ? "Draw"
-      : winner === "player"
-        ? "Victory"
-        : "Defeat"
-    : turn === "player"
-      ? "Your Turn"
-      : "Enemy Turn";
-
   const canEndTurn = turn === "player" && !winner;
   const endTurnAsset = canEndTurn
     ? "/assets/ui/end-turn-active.png"
@@ -104,50 +93,9 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
       <div
         style={{
           position: "absolute",
-          top: "16px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          padding: "10px 16px",
-          borderRadius: 18,
-          background: "linear-gradient(135deg, rgba(38,78,132,0.92), rgba(20,40,74,0.92))",
-          color: "#fff",
-          fontWeight: 800,
-          letterSpacing: 0.5,
-          boxShadow: "0 12px 24px rgba(0,0,0,0.35)",
-          pointerEvents: "none",
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          minWidth: 180,
-          justifyContent: "center",
-          textTransform: "uppercase"
-        }}
-      >
-        <span style={{ opacity: 0.86, fontSize: 13 }}>Turn {turnNumber}</span>
-        <span
-          style={{
-            padding: "6px 10px",
-            borderRadius: 999,
-            background: winner
-              ? "#39465e"
-              : turn === "player"
-                ? "linear-gradient(135deg, #5ce3b0, #2db087)"
-                : "linear-gradient(135deg, #ffd27a, #f0b542)",
-            color: "#0b1628",
-            boxShadow: winner ? "none" : "0 0 12px rgba(255,255,255,0.22)",
-            fontSize: 12
-          }}
-        >
-          {turnLabel}
-        </span>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
           top: "28px",
           left: 36,
-          transform: "translateY(30px)",
+          transform: "translateY(70px)",
           pointerEvents: "auto"
         }}
       >
@@ -165,7 +113,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
           alt=""
           style={{
             position: "absolute",
-            top: `${midGapY}%`,
+            top: `calc(${midGapY}% + 5px)`,
             left: 36,
             transform: "translateY(-50%)",
             width: 115,
@@ -183,7 +131,7 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
           bottom: hudRowY === undefined ? `${bottomOffset}px` : undefined,
           top: hudRowY !== undefined ? `${hudRowY}%` : undefined,
           left: 44,
-          transform: "translateY(30px)",
+          transform: "translateY(-20px)",
           pointerEvents: "auto"
         }}
       >
@@ -222,14 +170,16 @@ export default function UIHud({ safeBottom = 90, anchors }: UIHudProps) {
         disabled={!canEndTurn}
         style={{
           position: "absolute",
-          top: "50%",
-          right: 46,
+          top: "calc(50% - 20px)",
+          right: 238,
           transform: "translateY(-50%)",
           pointerEvents: "auto",
           border: "none",
           background: "transparent",
           padding: 0,
-          cursor: canEndTurn ? "pointer" : "not-allowed"
+          cursor: canEndTurn
+            ? "url('/assets/ui/cursor-pointer-64.png') 16 16, pointer"
+            : "not-allowed"
         }}
         onMouseDown={e => {
           if (!canEndTurn) return;

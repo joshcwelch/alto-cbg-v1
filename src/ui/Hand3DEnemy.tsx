@@ -6,6 +6,7 @@ import type { CardVisual } from "../../apps/client/src/game/cards/types";
 import { useAnchors } from "./boardAnchors";
 
 const ENEMY_OVERLAP = 0.72;
+const ENEMY_DROP = 0.32; // push the enemy hand toward screen top (ratio of viewport height)
 
 export default function Hand3DEnemy() {
   const enemyHand = useGameStore(s => s.enemyHand);
@@ -15,7 +16,7 @@ export default function Hand3DEnemy() {
   const { spacing, centerY } = useMemo(() => {
     const enemyCenterRatio = anchors.enemyHand.center;
     const spacingWorld = viewport.width * anchors.cardSpacing * ENEMY_OVERLAP;
-    const centerYWorld = (0.5 - enemyCenterRatio) * viewport.height;
+    const centerYWorld = (0.5 - enemyCenterRatio) * viewport.height + viewport.height * ENEMY_DROP * 0.5;
     return { spacing: spacingWorld, centerY: centerYWorld };
   }, [anchors.cardSpacing, anchors.enemyHand.center, viewport.height, viewport.width]);
 

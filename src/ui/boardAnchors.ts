@@ -34,14 +34,15 @@ const BASE = {
   enemyHand: 0.1,
   playerHand: 0.15,
   laneHeight: LANE_HEIGHT_RATIO, // required: lane height scales from board height
-  midGap: 0.1,      // midfield gap between lanes (8-12% viewport)
+  midGap: 0.083,    // midfield gap between lanes (8-12% viewport)
   handBoardGap: 0.018,
   slotGap: 0.02,
-  paddingTop: 0.024,
+  paddingTop: 0.06,
   paddingBottom: 0.06,
   cardSpacing: 0.086,
   boardSpacing: 0.032,
   safeBottomPx: 120,
+  playerBoardOffsetPx: 80,
   laneScale: {
     enemy: 0.95,
     player: 1.05
@@ -79,7 +80,8 @@ function computeAnchors(): BoardAnchors {
   const enemyBoardTop = cursor;
   cursor += enemyBoardHeight + boardGap;
 
-  const playerBoardTop = cursor;
+  const playerBoardOffset = BASE.playerBoardOffsetPx / BOARD_HEIGHT;
+  const playerBoardTop = cursor + playerBoardOffset;
   cursor += playerBoardHeight + handBoardGap;
 
   const playerHandTop = cursor;

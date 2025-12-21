@@ -9,6 +9,10 @@ type HeroPanelProps = {
 };
 
 const FRAME_IMAGE_URL = "/assets/ui/frames/player-frame.png";
+const PANEL_WIDTH = 192;
+const PANEL_SCALE = 0.8;
+const PANEL_FONT_SIZE = Math.round(27 * PANEL_SCALE);
+const PANEL_MIN_WIDTH = Math.round(36 * PANEL_SCALE);
 
 export default function HeroPanel({ playerId, align = "bottom" }: HeroPanelProps) {
   const heroStates = useGameStore(s => s.heroStates);
@@ -20,7 +24,7 @@ export default function HeroPanel({ playerId, align = "bottom" }: HeroPanelProps
   return (
     <div
       style={{
-        width: 192,
+        width: PANEL_WIDTH * PANEL_SCALE,
         aspectRatio: "675 / 935",
         pointerEvents: "auto",
         position: "relative",
@@ -74,11 +78,11 @@ export default function HeroPanel({ playerId, align = "bottom" }: HeroPanelProps
           bottom: "8%",
           left: "calc(50% - 2px)",
           transform: "translateX(-50%) translateY(6px)",
-          minWidth: 36,
+          minWidth: PANEL_MIN_WIDTH,
           padding: "2px 6px",
           color: "#e7f6ff",
           fontWeight: 900,
-          fontSize: 27,
+          fontSize: PANEL_FONT_SIZE,
           textAlign: "center",
           textShadow:
             "0 0 6px rgba(90, 210, 255, 0.9), 0 0 14px rgba(70, 190, 255, 0.75), 0 0 22px rgba(40, 150, 255, 0.55)",
