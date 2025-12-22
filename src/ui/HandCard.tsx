@@ -8,6 +8,7 @@ type HandCardProps = {
   rotation?: number;
   isDragging?: boolean;
   onDragStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onActivate?: () => void;
   name: string;
   text: string;
   cost: number;
@@ -25,6 +26,7 @@ const HandCard = ({
   rotation = 0,
   isDragging = false,
   onDragStart,
+  onActivate,
   name,
   text,
   cost,
@@ -57,10 +59,17 @@ const HandCard = ({
       onPointerLeave={() => setCursorState("default")}
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
-        setCursorState("dragging");
-        onDragStart?.(event);
+        if (onDragStart) {
+          setCursorState("dragging");
+          onDragStart(event);
+        }
       }}
-      onPointerUp={() => setCursorState("hover")}
+      onPointerUp={() => {
+        setCursorState("hover");
+        if (!isDragging) {
+          onActivate?.();
+        }
+      }}
     >
       <span className="hand-card__glow" aria-hidden="true" />
       <img className="hand-card__art" src={artSrc} alt={alt} draggable={false} />

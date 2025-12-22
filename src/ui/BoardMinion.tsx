@@ -8,6 +8,8 @@ type BoardMinionProps = {
   attack?: number;
   health?: number;
   isGhost?: boolean;
+  isExhausted?: boolean;
+  isAttackVisual?: boolean;
   onTargetStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
   onTargetEnter?: () => void;
   onTargetLeave?: () => void;
@@ -20,6 +22,8 @@ const BoardMinion = ({
   attack = 2,
   health = 2,
   isGhost = false,
+  isExhausted = false,
+  isAttackVisual = false,
   onTargetStart,
   onTargetEnter,
   onTargetLeave,
@@ -28,18 +32,24 @@ const BoardMinion = ({
 
   return (
     <div
-      className={`board-minion${isGhost ? " is-ghost" : ""}`}
+      className={`board-minion${isGhost ? " is-ghost" : ""}${isExhausted ? " is-exhausted" : ""}${isAttackVisual ? " is-attack-visual" : ""}`}
       style={{ left: slot.x, top: slot.y }}
       onPointerLeave={() => {
+        if (isAttackVisual) return;
         setCursorState("default");
         onTargetLeave?.();
       }}
       onPointerDown={(event) => {
+        if (isAttackVisual) return;
         setCursorState("dragging");
         onTargetStart?.(event);
       }}
-      onPointerUp={() => setCursorState("hover")}
+      onPointerUp={() => {
+        if (isAttackVisual) return;
+        setCursorState("hover");
+      }}
       onPointerEnter={() => {
+        if (isAttackVisual) return;
         setCursorState("hover");
         onTargetEnter?.();
       }}
