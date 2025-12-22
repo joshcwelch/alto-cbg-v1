@@ -298,6 +298,175 @@ export const CardRegistry: Record<string, Card> = {
      SYLVAN KIN — Beasts, regrowth, board-centric buffs, nature control
      Identity: Wide boards, healing-over-time, efficient taunts
      ------------------------------------------------------------------------ */
+  /* Demo Starter Deck - Ember */
+  EMBER_EMBERFOOT_SOLDIER: minion(
+    "EMBER_EMBERFOOT_SOLDIER",
+    "Emberfoot Soldier",
+    "EMBER",
+    1,
+    "COMMON",
+    1,
+    2,
+    "Rally on the front line.",
+    { tribe: "Soldier" }
+  ),
+
+  EMBER_ASHBOUND_INITIATE: minion(
+    "EMBER_ASHBOUND_INITIATE",
+    "Ashbound Initiate",
+    "EMBER",
+    1,
+    "COMMON",
+    2,
+    1,
+    "Raze the path.",
+    { tribe: "Initiate" }
+  ),
+
+  EMBER_CINDERBLADE_RAIDER: minion(
+    "EMBER_CINDERBLADE_RAIDER",
+    "Cinderblade Raider",
+    "EMBER",
+    2,
+    "COMMON",
+    3,
+    1,
+    "Fast strike.",
+    { tribe: "Raider" }
+  ),
+
+  EMBER_FLAMEFORGED_BRUTE: minion(
+    "EMBER_FLAMEFORGED_BRUTE",
+    "Flameforged Brute",
+    "EMBER",
+    3,
+    "COMMON",
+    3,
+    3,
+    "Heavy hitter.",
+    { tribe: "Brute" }
+  ),
+
+  EMBER_ASHSPIRE_VANGUARD: minion(
+    "EMBER_ASHSPIRE_VANGUARD",
+    "Ashspire Vanguard",
+    "EMBER",
+    3,
+    "COMMON",
+    2,
+    4,
+    "Taunt.",
+    { tags: ["Taunt"], tribe: "Vanguard" }
+  ),
+
+  EMBER_EMBER_HOUND: minion(
+    "EMBER_EMBER_HOUND",
+    "Ember Hound",
+    "EMBER",
+    2,
+    "COMMON",
+    2,
+    2,
+    "Pack aggression.",
+    { tribe: "Beast" }
+  ),
+
+  EMBER_MOLTEN_CHAMPION: minion(
+    "EMBER_MOLTEN_CHAMPION",
+    "Molten Champion",
+    "EMBER",
+    4,
+    "COMMON",
+    4,
+    3,
+    "Burn with momentum.",
+    { tribe: "Champion" }
+  ),
+
+  EMBER_PYREBOUND_KNIGHT: minion(
+    "EMBER_PYREBOUND_KNIGHT",
+    "Pyrebound Knight",
+    "EMBER",
+    5,
+    "COMMON",
+    4,
+    5,
+    "Shield.",
+    { tags: ["Shield"], tribe: "Knight" }
+  ),
+
+  EMBER_INFERNAL_COLOSSUS: minion(
+    "EMBER_INFERNAL_COLOSSUS",
+    "Infernal Colossus",
+    "EMBER",
+    7,
+    "COMMON",
+    7,
+    7,
+    "Resilient.",
+    { tags: ["Resilient"], tribe: "Colossus" }
+  ),
+
+  EMBER_SCORCHING_COMMAND: spell(
+    "EMBER_SCORCHING_COMMAND",
+    "Scorching Command",
+    "EMBER",
+    1,
+    "COMMON",
+    "Deal 2 damage to an enemy.",
+    { tags: ["Burn"] }
+  ),
+
+  EMBER_ASHFALL_STRIKE: spell(
+    "EMBER_ASHFALL_STRIKE",
+    "Ashfall Strike",
+    "EMBER",
+    2,
+    "COMMON",
+    "Deal 3 damage to an enemy minion.",
+    { tags: ["Removal"] }
+  ),
+
+  EMBER_FLAME_SURGE: spell(
+    "EMBER_FLAME_SURGE",
+    "Flame Surge",
+    "EMBER",
+    3,
+    "RARE",
+    "Deal 1 damage to all enemy minions.",
+    { tags: ["AOE"] }
+  ),
+
+  EMBER_BATTLE_CRY_OF_EMBERS: spell(
+    "EMBER_BATTLE_CRY_OF_EMBERS",
+    "Battle Cry of Embers",
+    "EMBER",
+    3,
+    "RARE",
+    "Give your minions +1 Attack.",
+    { tags: ["Buff"] }
+  ),
+
+  EMBER_MOLTEN_VERDICT: spell(
+    "EMBER_MOLTEN_VERDICT",
+    "Molten Verdict",
+    "EMBER",
+    4,
+    "RARE",
+    "Deal 4 damage to a minion. If it dies, draw a card.",
+    { tags: ["Removal", "Draw"] }
+  ),
+
+  EMBER_BURN_THE_WEAK: spell(
+    "EMBER_BURN_THE_WEAK",
+    "Burn the Weak",
+    "EMBER",
+    2,
+    "COMMON",
+    "Deal 2 damage to a damaged enemy minion. If it survives, deal 1 more.",
+    { tags: ["Burn"] }
+  ),
+
   SYLVAN_ELDERWOOD_WOLF: minion(
     "SYLVAN_ELDERWOOD_WOLF",
     "Elderwood Wolf",
@@ -420,6 +589,175 @@ export const CardRegistry: Record<string, Card> = {
      GEARSPIRE RAIDERS — Mechs, value chains, cog synergies, explosives
      Identity: Token mechs, modular buffs, direct cannon damage
      ------------------------------------------------------------------------ */
+  /* Demo Starter Deck - Voidborn */
+  VOID_VOID_INITIATE: minion(
+    "VOID_VOID_INITIATE",
+    "Void Initiate",
+    "VOIDBORN",
+    1,
+    "COMMON",
+    1,
+    2,
+    "Acolyte of the void.",
+    { tribe: "Cultist" }
+  ),
+
+  VOID_UMBRAL_THRALL: minion(
+    "VOID_UMBRAL_THRALL",
+    "Umbral Thrall",
+    "VOIDBORN",
+    2,
+    "COMMON",
+    2,
+    2,
+    "Lifesteal.",
+    { tags: ["Lifesteal"], tribe: "Thrall" }
+  ),
+
+  VOID_VOIDBOUND_ACOLYTE: minion(
+    "VOID_VOIDBOUND_ACOLYTE",
+    "Voidbound Acolyte",
+    "VOIDBORN",
+    2,
+    "COMMON",
+    2,
+    3,
+    "When this dies, draw a card.",
+    { tags: ["Deathrattle"], tribe: "Acolyte" }
+  ),
+
+  VOID_ABYSSAL_WATCHER: minion(
+    "VOID_ABYSSAL_WATCHER",
+    "Abyssal Watcher",
+    "VOIDBORN",
+    3,
+    "COMMON",
+    3,
+    3,
+    "Stealth.",
+    { tags: ["Stealth"], tribe: "Watcher" }
+  ),
+
+  VOID_GRAVETIDE_COLLECTOR: minion(
+    "VOID_GRAVETIDE_COLLECTOR",
+    "Gravetide Collector",
+    "VOIDBORN",
+    3,
+    "COMMON",
+    2,
+    4,
+    "Whenever a minion dies, gain +1 Attack this turn.",
+    { tags: ["Synergy"], tribe: "Reaper" }
+  ),
+
+  VOID_HOLLOW_SENTINEL: minion(
+    "VOID_HOLLOW_SENTINEL",
+    "Hollow Sentinel",
+    "VOIDBORN",
+    4,
+    "COMMON",
+    2,
+    5,
+    "Taunt.",
+    { tags: ["Taunt"], tribe: "Sentinel" }
+  ),
+
+  VOID_VOID_LEECH: minion(
+    "VOID_VOID_LEECH",
+    "Void Leech",
+    "VOIDBORN",
+    3,
+    "COMMON",
+    3,
+    2,
+    "Lifesteal.",
+    { tags: ["Lifesteal"], tribe: "Leech" }
+  ),
+
+  VOID_DUSK_HERALD: minion(
+    "VOID_DUSK_HERALD",
+    "Dusk Herald",
+    "VOIDBORN",
+    5,
+    "COMMON",
+    4,
+    4,
+    "Your hero takes 1 damage when you play this.",
+    { tags: ["Self-Damage"], tribe: "Herald" }
+  ),
+
+  VOID_OBSIDIAN_WARDEN: minion(
+    "VOID_OBSIDIAN_WARDEN",
+    "Obsidian Warden",
+    "VOIDBORN",
+    6,
+    "COMMON",
+    5,
+    6,
+    "Taunt. Resilient.",
+    { tags: ["Taunt", "Resilient"], tribe: "Warden" }
+  ),
+
+  VOID_VOID_TITHE: spell(
+    "VOID_VOID_TITHE",
+    "Void Tithe",
+    "VOIDBORN",
+    1,
+    "COMMON",
+    "Deal 1 damage to your hero. Draw a card.",
+    { tags: ["Draw", "Self-Damage"] }
+  ),
+
+  VOID_GRASP_OF_NOTHING: spell(
+    "VOID_GRASP_OF_NOTHING",
+    "Grasp of Nothing",
+    "VOIDBORN",
+    2,
+    "COMMON",
+    "Deal 2 damage to an enemy minion.",
+    { tags: ["Removal"] }
+  ),
+
+  VOID_SHADOW_RECLAIM: spell(
+    "VOID_SHADOW_RECLAIM",
+    "Shadow Reclaim",
+    "VOIDBORN",
+    2,
+    "COMMON",
+    "Restore 2 Health to your hero. Draw a card.",
+    { tags: ["Heal", "Draw"] }
+  ),
+
+  VOID_GRAVE_OFFERING: spell(
+    "VOID_GRAVE_OFFERING",
+    "Grave Offering",
+    "VOIDBORN",
+    3,
+    "RARE",
+    "Destroy a friendly minion. Draw two cards.",
+    { tags: ["Sacrifice", "Draw"] }
+  ),
+
+  VOID_SILENCE_THE_LIGHT: spell(
+    "VOID_SILENCE_THE_LIGHT",
+    "Silence the Light",
+    "VOIDBORN",
+    3,
+    "RARE",
+    "Set a minion's Attack to 1 and remove its keywords.",
+    { tags: ["Control"] }
+  ),
+
+  VOID_ENCROACHING_VOID: spell(
+    "VOID_ENCROACHING_VOID",
+    "Encroaching Void",
+    "VOIDBORN",
+    4,
+    "RARE",
+    "Deal 1 damage to all minions.",
+    { tags: ["AOE"] }
+  ),
+
   GEAR_SPIRE_STEAM_CLOAK: spell(
     "GEAR_SPIRE_STEAM_CLOAK",
     "Steam Cloak",
@@ -597,14 +935,14 @@ export const HeroPowers: Record<string, HeroPower> = {
     "Void Tithe",
     "VOIDBORN",
     2,
-    "Destroy a friendly minion. Draw a card.",
+    "Deal 1 damage to your hero. Draw a card.",
     {
-      tags: ["Sacrifice", "Draw"],
+      tags: ["Self-Damage", "Draw"],
       dev: {
         intent:
-          "Repeatable card advantage gated behind board investment. Enables Voidborn sacrifice lines without raw tempo.",
+          "Repeatable card advantage gated behind self-damage. Enables Voidborn attrition lines without raw tempo.",
         notes:
-          "Engine: pick friendly minion target; destroy; then draw 1. If no valid target, hero power cannot be used.",
+          "Engine: deal 1 to your hero, then draw 1. Can be used even with an empty board.",
       },
     }
   ),
@@ -619,14 +957,14 @@ export const HeroPowers: Record<string, HeroPower> = {
     "Ember Command",
     "EMBER",
     2,
-    "Deal 1 damage to a minion. If it dies, refresh (1) Mana.",
+    "Deal 1 damage to an enemy. If it dies this turn, gain +1 Altlight next turn.",
     {
       tags: ["Damage", "Tempo"],
       dev: {
         intent:
           "A measured, repeatable ping that can convert into small tempo when used as a finisher—without enabling infinite chains.",
         notes:
-          "Engine: target must be a minion. If damage causes death, immediately restore 1 current-turn mana (cap at max).",
+          "Engine: target enemy hero or minion. If the target dies this turn, grant +1 mana on your next turn only.",
       },
     }
   ),
