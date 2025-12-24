@@ -10,13 +10,29 @@ import HandCard from "./HandCard";
 import HeroSlot from "./HeroSlot";
 import ManaBar from "./ManaBar";
 import MenuStamp from "./MenuStamp";
+import GraveyardPortal, { GRAVEYARD_PORTAL_SIZE } from "./GraveyardPortal";
+import GraveyardVoidFX from "./GraveyardVoidFX";
 import { useGameContext } from "../GameRoot";
 import { CardRegistry, getHeroPowerFor } from "../cards/CardRegistry";
 import { chooseAiIntent } from "../ai/ai";
 import { COMBAT_TIMING } from "../engine/combatTiming";
 import { MAX_BOARD_SIZE } from "../engine/constants";
-import { createInitialState, engineReducer, getCardTargetType, getHeroPowerTargetTypeFor } from "../engine/engine";
+import {
+  createInitialState,
+  engineReducer,
+  getCardTargetType,
+  getHeroPowerTargetTypeFor,
+} from "../engine/engine";
 import type { Intent, MinionInstance, SlamProfile, TargetSpec } from "../engine/types";
+
+type HeroTargetHover =
+  | { id: "enemy-hero"; x: number; y: number }
+  | { id: "player-hero"; x: number; y: number }
+  | null;
+
+type MinionTargetHover =
+  | { id: string; owner: "enemy" | "player"; x: number; y: number }
+  | null;
 
 type HandCardData = {
   id: string;
@@ -44,20 +60,17 @@ type LaneConfig = {
   height: number;
 };
 
+type GraveyardBurst = {
+  id: string;
+  bounds: { x: number; y: number; width: number; height: number };
+};
+
 const minionSize = 130;
 const heroFrameSize = 223;
 const handSpacing = 120;
 
-const cardArtOverrides: Record<string, string> = {
-  CELESTIAL_CRYSTAL_ACOLYTE: "/assets/cards/crystal-acolyte.png",
-  CELESTIAL_LIGHTBORN_ADEPT: "/assets/cards/sunlance-scout.png",
-  CELESTIAL_DAWNWATCH_CLERIC: "/assets/cards/beacon-monk.png",
-  EMBER_EMBERFORGED_BERSERKER: "/assets/cards/sunlance-champion.png",
-  SYLVAN_ROOTSNARL_GUARDIAN: "/assets/cards/seraphic-warden.png",
-};
-
 const getCardDef = (cardId: string) => CardRegistry[cardId];
-const getCardArt = (cardId: string) => CardRegistry[cardId]?.art ?? cardArtOverrides[cardId];
+const getCardArt = (cardId: string) => getCardDef(cardId)?.art;
 
 const getLaneSlots = (lane: LaneConfig, count: number) => {
   const totalWidth = count * minionSize + (count - 1) * 16;
@@ -76,12 +89,13 @@ const layoutMinions = (minions: MinionInstance[], lane: LaneConfig) => {
 
 const layoutHand = (cards: HandCardData[]) => {
   const count = cards.length;
-  const centerX = BoardSlots.Hand.x;
+  const centerX = BoardSlots.BoardCenter.x;
   const startX = centerX - ((count - 1) * handSpacing) / 2;
+  const spread = count >= 2 ? 2 : 0;
   return cards.map((card, index) => ({
     ...card,
     slot: { x: startX + index * handSpacing, y: BoardSlots.Hand.y },
-    rotation: (index - (count - 1) / 2) * -2,
+    rotation: (index - (count - 1) / 2) * spread,
   }));
 };
 
@@ -91,58 +105,76 @@ const getEnemyHandSlot = (index: number) => ({
 });
 
 const getSpellTarget = (
-  targeting: { id: string; owner: "player" | "enemy" } | null,
-  targetingHero: { id: "enemy-hero" | "player-hero"; x: number; y: number } | null
-) => {
+  targeting: MinionTargetHover,
+  targetingHero: HeroTargetHover
+): TargetSpec | undefined => {
   if (targetingHero) {
-    return { type: "HERO", player: targetingHero.id === "enemy-hero" ? "enemy" : "player" } as TargetSpec;
+    return {
+      type: "HERO",
+      player: targetingHero.id === "enemy-hero" ? "enemy" : "player",
+    };
   }
+
   if (targeting) {
-    return { type: "MINION", id: targeting.id, owner: targeting.owner } as TargetSpec;
+    return {
+      type: "MINION",
+      id: targeting.id,
+      owner: targeting.owner,
+    };
   }
+
   return undefined;
 };
 
 const BoardStage = () => {
   const { cursor } = useGameContext();
-  const [state, dispatch] = useReducer(engineReducer, undefined, () => createInitialState());
+  const [state, dispatch] = useReducer(engineReducer, undefined, createInitialState);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
   const [spellTargetingFrom, setSpellTargetingFrom] = useState<{
     cardId: string;
     handId: string;
     x: number;
     y: number;
   } | null>(null);
-  const [spellTargetingToMinion, setSpellTargetingToMinion] = useState<{
-    id: string;
-    owner: "player" | "enemy";
-  } | null>(null);
-  const [spellTargetingToHero, setSpellTargetingToHero] = useState<{
-    id: "enemy-hero" | "player-hero";
-    x: number;
-    y: number;
-  } | null>(null);
-  const [targetingFrom, setTargetingFrom] = useState<{ id: string; x: number; y: number } | null>(null);
+
+  const [spellTargetingToMinion, setSpellTargetingToMinion] =
+    useState<MinionTargetHover>(null);
+
+  const [spellTargetingToHero, setSpellTargetingToHero] =
+    useState<HeroTargetHover>(null);
+
+  const [targetingFrom, setTargetingFrom] = useState<MinionInstance | null>(null);
   const [targetingToId, setTargetingToId] = useState<string | null>(null);
-  const [targetingToHero, setTargetingToHero] = useState<{ id: "enemy-hero" | "player-hero"; x: number; y: number } | null>(
-    null
-  );
+  const [targetingToHero, setTargetingToHero] =
+    useState<HeroTargetHover>(null);
+
   const [attackVisual, setAttackVisual] = useState<AttackVisual | null>(null);
-  const [attackVisualPos, setAttackVisualPos] = useState<{ x: number; y: number } | null>(null);
+  const [attackVisualPos, setAttackVisualPos] =
+    useState<{ x: number; y: number } | null>(null);
+  const [graveyardBursts, setGraveyardBursts] = useState<GraveyardBurst[]>([]);
+
   const attackVisualFrameRef = useRef<number | null>(null);
   const combatTimeoutRef = useRef<number | null>(null);
+
   const [inputLocked, setInputLocked] = useState(false);
   const prevLogIndexRef = useRef(0);
   const minionCentersRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
+  const attackQueueRef = useRef<
+    Array<{ attackerId: string; target: TargetSpec; slam: SlamProfile }>
+  >([]);
+  const isAnimatingRef = useRef(false);
+
   const player = state.players.player;
   const enemy = state.players.enemy;
+
   const playerHeroPower = getHeroPowerFor(player.hero.id);
   const enemyHeroPower = getHeroPowerFor(enemy.hero.id);
-  const winner = state.winner;
-  const isGameOver = winner !== null;
+
+  const isGameOver = !!state.winner;
 
   const playerLane: LaneConfig = useMemo(
     () => ({
@@ -165,92 +197,173 @@ const BoardStage = () => {
   );
 
   const playerHandCards = useMemo<HandCardData[]>(
-    () => player.hand.map((card) => ({ ...card, slot: { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y }, rotation: 0 })),
+    () =>
+      player.hand.map((card) => ({
+        ...card,
+        slot: { x: BoardSlots.Hand.x, y: BoardSlots.Hand.y },
+        rotation: 0,
+      })),
     [player.hand]
   );
 
   const draggingCard = playerHandCards.find((card) => card.id === draggingId) ?? null;
 
-  const playerMinionLayout = useMemo(() => layoutMinions(player.board, playerLane), [player.board, playerLane]);
-  const enemyMinionLayout = useMemo(() => layoutMinions(enemy.board, enemyLane), [enemy.board, enemyLane]);
+  const playerMinionLayout = useMemo(
+    () => layoutMinions(player.board, playerLane),
+    [player.board, playerLane]
+  );
+  const enemyMinionLayout = useMemo(
+    () => layoutMinions(enemy.board, enemyLane),
+    [enemy.board, enemyLane]
+  );
 
-  const enemyHeroCenter = {
-    x: BoardSlots.HeroBottom.x + 58 + heroFrameSize / 2,
-    y: BoardSlots.HeroTop.y + 80 + heroFrameSize / 2,
-  };
-  const playerHeroCenter = {
-    x: BoardSlots.HeroBottom.x + 58 + heroFrameSize / 2,
-    y: BoardSlots.HeroBottom.y - 45 + heroFrameSize / 2,
-  };
+  const playerHeroCenter = useMemo(
+    () => ({
+      x: BoardSlots.HeroBottom.x + 58 + heroFrameSize / 2,
+      y: BoardSlots.HeroBottom.y - 45 + heroFrameSize / 2,
+    }),
+    []
+  );
+  const enemyHeroCenter = useMemo(
+    () => ({
+      x: BoardSlots.HeroBottom.x + 58 + heroFrameSize / 2,
+      y: BoardSlots.HeroTop.y + 80 + heroFrameSize / 2,
+    }),
+    []
+  );
+  const graveyardCenter = useMemo(
+    () => ({
+      x: BoardSlots.Graveyard.x,
+      y: BoardSlots.Graveyard.y,
+    }),
+    []
+  );
 
   useEffect(() => {
-    const centers = new Map(minionCentersRef.current);
-    playerMinionLayout.forEach((minion) => {
-      centers.set(minion.id, { x: minion.slot.x + minionSize / 2, y: minion.slot.y + minionSize / 2 });
-    });
-    enemyMinionLayout.forEach((minion) => {
-      centers.set(minion.id, { x: minion.slot.x + minionSize / 2, y: minion.slot.y + minionSize / 2 });
-    });
+    const centers = new Map<string, { x: number; y: number }>();
+
+    playerMinionLayout.forEach((minion) =>
+      centers.set(minion.id, {
+        x: minion.slot.x + minionSize / 2,
+        y: minion.slot.y + minionSize / 2,
+      })
+    );
+    enemyMinionLayout.forEach((minion) =>
+      centers.set(minion.id, {
+        x: minion.slot.x + minionSize / 2,
+        y: minion.slot.y + minionSize / 2,
+      })
+    );
+
     minionCentersRef.current = centers;
   }, [playerMinionLayout, enemyMinionLayout]);
 
   const dispatchIntent = useCallback(
     (intent: Intent) => {
-      if (inputLocked) return;
-      dispatch(intent);
+      if (!inputLocked) dispatch(intent);
     },
     [inputLocked]
   );
 
   const startAttackVisual = useCallback(
-    (attackerId: string, target: TargetSpec, slam: SlamProfile) => {
-      const startCenter = minionCentersRef.current.get(attackerId);
-      if (!startCenter) return;
-      const endCenter =
+    (attackerId: string, target: TargetSpec, slam: SlamProfile): number => {
+      setAttackVisual(null);
+      setAttackVisualPos(null);
+
+      const start = minionCentersRef.current.get(attackerId);
+      if (!start) return 0;
+
+      const end =
         target.type === "HERO"
           ? target.player === "enemy"
             ? enemyHeroCenter
             : playerHeroCenter
           : minionCentersRef.current.get(target.id);
-      if (!endCenter) return;
-      const duration = COMBAT_TIMING.attackWindup + COMBAT_TIMING.impactPause * (slam === "LETHAL" ? 1.3 : slam === "HEAVY" ? 1 : 0.8);
-      const attacker = [...player.board, ...enemy.board].find((minion) => minion.id === attackerId);
-      if (!attacker) return;
+
+      if (!end) return 0;
+
+      const attacker = [...player.board, ...enemy.board].find(
+        (minion) => minion.id === attackerId
+      );
+      if (!attacker) return 0;
+
+      const duration =
+        COMBAT_TIMING.attackWindup + COMBAT_TIMING.impactPause;
 
       setAttackVisual({
-        id: `attack-${attackerId}-${Date.now()}`,
+        id: `${attackerId}-${Date.now()}`,
         art: getCardArt(attacker.cardId) ?? "/assets/cards/sunlance-champion.png",
         alt: getCardDef(attacker.cardId)?.name ?? "Attacker",
         attack: attacker.attack,
         health: attacker.health,
-        start: { x: startCenter.x - minionSize / 2, y: startCenter.y - minionSize / 2 },
-        end: { x: endCenter.x - minionSize / 2, y: endCenter.y - minionSize / 2 },
+        start: { x: start.x - minionSize / 2, y: start.y - minionSize / 2 },
+        end: { x: end.x - minionSize / 2, y: end.y - minionSize / 2 },
         startTime: performance.now(),
         durationMs: duration,
       });
 
-      if (combatTimeoutRef.current !== null) {
-        window.clearTimeout(combatTimeoutRef.current);
-      }
-      setInputLocked(true);
-      const total = COMBAT_TIMING.attackWindup + COMBAT_TIMING.impactPause + COMBAT_TIMING.damageFX + COMBAT_TIMING.deathFX + COMBAT_TIMING.resolveBuffer;
-      combatTimeoutRef.current = window.setTimeout(() => {
-        setInputLocked(false);
-      }, total);
+      return duration;
     },
-    [enemyHeroCenter, playerHeroCenter, player.board, enemy.board]
+    [player.board, enemy.board, enemyHeroCenter, playerHeroCenter]
   );
+
+  const runNextAttack = useCallback(() => {
+    if (isAnimatingRef.current) return;
+
+    const next = attackQueueRef.current.shift();
+    if (!next) {
+      setInputLocked(false);
+      return;
+    }
+
+    isAnimatingRef.current = true;
+    setInputLocked(true);
+
+    const moveDuration = startAttackVisual(
+      next.attackerId,
+      next.target,
+      next.slam
+    );
+
+    combatTimeoutRef.current = window.setTimeout(() => {
+      isAnimatingRef.current = false;
+      runNextAttack();
+    }, moveDuration + COMBAT_TIMING.resolveBuffer);
+  }, [startAttackVisual]);
 
   useEffect(() => {
     const newEvents = state.log.slice(prevLogIndexRef.current);
-    if (newEvents.length === 0) return;
     prevLogIndexRef.current = state.log.length;
+
     newEvents.forEach((event) => {
       if (event.type === "ATTACK_DECLARED") {
-        startAttackVisual(event.payload.attackerId, event.payload.target, event.payload.slam);
+        attackQueueRef.current.push({
+          attackerId: event.payload.attackerId,
+          target: event.payload.target,
+          slam: event.payload.slam,
+        });
+      }
+      if (event.type === "MINION_DIED") {
+        const center =
+          minionCentersRef.current.get(event.payload.minionId) ??
+          { x: BoardSlots.BoardCenter.x, y: BoardSlots.BoardCenter.y };
+        setGraveyardBursts((prev) => [
+          ...prev,
+          {
+            id: `graveyard-${event.id}`,
+            bounds: {
+              x: center.x - minionSize / 2,
+              y: center.y - minionSize / 2,
+              width: minionSize,
+              height: minionSize,
+            },
+          },
+        ]);
       }
     });
-  }, [state.log, startAttackVisual]);
+
+    runNextAttack();
+  }, [state.log, runNextAttack]);
 
   useEffect(() => {
     if (!attackVisual) return;
@@ -284,23 +397,22 @@ const BoardStage = () => {
   }, [attackVisual]);
 
   useEffect(() => {
-    if (state.turn !== "enemy") return;
-    if (state.winner) return;
-    if (inputLocked) return;
+    if (state.turn !== "enemy" || inputLocked || state.winner) return;
+
     const intent = chooseAiIntent(state);
     if (!intent) return;
-    const delay = intent.type === "DECLARE_ATTACK" ? COMBAT_TIMING.attackWindup : 350;
-    const timer = window.setTimeout(() => dispatch(intent), delay);
-    return () => window.clearTimeout(timer);
-  }, [inputLocked, state]);
+
+    const t = window.setTimeout(() => dispatchIntent(intent), 400);
+    return () => window.clearTimeout(t);
+  }, [state, inputLocked, dispatchIntent]);
 
   const handleEndTurn = () => {
-    if (isGameOver || inputLocked) return;
+    if (isGameOver || inputLocked || state.turn !== "player") return;
     dispatchIntent({ type: "END_TURN", player: "player" });
   };
 
   const handlePlayerHeroPower = () => {
-    if (isGameOver || inputLocked) return;
+    if (isGameOver || inputLocked || state.turn !== "player") return;
     const targetType = getHeroPowerTargetTypeFor("player");
     if (targetType === "NONE") {
       dispatchIntent({ type: "USE_HERO_POWER", player: "player" });
@@ -308,7 +420,7 @@ const BoardStage = () => {
   };
 
   const handleSpellActivate = (card: HandCardData) => {
-    if (isGameOver || inputLocked) return;
+    if (isGameOver || inputLocked || state.turn !== "player") return;
     const cardDef = getCardDef(card.cardId);
     if (!cardDef || cardDef.type !== "SPELL") return;
     if (player.mana < cardDef.cost) return;
@@ -322,6 +434,12 @@ const BoardStage = () => {
 
   const handleSpellTargetCommit = () => {
     if (!spellTargetingFrom) return;
+    if (state.turn !== "player" || inputLocked) {
+      setSpellTargetingFrom(null);
+      setSpellTargetingToMinion(null);
+      setSpellTargetingToHero(null);
+      return;
+    }
     const target = getSpellTarget(spellTargetingToMinion, spellTargetingToHero);
     if (!target) {
       setSpellTargetingFrom(null);
@@ -337,6 +455,12 @@ const BoardStage = () => {
 
   const handleAttackCommit = () => {
     if (!targetingFrom) return;
+    if (state.turn !== "player" || inputLocked) {
+      setTargetingFrom(null);
+      setTargetingToId(null);
+      setTargetingToHero(null);
+      return;
+    }
     const target = targetingToHero
       ? ({ type: "HERO", player: targetingToHero.id === "enemy-hero" ? "enemy" : "player" } as TargetSpec)
       : targetingToId
@@ -351,6 +475,16 @@ const BoardStage = () => {
   };
 
   useEffect(() => {
+    if (state.turn === "player" && !inputLocked) return;
+    setSpellTargetingFrom(null);
+    setSpellTargetingToMinion(null);
+    setSpellTargetingToHero(null);
+    setTargetingFrom(null);
+    setTargetingToId(null);
+    setTargetingToHero(null);
+  }, [state.turn, inputLocked]);
+
+  useEffect(() => {
     if (!spellTargetingFrom) return;
     const handlePointerUp = () => {
       handleSpellTargetCommit();
@@ -359,44 +493,108 @@ const BoardStage = () => {
     return () => window.removeEventListener("pointerup", handlePointerUp);
   }, [spellTargetingFrom, spellTargetingToHero, spellTargetingToMinion]);
 
+  useEffect(() => {
+    if (!targetingFrom) return;
+    const handlePointerUp = () => {
+      handleAttackCommit();
+    };
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => window.removeEventListener("pointerup", handlePointerUp);
+  }, [targetingFrom, targetingToHero, targetingToId]);
+
   const isCursorInPlayerLane =
     cursor.x >= playerLane.left &&
     cursor.x <= playerLane.left + playerLane.width &&
     cursor.y >= playerLane.top &&
     cursor.y <= playerLane.top + playerLane.height;
 
-  const ghostSlot = draggingCard && isCursorInPlayerLane && player.board.length < MAX_BOARD_SIZE
-    ? { x: cursor.x - minionSize / 2, y: cursor.y - minionSize / 2 }
+  useEffect(() => {
+    if (!draggingId) return;
+    const handlePointerUp = () => {
+      const card = playerHandCards.find((item) => item.id === draggingId);
+      if (card) {
+        const cardDef = getCardDef(card.cardId);
+        const canPlayMinion =
+          !!cardDef &&
+          cardDef.type === "MINION" &&
+          state.turn === "player" &&
+          !inputLocked &&
+          player.mana >= cardDef.cost &&
+          player.board.length < MAX_BOARD_SIZE;
+
+        if (canPlayMinion && isCursorInPlayerLane) {
+          dispatchIntent({ type: "PLAY_CARD", player: "player", handId: card.id });
+        }
+      }
+
+      setDraggingId(null);
+      setDragOffset({ x: 0, y: 0 });
+    };
+
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => window.removeEventListener("pointerup", handlePointerUp);
+  }, [
+    dispatchIntent,
+    draggingId,
+    inputLocked,
+    isCursorInPlayerLane,
+    player.board.length,
+    player.mana,
+    playerHandCards,
+    state.turn,
+  ]);
+
+  const ghostSlot =
+    draggingCard && isCursorInPlayerLane && player.board.length < MAX_BOARD_SIZE
+      ? { x: cursor.x - minionSize / 2, y: cursor.y - minionSize / 2 }
+      : null;
+
+  const targetingFromCenter = targetingFrom
+    ? minionCentersRef.current.get(targetingFrom.id) ?? null
     : null;
 
   const activeTargetingEnd = targetingFrom
     ? targetingToHero
       ? { x: targetingToHero.x, y: targetingToHero.y }
       : targetingToId
-        ? minionCentersRef.current.get(targetingToId)
+        ? minionCentersRef.current.get(targetingToId) ?? null
         : { x: cursor.x, y: cursor.y }
     : spellTargetingFrom
       ? spellTargetingToHero
         ? { x: spellTargetingToHero.x, y: spellTargetingToHero.y }
         : spellTargetingToMinion
-          ? minionCentersRef.current.get(spellTargetingToMinion.id)
+          ? { x: spellTargetingToMinion.x, y: spellTargetingToMinion.y }
           : { x: cursor.x, y: cursor.y }
       : null;
 
-  const activeTargetingFrom = targetingFrom
-    ? { x: targetingFrom.x, y: targetingFrom.y }
+  const activeTargetingFrom = targetingFromCenter
+    ? { x: targetingFromCenter.x, y: targetingFromCenter.y }
     : spellTargetingFrom
       ? { x: spellTargetingFrom.x, y: spellTargetingFrom.y }
       : null;
 
   const isPlayerHeroPowerDisabled =
-    isGameOver || inputLocked || state.turn !== "player" || player.hero.heroPowerUsed || player.mana < (playerHeroPower?.cost ?? 2);
+    isGameOver ||
+    inputLocked ||
+    state.turn !== "player" ||
+    player.hero.heroPowerUsed ||
+    player.mana < (playerHeroPower?.cost ?? 2);
 
   return (
     <div className="board-stage">
       <MenuStamp slot={{ x: 24, y: 24 }} src="/assets/ui/menus/menuBackground.png" alt="Menu background" width={1} height={1} />
       <MenuStamp slot={{ x: 48, y: 24 }} src="/assets/ui/menus/map.png" alt="Map panel" width={1} height={1} />
       <MenuStamp slot={{ x: 72, y: 24 }} src="/assets/ui/menus/heroPanel.png" alt="Hero panel" width={1} height={1} />
+      <GraveyardPortal center={graveyardCenter} />
+      <GraveyardVoidFX
+        bursts={graveyardBursts}
+        portalCenter={graveyardCenter}
+        portalSize={GRAVEYARD_PORTAL_SIZE}
+        onBurstComplete={(id) => {
+          setGraveyardBursts((prev) => prev.filter((burst) => burst.id !== id));
+        }}
+      />
+
       <HeroSlot
         slot={{ x: BoardSlots.HeroBottom.x + 58, y: BoardSlots.HeroTop.y + 80 }}
         portraitSrc="/assets/heroes/tharos.png"
@@ -424,6 +622,7 @@ const BoardStage = () => {
           }
         }}
       />
+
       <HeroSlot
         slot={{ x: BoardSlots.HeroBottom.x + 58, y: BoardSlots.HeroBottom.y - 45 }}
         portraitSrc="/assets/heroes/lyra.png"
@@ -431,12 +630,15 @@ const BoardStage = () => {
         alt="Player hero"
         health={player.hero.health}
       />
+
       <ManaBar current={player.mana} max={player.maxMana} />
+
       <EndTurnButton
         slot={BoardSlots.EndTurn}
         isActive={state.turn === "player" && !isGameOver && !inputLocked}
         onEndTurn={handleEndTurn}
       />
+
       <AbilityFrame
         slot={BoardSlots.AbilityFrame}
         iconSrc="/assets/ui/hero powers/hp-lyra-vt.png"
@@ -445,6 +647,7 @@ const BoardStage = () => {
         isDisabled={isPlayerHeroPowerDisabled}
         cost={playerHeroPower?.cost ?? 2}
       />
+
       <AbilityFrame
         slot={BoardSlots.EnemyAbilityFrame}
         iconSrc="/assets/ui/hero powers/hp-tharos-ec.png"
@@ -452,12 +655,17 @@ const BoardStage = () => {
         isDisabled
         cost={enemyHeroPower?.cost ?? 2}
       />
+
       <div className="combat-lane combat-lane--enemy" />
       <div className="combat-lane combat-lane--player" />
+
       {layoutHand(playerHandCards).map((card, index) => {
         const cardDef = getCardDef(card.cardId);
         if (!cardDef) return null;
-        const cardSlot = draggingId === card.id ? { x: cursor.x - dragOffset.x, y: cursor.y - dragOffset.y } : card.slot;
+        const cardSlot =
+          draggingId === card.id
+            ? { x: cursor.x - dragOffset.x, y: cursor.y - dragOffset.y }
+            : card.slot;
         const hoverOffsets = [
           { x: -12, y: -20 },
           { x: -8, y: -16 },
@@ -504,6 +712,7 @@ const BoardStage = () => {
           />
         );
       })}
+
       {enemy.hand.map((_, index) => (
         <CardBack
           key={`enemy-back-${index}`}
@@ -511,6 +720,7 @@ const BoardStage = () => {
           rotation={180}
         />
       ))}
+
       {attackVisual && attackVisualPos && (
         <BoardMinion
           slot={attackVisualPos}
@@ -521,6 +731,7 @@ const BoardStage = () => {
           isAttackVisual
         />
       )}
+
       {ghostSlot && draggingCard && (
         <BoardMinion
           slot={ghostSlot}
@@ -529,6 +740,7 @@ const BoardStage = () => {
           isGhost
         />
       )}
+
       {playerMinionLayout.map((minion) => (
         <BoardMinion
           key={minion.id}
@@ -542,15 +754,16 @@ const BoardStage = () => {
             if (state.turn !== "player" || inputLocked) return;
             if (!minion.canAttack) return;
             event.currentTarget.setPointerCapture(event.pointerId);
-            setTargetingFrom({
-              id: minion.id,
-              x: minion.slot.x + minionSize / 2,
-              y: minion.slot.y + minionSize / 2,
-            });
+            setTargetingFrom(minion);
           }}
           onTargetEnter={() => {
             if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
-              setSpellTargetingToMinion({ id: minion.id, owner: "player" });
+              setSpellTargetingToMinion({
+                id: minion.id,
+                owner: "player",
+                x: minion.slot.x + minionSize / 2,
+                y: minion.slot.y + minionSize / 2,
+              });
             }
           }}
           onTargetLeave={() => {
@@ -560,6 +773,7 @@ const BoardStage = () => {
           }}
         />
       ))}
+
       {enemyMinionLayout.map((minion) => (
         <BoardMinion
           key={minion.id}
@@ -574,7 +788,12 @@ const BoardStage = () => {
               setTargetingToId(minion.id);
             }
             if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
-              setSpellTargetingToMinion({ id: minion.id, owner: "enemy" });
+              setSpellTargetingToMinion({
+                id: minion.id,
+                owner: "enemy",
+                x: minion.slot.x + minionSize / 2,
+                y: minion.slot.y + minionSize / 2,
+              });
             }
           }}
           onTargetLeave={() => {
@@ -587,6 +806,7 @@ const BoardStage = () => {
           }}
         />
       ))}
+
       {activeTargetingFrom && activeTargetingEnd && (
         <svg className="targeting-overlay" viewBox="0 0 1536 1024">
           <defs>
@@ -614,23 +834,15 @@ const BoardStage = () => {
           />
         </svg>
       )}
+
       <CursorCoords
         turn={state.turn}
         timeLeftMs={50000}
         mana={player.mana}
         manaMax={player.maxMana}
       />
+
       <BoardCursor />
-      {winner && (
-        <div className="game-over">
-          <div className="game-over__panel">
-            <div className="game-over__title">{winner === "player" ? "Victory" : "Defeat"}</div>
-            <div className="game-over__subtitle">
-              {winner === "player" ? "Lyra prevails." : "Tharos prevails."}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
