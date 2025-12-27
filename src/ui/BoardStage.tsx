@@ -23,7 +23,7 @@ import {
   getCardTargetType,
   getHeroPowerTargetTypeFor,
 } from "../engine/engine";
-import type { Intent, MinionInstance, SlamProfile, TargetSpec } from "../engine/types";
+import type { GameEvent, Intent, MinionInstance, SlamProfile, TargetSpec } from "../engine/types";
 
 type HeroTargetHover =
   | { id: "enemy-hero"; x: number; y: number }
@@ -63,6 +63,17 @@ type LaneConfig = {
 type GraveyardBurst = {
   id: string;
   bounds: { x: number; y: number; width: number; height: number };
+};
+
+type PresentationMinionSnapshot = {
+  id: string;
+  cardId: string;
+  artSrc: string;
+  alt: string;
+  attack: number;
+  health: number;
+  slot: { x: number; y: number };
+  center: { x: number; y: number };
 };
 
 const minionSize = 130;
@@ -154,19 +165,60 @@ const BoardStage = () => {
   const [attackVisual, setAttackVisual] = useState<AttackVisual | null>(null);
   const [attackVisualPos, setAttackVisualPos] =
     useState<{ x: number; y: number } | null>(null);
+  const [ghostAttack, setGhostAttack] = useState<AttackVisual | null>(null);
+  const [ghostAttackPos, setGhostAttackPos] =
+    useState<{ x: number; y: number } | null>(null);
   const [graveyardBursts, setGraveyardBursts] = useState<GraveyardBurst[]>([]);
 
   const attackVisualFrameRef = useRef<number | null>(null);
+  const ghostAttackFrameRef = useRef<number | null>(null);
   const combatTimeoutRef = useRef<number | null>(null);
 
   const [inputLocked, setInputLocked] = useState(false);
-  const prevLogIndexRef = useRef(0);
   const minionCentersRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   const attackQueueRef = useRef<
     Array<{ attackerId: string; target: TargetSpec; slam: SlamProfile }>
   >([]);
   const isAnimatingRef = useRef(false);
+  const presentationCursorRef = useRef(0);
+  const damagePulseTimeoutRef = useRef<number | null>(null);
+  const summonTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const summonRafRef = useRef<Map<string, number>>(new Map());
+  const deathTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const deathRafRef = useRef<Map<string, number>>(new Map());
+  const damageNumberTimeoutsRef = useRef<Map<number, number>>(new Map());
+  const damageNumberRafRef = useRef<Map<number, number>>(new Map());
+  const hitFlashTimeoutsRef = useRef<Map<number, number>>(new Map());
+  const hitFlashRafRef = useRef<Map<number, number>>(new Map());
+  const impactPunchTimeoutsRef = useRef<Map<number, number>>(new Map());
+  const impactPunchRafRef = useRef<Map<number, number>>(new Map());
+  const knownMinionIdsRef = useRef<Set<string>>(new Set());
+  const lastMinionSnapshotRef = useRef<Map<string, PresentationMinionSnapshot>>(new Map());
+  const prevTurnRef = useRef(state.turn);
+
+  const [presentationAttack, setPresentationAttack] = useState<{
+    attackerId: string;
+    target: TargetSpec;
+    slam: SlamProfile;
+  } | null>(null);
+  const [damagePulse, setDamagePulse] = useState<{
+    id: number;
+    x: number;
+    y: number;
+    amount: number;
+  } | null>(null);
+  const [summonEffects, setSummonEffects] = useState<Record<string, { phase: "start" | "end" }>>({});
+  const [deathEffects, setDeathEffects] = useState<Record<string, { phase: "start" | "end"; snapshot: PresentationMinionSnapshot }>>({});
+  const [damageNumbers, setDamageNumbers] = useState<
+    Record<number, { id: number; x: number; y: number; amount: number; isHealing: boolean; scale: number; phase: "start" | "end" }>
+  >({});
+  const [hitFlashes, setHitFlashes] = useState<
+    Record<number, { id: number; x: number; y: number; scale: number; phase: "start" | "end" }>
+  >({});
+  const [impactPunches, setImpactPunches] = useState<
+    Record<number, { id: number; snapshot: PresentationMinionSnapshot; scale: number; phase: "start" | "end" }>
+  >({});
 
   const player = state.players.player;
   const enemy = state.players.enemy;
@@ -175,6 +227,7 @@ const BoardStage = () => {
   const enemyHeroPower = getHeroPowerFor(enemy.hero.id);
 
   const isGameOver = !!state.winner;
+  const presentationEnabled = true;
 
   const playerLane: LaneConfig = useMemo(
     () => ({
@@ -241,6 +294,7 @@ const BoardStage = () => {
 
   useEffect(() => {
     const centers = new Map<string, { x: number; y: number }>();
+    const snapshots = new Map<string, PresentationMinionSnapshot>(lastMinionSnapshotRef.current);
 
     playerMinionLayout.forEach((minion) =>
       centers.set(minion.id, {
@@ -255,7 +309,39 @@ const BoardStage = () => {
       })
     );
 
+    playerMinionLayout.forEach((minion) => {
+      snapshots.set(minion.id, {
+        id: minion.id,
+        cardId: minion.cardId,
+        artSrc: getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png",
+        alt: getCardDef(minion.cardId)?.name ?? "Minion",
+        attack: minion.attack,
+        health: minion.health,
+        slot: minion.slot,
+        center: {
+          x: minion.slot.x + minionSize / 2,
+          y: minion.slot.y + minionSize / 2,
+        },
+      });
+    });
+    enemyMinionLayout.forEach((minion) => {
+      snapshots.set(minion.id, {
+        id: minion.id,
+        cardId: minion.cardId,
+        artSrc: getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png",
+        alt: getCardDef(minion.cardId)?.name ?? "Minion",
+        attack: minion.attack,
+        health: minion.health,
+        slot: minion.slot,
+        center: {
+          x: minion.slot.x + minionSize / 2,
+          y: minion.slot.y + minionSize / 2,
+        },
+      });
+    });
+
     minionCentersRef.current = centers;
+    lastMinionSnapshotRef.current = snapshots;
   }, [playerMinionLayout, enemyMinionLayout]);
 
   const dispatchIntent = useCallback(
@@ -312,12 +398,14 @@ const BoardStage = () => {
 
     const next = attackQueueRef.current.shift();
     if (!next) {
+      setPresentationAttack(null);
       setInputLocked(false);
       return;
     }
 
     isAnimatingRef.current = true;
     setInputLocked(true);
+    setPresentationAttack(next);
 
     const moveDuration = startAttackVisual(
       next.attackerId,
@@ -331,26 +419,465 @@ const BoardStage = () => {
     }, moveDuration + COMBAT_TIMING.resolveBuffer);
   }, [startAttackVisual]);
 
-  useEffect(() => {
-    const newEvents = state.log.slice(prevLogIndexRef.current);
-    prevLogIndexRef.current = state.log.length;
-
-    newEvents.forEach((event) => {
-      if (event.type === "ATTACK_DECLARED") {
-        attackQueueRef.current.push({
-          attackerId: event.payload.attackerId,
-          target: event.payload.target,
-          slam: event.payload.slam,
-        });
+  const getTargetCenter = useCallback(
+    (target: TargetSpec) => {
+      if (target.type === "HERO") {
+        return target.player === "enemy" ? enemyHeroCenter : playerHeroCenter;
       }
-      if (event.type === "MINION_DIED") {
+      const snapshot = lastMinionSnapshotRef.current.get(target.id);
+      if (snapshot) return snapshot.center;
+      return minionCentersRef.current.get(target.id) ?? null;
+    },
+    [enemyHeroCenter, playerHeroCenter]
+  );
+
+  const startGhostAttack = useCallback(
+    (attacker: MinionInstance, target: TargetSpec, slam: SlamProfile = "LIGHT") => {
+      if (!presentationEnabled) return;
+      setGhostAttack(null);
+      setGhostAttackPos(null);
+
+      const start =
+        lastMinionSnapshotRef.current.get(attacker.id)?.center ??
+        minionCentersRef.current.get(attacker.id);
+      if (!start) return;
+
+      const end = getTargetCenter(target);
+      if (!end) return;
+
+      const duration =
+        slam === "LETHAL" ? 120 : slam === "HEAVY" ? 135 : 150;
+
+      setGhostAttack({
+        id: `ghost-${attacker.id}-${Date.now()}`,
+        art: getCardArt(attacker.cardId) ?? "/assets/cards/sunlance-champion.png",
+        alt: getCardDef(attacker.cardId)?.name ?? "Attacker",
+        attack: attacker.attack,
+        health: attacker.health,
+        start: { x: start.x - minionSize / 2, y: start.y - minionSize / 2 },
+        end: { x: end.x - minionSize / 2, y: end.y - minionSize / 2 },
+        startTime: performance.now(),
+        durationMs: duration,
+      });
+      setGhostAttackPos({ x: start.x - minionSize / 2, y: start.y - minionSize / 2 });
+    },
+    [presentationEnabled, getTargetCenter]
+  );
+
+  const addSummonEffect = useCallback(
+    (minionId: string) => {
+      if (!presentationEnabled) return;
+      setSummonEffects((prev) => ({ ...prev, [minionId]: { phase: "start" } }));
+      const rafId = window.requestAnimationFrame(() => {
+        setSummonEffects((prev) => {
+          if (!prev[minionId]) return prev;
+          return { ...prev, [minionId]: { phase: "end" } };
+        });
+      });
+      summonRafRef.current.set(minionId, rafId);
+      const timeoutId = window.setTimeout(() => {
+        setSummonEffects((prev) => {
+          if (!prev[minionId]) return prev;
+          const next = { ...prev };
+          delete next[minionId];
+          return next;
+        });
+        summonTimeoutsRef.current.delete(minionId);
+        summonRafRef.current.delete(minionId);
+      }, 170);
+      summonTimeoutsRef.current.set(minionId, timeoutId);
+    },
+    [presentationEnabled]
+  );
+
+  const addDeathEffect = useCallback(
+    (minionId: string) => {
+      if (!presentationEnabled) return;
+      const snapshot = lastMinionSnapshotRef.current.get(minionId);
+      if (!snapshot) return;
+      setDeathEffects((prev) => ({
+        ...prev,
+        [minionId]: { phase: "start", snapshot },
+      }));
+      const rafId = window.requestAnimationFrame(() => {
+        setDeathEffects((prev) => {
+          const current = prev[minionId];
+          if (!current) return prev;
+          return { ...prev, [minionId]: { ...current, phase: "end" } };
+        });
+      });
+      deathRafRef.current.set(minionId, rafId);
+      const timeoutId = window.setTimeout(() => {
+        setDeathEffects((prev) => {
+          if (!prev[minionId]) return prev;
+          const next = { ...prev };
+          delete next[minionId];
+          return next;
+        });
+        deathTimeoutsRef.current.delete(minionId);
+        deathRafRef.current.delete(minionId);
+      }, 200);
+      deathTimeoutsRef.current.set(minionId, timeoutId);
+    },
+    [presentationEnabled]
+  );
+
+  const addDamageNumber = useCallback(
+    (event: { id: number; payload: { target: TargetSpec; amount: number; slam?: SlamProfile } }) => {
+      if (!presentationEnabled) return;
+      const center =
+        event.payload.target.type === "MINION"
+          ? lastMinionSnapshotRef.current.get(event.payload.target.id)?.center ?? getTargetCenter(event.payload.target)
+          : getTargetCenter(event.payload.target);
+      if (!center) return;
+      const scale =
+        event.payload.slam === "LETHAL" ? 1.18 : event.payload.slam === "HEAVY" ? 1.08 : 1;
+      const isHealing = event.payload.amount < 0;
+      setDamageNumbers((prev) => ({
+        ...prev,
+        [event.id]: {
+          id: event.id,
+          x: center.x,
+          y: center.y,
+          amount: Math.abs(event.payload.amount),
+          isHealing,
+          scale,
+          phase: "start",
+        },
+      }));
+      const rafId = window.requestAnimationFrame(() => {
+        setDamageNumbers((prev) => {
+          const current = prev[event.id];
+          if (!current) return prev;
+          return { ...prev, [event.id]: { ...current, phase: "end" } };
+        });
+      });
+      damageNumberRafRef.current.set(event.id, rafId);
+      const timeoutId = window.setTimeout(() => {
+        setDamageNumbers((prev) => {
+          if (!prev[event.id]) return prev;
+          const next = { ...prev };
+          delete next[event.id];
+          return next;
+        });
+        damageNumberTimeoutsRef.current.delete(event.id);
+        damageNumberRafRef.current.delete(event.id);
+      }, 560);
+      damageNumberTimeoutsRef.current.set(event.id, timeoutId);
+    },
+    [presentationEnabled, getTargetCenter]
+  );
+
+  const addHitFlash = useCallback(
+    (event: { id: number; payload: { target: TargetSpec; slam?: SlamProfile } }) => {
+      if (!presentationEnabled) return;
+      const center =
+        event.payload.target.type === "MINION"
+          ? lastMinionSnapshotRef.current.get(event.payload.target.id)?.center ?? getTargetCenter(event.payload.target)
+          : getTargetCenter(event.payload.target);
+      if (!center) return;
+      const scale =
+        event.payload.slam === "LETHAL" ? 1.08 : event.payload.slam === "HEAVY" ? 1.04 : 1;
+      setHitFlashes((prev) => ({
+        ...prev,
+        [event.id]: {
+          id: event.id,
+          x: center.x,
+          y: center.y,
+          scale,
+          phase: "start",
+        },
+      }));
+      const rafId = window.requestAnimationFrame(() => {
+        setHitFlashes((prev) => {
+          const current = prev[event.id];
+          if (!current) return prev;
+          return { ...prev, [event.id]: { ...current, phase: "end" } };
+        });
+      });
+      hitFlashRafRef.current.set(event.id, rafId);
+      const timeoutId = window.setTimeout(() => {
+        setHitFlashes((prev) => {
+          if (!prev[event.id]) return prev;
+          const next = { ...prev };
+          delete next[event.id];
+          return next;
+        });
+        hitFlashTimeoutsRef.current.delete(event.id);
+        hitFlashRafRef.current.delete(event.id);
+      }, 90);
+      hitFlashTimeoutsRef.current.set(event.id, timeoutId);
+    },
+    [presentationEnabled, getTargetCenter]
+  );
+
+  const addImpactPunch = useCallback(
+    (entry: { id: number; minionId: string; slam?: SlamProfile }) => {
+      if (!presentationEnabled) return;
+      const snapshot = lastMinionSnapshotRef.current.get(entry.minionId);
+      if (!snapshot) return;
+      const scale =
+        entry.slam === "LETHAL" ? 1.08 : entry.slam === "HEAVY" ? 1.05 : 1.03;
+      setImpactPunches((prev) => ({
+        ...prev,
+        [entry.id]: {
+          id: entry.id,
+          snapshot,
+          scale,
+          phase: "start",
+        },
+      }));
+      const rafId = window.requestAnimationFrame(() => {
+        setImpactPunches((prev) => {
+          const current = prev[entry.id];
+          if (!current) return prev;
+          return { ...prev, [entry.id]: { ...current, phase: "end" } };
+        });
+      });
+      impactPunchRafRef.current.set(entry.id, rafId);
+      const timeoutId = window.setTimeout(() => {
+        setImpactPunches((prev) => {
+          if (!prev[entry.id]) return prev;
+          const next = { ...prev };
+          delete next[entry.id];
+          return next;
+        });
+        impactPunchTimeoutsRef.current.delete(entry.id);
+        impactPunchRafRef.current.delete(entry.id);
+      }, 90);
+      impactPunchTimeoutsRef.current.set(entry.id, timeoutId);
+    },
+    [presentationEnabled]
+  );
+
+  const clearDamagePulse = useCallback(() => {
+    if (damagePulseTimeoutRef.current !== null) {
+      window.clearTimeout(damagePulseTimeoutRef.current);
+      damagePulseTimeoutRef.current = null;
+    }
+    setDamagePulse(null);
+  }, []);
+
+  const enqueueAttackPresentation = useCallback(
+    (entry: { attackerId: string; target: TargetSpec; slam: SlamProfile }) => {
+      if (!presentationEnabled) return;
+      attackQueueRef.current.push(entry);
+      runNextAttack();
+    },
+    [presentationEnabled, runNextAttack]
+  );
+
+  const showDamagePulse = useCallback(
+    (event: { id: number; payload: { target: TargetSpec; amount: number } }) => {
+      if (!presentationEnabled) return;
+      const center = getTargetCenter(event.payload.target);
+      if (!center) return;
+      clearDamagePulse();
+      setDamagePulse({
+        id: event.id,
+        x: center.x,
+        y: center.y,
+        amount: event.payload.amount,
+      });
+      damagePulseTimeoutRef.current = window.setTimeout(() => {
+        setDamagePulse(null);
+        damagePulseTimeoutRef.current = null;
+      }, 220);
+    },
+    [presentationEnabled, getTargetCenter, clearDamagePulse]
+  );
+
+  const clearPresentationEffects = useCallback(() => {
+    summonTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    summonRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    deathTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    deathRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    summonTimeoutsRef.current.clear();
+    summonRafRef.current.clear();
+    deathTimeoutsRef.current.clear();
+    deathRafRef.current.clear();
+    setSummonEffects({});
+    setDeathEffects({});
+  }, []);
+
+  const clearDamageNumbers = useCallback(() => {
+    damageNumberTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    damageNumberRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    damageNumberTimeoutsRef.current.clear();
+    damageNumberRafRef.current.clear();
+    setDamageNumbers({});
+  }, []);
+
+  const clearHitFlashes = useCallback(() => {
+    hitFlashTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    hitFlashRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    hitFlashTimeoutsRef.current.clear();
+    hitFlashRafRef.current.clear();
+    setHitFlashes({});
+  }, []);
+
+  const clearImpactPunches = useCallback(() => {
+    impactPunchTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    impactPunchRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    impactPunchTimeoutsRef.current.clear();
+    impactPunchRafRef.current.clear();
+    setImpactPunches({});
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (damagePulseTimeoutRef.current !== null) {
+        window.clearTimeout(damagePulseTimeoutRef.current);
+      }
+      clearDamageNumbers();
+      clearHitFlashes();
+      clearImpactPunches();
+      clearPresentationEffects();
+      setGhostAttack(null);
+      setGhostAttackPos(null);
+    };
+  }, [clearPresentationEffects, clearDamageNumbers, clearHitFlashes, clearImpactPunches]);
+
+  useEffect(() => {
+    if (!presentationEnabled) {
+      setPresentationAttack(null);
+      clearDamagePulse();
+      clearDamageNumbers();
+      clearHitFlashes();
+      clearImpactPunches();
+      clearPresentationEffects();
+      setGhostAttack(null);
+      setGhostAttackPos(null);
+      return;
+    }
+  }, [
+    presentationEnabled,
+    clearDamagePulse,
+    clearDamageNumbers,
+    clearHitFlashes,
+    clearImpactPunches,
+    clearPresentationEffects,
+  ]);
+
+  useEffect(() => {
+    if (prevTurnRef.current === state.turn) return;
+    prevTurnRef.current = state.turn;
+    clearDamagePulse();
+    clearDamageNumbers();
+    clearHitFlashes();
+    clearImpactPunches();
+    clearPresentationEffects();
+    setGhostAttack(null);
+    setGhostAttackPos(null);
+  }, [
+    state.turn,
+    clearDamagePulse,
+    clearDamageNumbers,
+    clearHitFlashes,
+    clearImpactPunches,
+    clearPresentationEffects,
+  ]);
+
+  useEffect(() => {
+    if (!isGameOver) return;
+    clearDamagePulse();
+    clearDamageNumbers();
+    clearHitFlashes();
+    clearImpactPunches();
+    clearPresentationEffects();
+    setGhostAttack(null);
+    setGhostAttackPos(null);
+  }, [
+    isGameOver,
+    clearDamagePulse,
+    clearDamageNumbers,
+    clearHitFlashes,
+    clearImpactPunches,
+    clearPresentationEffects,
+  ]);
+
+  const resolveSummonedMinionId = useCallback(
+    (playerId: "player" | "enemy", cardId: string) => {
+      const board = state.players[playerId].board;
+      const known = knownMinionIdsRef.current;
+      const candidate = board.find((minion) => minion.cardId === cardId && !known.has(minion.id));
+      if (!candidate) return null;
+      known.add(candidate.id);
+      return candidate.id;
+    },
+    [state.players]
+  );
+
+  const presentationHandlers = useMemo(
+    () => ({
+      playSound: (cueId: string) => {
+        console.debug("[presentation] sound", cueId);
+      },
+      getSoundCueForEvent: (event: GameEvent): string | null => {
+        switch (event.type) {
+          case "CARD_PLAYED":
+            return "card_play";
+          case "ATTACK_DECLARED":
+            return "attack_swing";
+          case "DAMAGE_DEALT":
+            return "damage_hit";
+          case "MINION_DIED":
+            return "minion_die";
+          case "TURN_STARTED":
+            return "turn_start";
+          default:
+            return null;
+        }
+      },
+      onCardPlayed: (cardId: string, playerId: "player" | "enemy") => {
+        console.debug("[presentation] card played", cardId, playerId);
+      },
+      onMinionSummoned: (minionId: string) => {
+        console.debug("[presentation] minion summoned", minionId);
+        addSummonEffect(minionId);
+      },
+      onAttackDeclared: (attackerId: string) => {
+        console.debug("[presentation] attack declared", attackerId);
+      },
+      onAttackQueued: (entry: { attackerId: string; target: TargetSpec; slam: SlamProfile }) => {
+        console.debug("[presentation] attack queued", entry.attackerId);
+        enqueueAttackPresentation(entry);
+      },
+      onDamageDealt: (event: { id: number; payload: { target: TargetSpec; amount: number } }) => {
+        console.debug("[presentation] damage dealt", event.payload.amount);
+        showDamagePulse(event);
+        addDamageNumber(event);
+        addHitFlash(event);
+        if (event.payload.target.type === "MINION") {
+          addImpactPunch({
+            id: event.id,
+            minionId: event.payload.target.id,
+            slam: event.payload.slam,
+          });
+          if (presentationAttack?.target.type === "MINION") {
+            const sameTarget =
+              presentationAttack.target.id === event.payload.target.id &&
+              presentationAttack.target.owner === event.payload.target.owner;
+            if (sameTarget) {
+              addImpactPunch({
+                id: event.id * 10 + 1,
+                minionId: presentationAttack.attackerId,
+                slam: event.payload.slam,
+              });
+            }
+          }
+        }
+      },
+      onMinionDied: (minionId: string) => {
+        console.debug("[presentation] minion died", minionId);
+        addDeathEffect(minionId);
         const center =
-          minionCentersRef.current.get(event.payload.minionId) ??
+          minionCentersRef.current.get(minionId) ??
           { x: BoardSlots.BoardCenter.x, y: BoardSlots.BoardCenter.y };
         setGraveyardBursts((prev) => [
           ...prev,
           {
-            id: `graveyard-${event.id}`,
+            id: `graveyard-${minionId}-${Date.now()}`,
             bounds: {
               x: center.x - minionSize / 2,
               y: center.y - minionSize / 2,
@@ -359,11 +886,94 @@ const BoardStage = () => {
             },
           },
         ]);
+      },
+      onTurnStart: (playerId: string) => {
+        console.debug("[presentation] turn start", playerId);
+      },
+      onTurnEnd: (playerId: string) => {
+        console.debug("[presentation] turn end", playerId);
+      },
+      onCombatResolved: () => {
+        console.debug("[presentation] combat resolved");
+        clearDamagePulse();
+        clearHitFlashes();
+        clearImpactPunches();
+        setPresentationAttack(null);
+        setGhostAttack(null);
+        setGhostAttackPos(null);
+      },
+    }),
+    [
+      enqueueAttackPresentation,
+      showDamagePulse,
+      clearDamagePulse,
+      addSummonEffect,
+      addDeathEffect,
+      addDamageNumber,
+      addHitFlash,
+      clearHitFlashes,
+      addImpactPunch,
+      clearImpactPunches,
+      presentationAttack,
+    ]
+  );
+
+  useEffect(() => {
+    const startIndex = presentationCursorRef.current;
+    if (startIndex >= state.log.length) return;
+
+    const events = state.log.slice(startIndex);
+    if (!presentationEnabled) {
+      presentationCursorRef.current = state.log.length;
+      return;
+    }
+    events.forEach((event) => {
+      const soundCue = presentationHandlers.getSoundCueForEvent(event);
+      if (soundCue) {
+        presentationHandlers.playSound(soundCue);
+      }
+      switch (event.type) {
+        case "TURN_STARTED":
+          presentationHandlers.onTurnStart(event.payload.player);
+          break;
+        case "TURN_ENDED":
+          presentationHandlers.onTurnEnd(event.payload.player);
+          break;
+        case "CARD_PLAYED": {
+          presentationHandlers.onCardPlayed(event.payload.cardId, event.payload.player);
+          const cardDef = getCardDef(event.payload.cardId);
+          if (cardDef?.type === "MINION") {
+            const summonedId = resolveSummonedMinionId(event.payload.player, event.payload.cardId);
+            if (summonedId) {
+              presentationHandlers.onMinionSummoned(summonedId);
+            }
+          }
+          break;
+        }
+        case "ATTACK_DECLARED":
+          presentationHandlers.onAttackDeclared(event.payload.attackerId);
+          presentationHandlers.onAttackQueued({
+            attackerId: event.payload.attackerId,
+            target: event.payload.target,
+            slam: event.payload.slam,
+          });
+          break;
+        case "DAMAGE_DEALT":
+          presentationHandlers.onDamageDealt({ id: event.id, payload: event.payload });
+          break;
+        case "MINION_DIED":
+          presentationHandlers.onMinionDied(event.payload.minionId);
+          break;
+        case "COMBAT_RESOLVED":
+          presentationHandlers.onCombatResolved();
+          break;
+        default:
+          break;
       }
     });
 
-    runNextAttack();
-  }, [state.log, runNextAttack]);
+    presentationCursorRef.current = state.log.length;
+  }, [state.log, presentationHandlers, presentationEnabled, resolveSummonedMinionId]);
 
   useEffect(() => {
     if (!attackVisual) return;
@@ -395,6 +1005,37 @@ const BoardStage = () => {
       }
     };
   }, [attackVisual]);
+
+  useEffect(() => {
+    if (!ghostAttack) return;
+    if (ghostAttackFrameRef.current !== null) {
+      window.cancelAnimationFrame(ghostAttackFrameRef.current);
+      ghostAttackFrameRef.current = null;
+    }
+
+    const animate = (time: number) => {
+      const elapsed = time - ghostAttack.startTime;
+      const t = Math.min(1, elapsed / ghostAttack.durationMs);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      const x = ghostAttack.start.x + (ghostAttack.end.x - ghostAttack.start.x) * eased;
+      const y = ghostAttack.start.y + (ghostAttack.end.y - ghostAttack.start.y) * eased;
+      setGhostAttackPos({ x, y });
+      if (t < 1) {
+        ghostAttackFrameRef.current = window.requestAnimationFrame(animate);
+      } else {
+        setGhostAttack(null);
+        setGhostAttackPos(null);
+      }
+    };
+
+    ghostAttackFrameRef.current = window.requestAnimationFrame(animate);
+    return () => {
+      if (ghostAttackFrameRef.current !== null) {
+        window.cancelAnimationFrame(ghostAttackFrameRef.current);
+        ghostAttackFrameRef.current = null;
+      }
+    };
+  }, [ghostAttack]);
 
   useEffect(() => {
     if (state.turn !== "enemy" || inputLocked || state.winner) return;
@@ -467,6 +1108,7 @@ const BoardStage = () => {
         ? ({ type: "MINION", id: targetingToId, owner: "enemy" } as TargetSpec)
         : null;
     if (target) {
+      startGhostAttack(targetingFrom, target);
       dispatchIntent({ type: "DECLARE_ATTACK", player: "player", attackerId: targetingFrom.id, target });
     }
     setTargetingFrom(null);
@@ -579,6 +1221,26 @@ const BoardStage = () => {
     state.turn !== "player" ||
     player.hero.heroPowerUsed ||
     player.mana < (playerHeroPower?.cost ?? 2);
+
+  const getSummonPresentationStyle = (minionId: string) => {
+    const effect = summonEffects[minionId];
+    if (!effect) return undefined;
+    const base = {
+      transition: "transform 160ms ease-out, opacity 160ms ease-out",
+      transformOrigin: "50% 50%",
+    };
+    if (effect.phase === "start") {
+      return { ...base, transform: "scale(0.9)", opacity: 0.2 };
+    }
+    return { ...base, transform: "scale(1)", opacity: 1 };
+  };
+
+  const getDeathPresentationStyle = (phase: "start" | "end") => ({
+    transition: "transform 190ms ease-in, opacity 190ms ease-in",
+    transformOrigin: "50% 50%",
+    transform: phase === "start" ? "scale(1)" : "scale(0.85)",
+    opacity: phase === "start" ? 1 : 0,
+  });
 
   return (
     <div className="board-stage">
@@ -721,16 +1383,136 @@ const BoardStage = () => {
         />
       ))}
 
-      {attackVisual && attackVisualPos && (
-        <BoardMinion
-          slot={attackVisualPos}
-          artSrc={attackVisual.art}
-          alt={attackVisual.alt}
-          attack={attackVisual.attack}
-          health={attackVisual.health}
-          isAttackVisual
-        />
-      )}
+      <div
+        className="fx-overlay"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      >
+        {ghostAttack && ghostAttackPos && (
+          <BoardMinion
+            slot={ghostAttackPos}
+            artSrc={ghostAttack.art}
+            alt={ghostAttack.alt}
+            attack={ghostAttack.attack}
+            health={ghostAttack.health}
+            isGhost
+            isPresentation
+            presentationStyle={{
+              transition: "transform 120ms ease-out, opacity 120ms ease-out",
+              transformOrigin: "50% 50%",
+              transform: "scale(1.05)",
+              opacity: 0.9,
+            }}
+          />
+        )}
+
+        {attackVisual && attackVisualPos && (
+          <BoardMinion
+            slot={attackVisualPos}
+            artSrc={attackVisual.art}
+            alt={attackVisual.alt}
+            attack={attackVisual.attack}
+            health={attackVisual.health}
+            isAttackVisual
+            isPresentation
+          />
+        )}
+
+        {damagePulse && (
+          <div
+            style={{
+              position: "absolute",
+              left: damagePulse.x - 12,
+              top: damagePulse.y - 12,
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
+              background: "rgba(255, 190, 120, 0.7)",
+              boxShadow: "0 0 12px rgba(255, 190, 120, 0.8)",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
+        {Object.values(damageNumbers).map((entry) => (
+          <div
+            key={`damage-${entry.id}`}
+            style={{
+              position: "absolute",
+              left: entry.x - 6,
+              top: entry.y - 12,
+              transform: entry.phase === "start" ? "translateY(0px) scale(0.85)" : `translateY(-18px) scale(${entry.scale})`,
+              opacity: entry.phase === "start" ? 1 : 0,
+              transition: "transform 520ms ease-out, opacity 520ms ease-out",
+              color: entry.isHealing ? "rgba(120, 220, 200, 0.95)" : "rgba(255, 160, 90, 0.95)",
+              fontSize: "16px",
+              fontWeight: 700,
+              textShadow: entry.isHealing
+                ? "0 0 8px rgba(120, 220, 200, 0.9)"
+                : "0 0 8px rgba(255, 160, 90, 0.9)",
+              pointerEvents: "none",
+            }}
+          >
+            {entry.amount}
+          </div>
+        ))}
+
+        {Object.values(hitFlashes).map((entry) => (
+          <div
+            key={`hit-${entry.id}`}
+            style={{
+              position: "absolute",
+              left: entry.x - 26,
+              top: entry.y - 26,
+              width: 52,
+              height: 52,
+              borderRadius: "50%",
+              border: "2px solid rgba(255, 220, 180, 0.65)",
+              opacity: entry.phase === "start" ? 0.6 : 0,
+              transform: entry.phase === "start" ? `scale(${entry.scale})` : `scale(${entry.scale * 1.05})`,
+              transition: "transform 80ms ease-out, opacity 80ms ease-out",
+              pointerEvents: "none",
+            }}
+          />
+        ))}
+
+        {Object.values(impactPunches).map((entry) => (
+          <BoardMinion
+            key={`impact-${entry.id}`}
+            slot={entry.snapshot.slot}
+            artSrc={entry.snapshot.artSrc}
+            alt={entry.snapshot.alt}
+            attack={entry.snapshot.attack}
+            health={entry.snapshot.health}
+            isGhost
+            isPresentation
+            presentationStyle={{
+              transition: "transform 80ms ease-out, opacity 80ms ease-out",
+              transformOrigin: "50% 50%",
+              transform: entry.phase === "start" ? "scale(1)" : `scale(${entry.scale})`,
+              opacity: entry.phase === "start" ? 1 : 0.85,
+            }}
+          />
+        ))}
+
+        {Object.values(deathEffects).map((effect) => (
+          <BoardMinion
+            key={`death-${effect.snapshot.id}`}
+            slot={effect.snapshot.slot}
+            artSrc={effect.snapshot.artSrc}
+            alt={effect.snapshot.alt}
+            attack={effect.snapshot.attack}
+            health={effect.snapshot.health}
+            isGhost
+            isPresentation
+            presentationStyle={getDeathPresentationStyle(effect.phase)}
+          />
+        ))}
+      </div>
 
       {ghostSlot && draggingCard && (
         <BoardMinion
@@ -750,6 +1532,7 @@ const BoardStage = () => {
           attack={minion.attack}
           health={minion.health}
           isExhausted={minion.summoningSick}
+          presentationStyle={getSummonPresentationStyle(minion.id)}
           onTargetStart={(event) => {
             if (state.turn !== "player" || inputLocked) return;
             if (!minion.canAttack) return;
@@ -783,6 +1566,7 @@ const BoardStage = () => {
           attack={minion.attack}
           health={minion.health}
           isExhausted={minion.summoningSick}
+          presentationStyle={getSummonPresentationStyle(minion.id)}
           onTargetEnter={() => {
             if (targetingFrom) {
               setTargetingToId(minion.id);
