@@ -10,6 +10,9 @@ type BoardMinionProps = {
   isGhost?: boolean;
   isExhausted?: boolean;
   isAttackVisual?: boolean;
+  isPresentation?: boolean;
+  presentationStyle?: React.CSSProperties;
+  presentationClassName?: string;
   onTargetStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
   onTargetEnter?: () => void;
   onTargetLeave?: () => void;
@@ -24,6 +27,9 @@ const BoardMinion = ({
   isGhost = false,
   isExhausted = false,
   isAttackVisual = false,
+  isPresentation = false,
+  presentationStyle,
+  presentationClassName,
   onTargetStart,
   onTargetEnter,
   onTargetLeave,
@@ -32,8 +38,8 @@ const BoardMinion = ({
 
   return (
     <div
-      className={`board-minion${isGhost ? " is-ghost" : ""}${isExhausted ? " is-exhausted" : ""}${isAttackVisual ? " is-attack-visual" : ""}`}
-      style={{ left: slot.x, top: slot.y }}
+      className={`board-minion${isGhost ? " is-ghost" : ""}${isExhausted ? " is-exhausted" : ""}${isAttackVisual ? " is-attack-visual" : ""}${presentationClassName ? ` ${presentationClassName}` : ""}`}
+      style={{ left: slot.x, top: slot.y, pointerEvents: isPresentation ? "none" : undefined, ...presentationStyle }}
       onPointerLeave={() => {
         if (isAttackVisual) return;
         setCursorState("default");
