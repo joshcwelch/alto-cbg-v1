@@ -73,7 +73,16 @@ const HandCard = ({
     >
       <span className="hand-card__glow" aria-hidden="true" />
       <img className="hand-card__art" src={artSrc} alt={alt} draggable={false} />
-      <img className="hand-card__frame" src="/assets/cards/frames/card-front.PNG" alt="" draggable={false} />
+      <img
+        className="hand-card__frame"
+        src={
+          type === "SPELL"
+            ? "/assets/cards/frames/card-front-spell.PNG"
+            : "/assets/cards/frames/card-front.PNG"
+        }
+        alt=""
+        draggable={false}
+      />
       <span className="hand-card__cost">{cost}</span>
       <span className="hand-card__name" style={{ fontSize: `${nameSize}px` }}>
         {name}
