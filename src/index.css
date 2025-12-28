@@ -204,6 +204,7 @@ body {
   padding: 0;
   background: none;
   cursor: none;
+  transition: filter 160ms ease, opacity 160ms ease, transform 120ms ease;
 }
 
 .ability-frame__icon {
@@ -225,11 +226,20 @@ body {
   pointer-events: none;
 }
 
-.ability-frame:hover {
+.ability-frame.is-active {
+  filter: drop-shadow(0 0 8px rgba(80, 140, 255, 0.75))
+    drop-shadow(0 0 16px rgba(50, 110, 220, 0.6));
+}
+
+.ability-frame.is-disabled {
+  filter: grayscale(0.6) brightness(0.85) saturate(0.4);
+}
+
+.ability-frame.is-active:hover {
   filter: brightness(1.08);
 }
 
-.ability-frame:active {
+.ability-frame.is-active:active {
   transform: scale(0.98);
 }
 
@@ -612,6 +622,7 @@ body {
   touch-action: none;
   transition: transform 0.18s ease;
   transform: rotate(var(--card-rot, 0deg));
+  z-index: 5;
 }
 
 .hand-card:hover {

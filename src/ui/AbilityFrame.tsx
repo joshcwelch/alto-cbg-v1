@@ -12,7 +12,7 @@ type AbilityFrameProps = {
 const AbilityFrame = ({ slot, iconSrc, iconAlt, onActivate, isDisabled = false, cost }: AbilityFrameProps) => {
   return (
     <button
-      className={`ability-frame${isDisabled ? " is-disabled" : ""}`}
+      className={`ability-frame${isDisabled ? " is-disabled" : " is-active"}`}
       type="button"
       style={{ left: slot.x, top: slot.y }}
       onClick={onActivate}
