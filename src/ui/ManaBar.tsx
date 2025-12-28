@@ -1,30 +1,39 @@
-import type { BoardPoint } from "./BoardSlots";
+import type { CSSProperties } from "react";
 
 type ManaBarProps = {
   current: number;
   max: number;
 };
 
+const maxCrystals = 10;
+const start = { x: 404, y: 485 };
+const end = { x: 984, y: 485 };
+const step = (end.x - start.x) / (maxCrystals - 1);
+const crystals = Array.from({ length: maxCrystals }, (_, index) => ({
+  x: start.x + step * index,
+  y: start.y,
+  index,
+}));
+
 const ManaBar = ({ current, max }: ManaBarProps) => {
-  const maxCrystals = 10;
-  const start = { x: 403, y: 510 };
-  const end = { x: 983, y: 510 };
-  const step = (end.x - start.x) / (maxCrystals - 1);
-  const crystals = Array.from({ length: maxCrystals }, (_, index) => ({
-    x: start.x + step * index,
-    y: start.y,
-  }));
+  const activeCount = Math.min(current, max);
 
   return (
     <div className="mana-bar">
-      {crystals.map((point, index) => {
-        const isActive = index < Math.min(current, max);
+      {crystals.map((point) => {
+        const isInactive = point.index >= activeCount;
         return (
-          <span
-            key={`mana-${index}`}
-            className={`mana-pip${isActive ? " is-active" : ""}`}
-            style={{ left: point.x, top: point.y }}
-          />
+          <div
+            key={`mana-${point.index}`}
+            className={`mana-crystal${isInactive ? " is-inactive" : ""}`}
+            style={{ left: point.x, top: point.y, ["--mana-index" as string]: point.index } as CSSProperties}
+          >
+            <span className="mana-crystal__bleed" />
+            <span className="mana-crystal__base" />
+            <span className="mana-crystal__energy" />
+            <span className="mana-crystal__core" />
+            <span className="mana-crystal__pulse" />
+          </div>
         );
       })}
       <span className="sr-only">

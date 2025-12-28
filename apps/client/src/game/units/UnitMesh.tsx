@@ -26,8 +26,9 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
     return trimmed.startsWith("data:") ? trimmed : `data:image/png;base64,${trimmed}`;
   }, []);
 
-  const frameTex = useTexture(frameUrl);
-  const artTex = useTexture(card.artSrc);
+  const frameTex = useTexture(frameUrl) as THREE.Texture;
+  const artUrl = card.artSrc ?? card.art ?? "/assets/cards/sunlance-champion.png";
+  const artTex = useTexture(artUrl) as THREE.Texture;
 
   const artMaskTex = useMemo(() => {
     if (typeof document === "undefined") return null;
@@ -89,8 +90,8 @@ export default function UnitMesh({ card, damage = 0, ...rest }: Props) {
   }, []);
 
   const stats = {
-    atk: card.attack,
-    hp: Math.max(0, card.health - damage)
+    atk: card.attack ?? 0,
+    hp: Math.max(0, (card.health ?? 0) - damage)
   };
 
   const meshRef = useRef<THREE.Mesh>(null!);
