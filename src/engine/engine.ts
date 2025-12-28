@@ -1,5 +1,4 @@
 import { CardRegistry, getHeroPowerFor } from "../cards/CardRegistry";
-import { COMBAT_TIMING } from "./combatTiming";
 import {
   DEFAULT_SEED,
   ENEMY_DECK,
@@ -12,12 +11,10 @@ import {
   PLAYER_ID,
   STARTING_HAND_SIZE,
 } from "./constants";
-import { shuffleWithRng, nextRng } from "./rng";
+import { shuffleWithRng } from "./rng";
 import type {
-  CardInstance,
   GameEvent,
   GameState,
-  HeroState,
   Intent,
   MinionInstance,
   PlayerId,
@@ -66,7 +63,7 @@ const getOpponent = (playerId: PlayerId): PlayerId => (playerId === PLAYER_ID ? 
 const hasKeyword = (cardId: string, keyword: string) => {
   const card = getCardDef(cardId);
   if (!card || card.type !== "MINION") return false;
-  return (card.keywords ?? []).includes(keyword);
+  return (card.keywords ?? []).includes(keyword) || (card.tags ?? []).includes(keyword);
 };
 
 const createMinion = (cardId: string, owner: PlayerId, id: string): MinionInstance => {
@@ -246,7 +243,10 @@ const ensureWinner = (draft: { state: GameState }) => {
   }
 };
 
-const startTurn = (draft: { state: GameState; events: GameEvent[]; nextEventId: number }) => {
+const startTurn = (
+  draft: { state: GameState; events: GameEvent[]; nextEventId: number },
+  options?: { skipDraw?: boolean }
+) => {
   const active = draft.state.turn;
   draft.state.turnCounter += 1;
 
@@ -264,7 +264,9 @@ const startTurn = (draft: { state: GameState; events: GameEvent[]; nextEventId: 
     berserkerBuffedThisTurn: false,
   }));
 
-  drawCards(draft, active, 1);
+  if (!options?.skipDraw) {
+    drawCards(draft, active, 1);
+  }
 
   addEvent(draft, {
     type: "TURN_STARTED",
@@ -302,12 +304,7 @@ const isTargetable = (minion: MinionInstance) => !minion.stealth && !minion.cloa
 
 const hasTaunt = (board: MinionInstance[]) => board.some((minion) => minion.taunt && isTargetable(minion));
 
-const validateAttackTarget = (
-  attacker: MinionInstance,
-  target: TargetSpec,
-  enemyBoard: MinionInstance[],
-  enemyId: PlayerId
-) => {
+const validateAttackTarget = (target: TargetSpec, enemyBoard: MinionInstance[], enemyId: PlayerId) => {
   if (target.type === "HERO") {
     if (target.player !== enemyId) return false;
     if (hasTaunt(enemyBoard)) return false;
@@ -365,7 +362,7 @@ export const createInitialState = (seed: number = DEFAULT_SEED): GameState => {
   const draft = { state: baseState, events: [] as GameEvent[], nextEventId: 0 };
   drawCards(draft, PLAYER_ID, STARTING_HAND_SIZE);
   drawCards(draft, ENEMY_ID, STARTING_HAND_SIZE);
-  startTurn(draft);
+  startTurn(draft, { skipDraw: true });
 
   baseState.log = draft.events;
   baseState.nextEventId = draft.nextEventId;
@@ -430,10 +427,11 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
           break;
         }
 
-        if (!intent.target) return state;
+        const target = intent.target;
+        if (!target) return state;
         if (targetType === "FRIENDLY_MINION") {
-          if (intent.target.type !== "MINION") return state;
-          const targetMinion = active.board.find((m) => m.id === intent.target!.id);
+          if (target.type !== "MINION") return state;
+          const targetMinion = active.board.find((m) => m.id === target.id);
           if (!targetMinion) return state;
 
           const healed = Math.min(3, targetMinion.maxHealth - targetMinion.health);
@@ -446,15 +444,28 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
         }
 
         if (targetType === "ANY_MINION") {
-          if (intent.target.type !== "MINION") return state;
-          const owner = intent.target.owner;
+          if (target.type !== "MINION") return state;
+          const owner = target.owner;
           const targetBoard = draft.state.players[owner].board;
-          const targetMinion = targetBoard.find((m) => m.id === intent.target!.id);
+          const targetMinion = targetBoard.find((m) => m.id === target.id);
           if (!targetMinion) return state;
 
-          draft.state.players[owner].board = targetBoard.map((m) =>
-            m.id === targetMinion.id ? { ...m, stealth: false, cloaked: false } : m
-          );
+          if (card.cardId === "VOID_SILENCE_THE_LIGHT") {
+            draft.state.players[owner].board = targetBoard.map((m) =>
+              m.id === targetMinion.id
+                ? {
+                    ...m,
+                    attack: 1,
+                    taunt: false,
+                    lifesteal: false,
+                    stealth: false,
+                    shield: false,
+                    resilient: false,
+                    cloaked: false,
+                  }
+                : m
+            );
+          }
 
           spendManaAndRemoveCard(active, card.id, cardDef.cost);
 
@@ -465,8 +476,8 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
         if (targetType === "ENEMY_ANY") {
           const enemyId = getOpponent(intent.player);
 
-          if (intent.target.type === "HERO") {
-            if (intent.target.player !== enemyId) return state;
+          if (target.type === "HERO") {
+            if (target.player !== enemyId) return state;
             const damaged = applyHeroDamage(opponent, 2);
             draft.state.players[enemyId] = damaged.nextPlayer;
 
@@ -475,15 +486,15 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
             addEvent(draft, { type: "CARD_PLAYED", payload: { player: intent.player, cardId: card.cardId } });
             addEvent(draft, {
               type: "DAMAGE_DEALT",
-              payload: { source: { type: "SPELL" }, target: intent.target, amount: damaged.actualDamage },
+              payload: { source: { type: "SPELL" }, target, amount: damaged.actualDamage },
             });
             ensureWinner(draft);
             break;
           }
 
-          if (intent.target.type === "MINION") {
-            if (intent.target.owner !== enemyId) return state;
-            const targetMinion = opponent.board.find((m) => m.id === intent.target!.id);
+          if (target.type === "MINION") {
+            if (target.owner !== enemyId) return state;
+            const targetMinion = opponent.board.find((m) => m.id === target.id);
             if (!targetMinion) return state;
 
             const result = applyDamageToMinion(targetMinion, 2, intent.player);
@@ -494,7 +505,7 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
             addEvent(draft, { type: "CARD_PLAYED", payload: { player: intent.player, cardId: card.cardId } });
             addEvent(draft, {
               type: "DAMAGE_DEALT",
-              payload: { source: { type: "SPELL" }, target: intent.target, amount: result.actualDamage },
+              payload: { source: { type: "SPELL" }, target, amount: result.actualDamage },
             });
 
             resolveDamageDeaths(draft, "LIGHT");
@@ -523,28 +534,29 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
       }
 
       if (targetType === "ENEMY_ANY") {
-        if (!intent.target) return state;
+        const target = intent.target;
+        if (!target) return state;
         const enemyId = getOpponent(intent.player);
 
         active.mana -= power.cost;
         active.hero.heroPowerUsed = true;
 
-        if (intent.target.type === "HERO") {
-          if (intent.target.player !== enemyId) return state;
+        if (target.type === "HERO") {
+          if (target.player !== enemyId) return state;
           const damaged = applyHeroDamage(opponent, 2);
           draft.state.players[enemyId] = damaged.nextPlayer;
 
           addEvent(draft, {
             type: "DAMAGE_DEALT",
-            payload: { source: { type: "HERO_POWER" }, target: intent.target, amount: damaged.actualDamage },
+            payload: { source: { type: "HERO_POWER" }, target, amount: damaged.actualDamage },
           });
           ensureWinner(draft);
           break;
         }
 
-        if (intent.target.type === "MINION") {
-          if (intent.target.owner !== enemyId) return state;
-          const targetMinion = opponent.board.find((m) => m.id === intent.target!.id);
+        if (target.type === "MINION") {
+          if (target.owner !== enemyId) return state;
+          const targetMinion = opponent.board.find((m) => m.id === target.id);
           if (!targetMinion) return state;
 
           const result = applyDamageToMinion(targetMinion, 2, intent.player);
@@ -552,7 +564,7 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
 
           addEvent(draft, {
             type: "DAMAGE_DEALT",
-            payload: { source: { type: "HERO_POWER" }, target: intent.target, amount: result.actualDamage },
+            payload: { source: { type: "HERO_POWER" }, target, amount: result.actualDamage },
           });
 
           resolveDamageDeaths(draft, "LIGHT");
@@ -567,19 +579,20 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
     case "DECLARE_ATTACK": {
       const attacker = active.board.find((minion) => minion.id === intent.attackerId);
       if (!attacker || !attacker.canAttack || attacker.summoningSick) return state;
-      if (!validateAttackTarget(attacker, intent.target, opponent.board, getOpponent(intent.player))) return state;
+      if (!validateAttackTarget(intent.target, opponent.board, getOpponent(intent.player))) return state;
 
       attacker.canAttack = false;
 
       const damageEvents: Array<{ target: TargetSpec; amount: number }> = [];
       let slamProfile: SlamProfile = "LIGHT";
 
-      if (intent.target.type === "HERO") {
+      const target = intent.target;
+      if (target.type === "HERO") {
         const damaged = applyHeroDamage(opponent, attacker.attack);
         draft.state.players[getOpponent(intent.player)] = damaged.nextPlayer;
-        damageEvents.push({ target: intent.target, amount: damaged.actualDamage });
+        damageEvents.push({ target, amount: damaged.actualDamage });
       } else {
-        const targetMinion = opponent.board.find((minion) => minion.id === intent.target.id);
+        const targetMinion = opponent.board.find((minion) => minion.id === target.id);
         if (!targetMinion) return state;
 
         const attackerResult = applyDamageToMinion(attacker, targetMinion.attack, intent.player);
@@ -588,7 +601,7 @@ export const engineReducer = (state: GameState, intent: Intent): GameState => {
         active.board = active.board.map((minion) => (minion.id === attacker.id ? attackerResult.next : minion));
         opponent.board = opponent.board.map((minion) => (minion.id === targetMinion.id ? targetResult.next : minion));
 
-        damageEvents.push({ target: intent.target, amount: targetResult.actualDamage });
+        damageEvents.push({ target, amount: targetResult.actualDamage });
         damageEvents.push({
           target: { type: "MINION", id: attacker.id, owner: intent.player },
           amount: attackerResult.actualDamage,

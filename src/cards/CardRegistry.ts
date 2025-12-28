@@ -50,6 +50,7 @@ export interface Card {
 
   // Optional metadata
   art?: string;            // public path to art asset (if available)
+  keywords?: string[];     // for rules keyword checks (e.g., Taunt, Stealth)
   tribe?: string;          // e.g., Beast, Construct, Spirit
   tags?: string[];         // e.g., ["Heal", "Burn", "Taunt", "Summon"]
   dev?: {

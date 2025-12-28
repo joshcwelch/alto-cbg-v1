@@ -15,6 +15,7 @@ import GraveyardVoidFX from "./GraveyardVoidFX";
 import { useGameContext } from "../GameRoot";
 import { CardRegistry, getHeroPowerFor } from "../cards/CardRegistry";
 import { chooseAiIntent } from "../ai/ai";
+import { AttackAnimationService } from "../presentation/AttackAnimationService";
 import { COMBAT_TIMING } from "../engine/combatTiming";
 import { MAX_BOARD_SIZE } from "../engine/constants";
 import {
@@ -63,6 +64,8 @@ type LaneConfig = {
 type GraveyardBurst = {
   id: string;
   bounds: { x: number; y: number; width: number; height: number };
+  artSrc?: string;
+  frameSrc?: string;
 };
 
 type PresentationMinionSnapshot = {
@@ -138,7 +141,7 @@ const getSpellTarget = (
 };
 
 const BoardStage = () => {
-  const { cursor } = useGameContext();
+  const { cursor, scale, offsetX, offsetY } = useGameContext();
   const [state, dispatch] = useReducer(engineReducer, undefined, createInitialState);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -173,15 +176,27 @@ const BoardStage = () => {
   const attackVisualFrameRef = useRef<number | null>(null);
   const ghostAttackFrameRef = useRef<number | null>(null);
   const combatTimeoutRef = useRef<number | null>(null);
+  const attackAnimatorRef = useRef<AttackAnimationService | null>(null);
+  const attackLayerRef = useRef<HTMLDivElement | null>(null);
 
   const [inputLocked, setInputLocked] = useState(false);
   const minionCentersRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   const attackQueueRef = useRef<
-    Array<{ attackerId: string; target: TargetSpec; slam: SlamProfile }>
+    Array<{
+      attackerId: string;
+      target: TargetSpec;
+      slam: SlamProfile;
+      showVisual: boolean;
+      durationMs?: number;
+    }>
   >([]);
   const isAnimatingRef = useRef(false);
   const presentationCursorRef = useRef(0);
+  const playerGestureAttackRef = useRef(false);
+  const lastSlamTargetRef = useRef<TargetSpec | null>(null);
+  const pendingDeathEffectsRef = useRef<Map<string, () => void>>(new Map());
+  const pendingDeathTimeoutsRef = useRef<Map<string, number>>(new Map());
   const damagePulseTimeoutRef = useRef<number | null>(null);
   const summonTimeoutsRef = useRef<Map<string, number>>(new Map());
   const summonRafRef = useRef<Map<string, number>>(new Map());
@@ -189,6 +204,8 @@ const BoardStage = () => {
   const deathRafRef = useRef<Map<string, number>>(new Map());
   const damageNumberTimeoutsRef = useRef<Map<number, number>>(new Map());
   const damageNumberRafRef = useRef<Map<number, number>>(new Map());
+  const damageNumberPhaseTimeoutsRef = useRef<Map<number, number[]>>(new Map());
+  const damageNumberDelayTimeoutsRef = useRef<Map<number, number>>(new Map());
   const hitFlashTimeoutsRef = useRef<Map<number, number>>(new Map());
   const hitFlashRafRef = useRef<Map<number, number>>(new Map());
   const impactPunchTimeoutsRef = useRef<Map<number, number>>(new Map());
@@ -211,7 +228,20 @@ const BoardStage = () => {
   const [summonEffects, setSummonEffects] = useState<Record<string, { phase: "start" | "end" }>>({});
   const [deathEffects, setDeathEffects] = useState<Record<string, { phase: "start" | "end"; snapshot: PresentationMinionSnapshot }>>({});
   const [damageNumbers, setDamageNumbers] = useState<
-    Record<number, { id: number; x: number; y: number; amount: number; isHealing: boolean; scale: number; phase: "start" | "end" }>
+    Record<
+      number,
+      {
+        id: number;
+        x: number;
+        y: number;
+        amount: number;
+        isHealing: boolean;
+        popScale: number;
+        settleScale: number;
+        brightness: number;
+        phase: "pop" | "settle" | "drift";
+      }
+    >
   >({});
   const [hitFlashes, setHitFlashes] = useState<
     Record<number, { id: number; x: number; y: number; scale: number; phase: "start" | "end" }>
@@ -228,6 +258,7 @@ const BoardStage = () => {
 
   const isGameOver = !!state.winner;
   const presentationEnabled = true;
+  const recoilAnimsRef = useRef<WeakMap<HTMLElement, Animation>>(new WeakMap());
 
   const playerLane: LaneConfig = useMemo(
     () => ({
@@ -351,8 +382,17 @@ const BoardStage = () => {
     [inputLocked]
   );
 
+  useEffect(() => {
+    if (!attackAnimatorRef.current) {
+      attackAnimatorRef.current = new AttackAnimationService();
+    }
+    return () => {
+      attackAnimatorRef.current?.stopAll();
+    };
+  }, []);
+
   const startAttackVisual = useCallback(
-    (attackerId: string, target: TargetSpec, slam: SlamProfile): number => {
+    (attackerId: string, target: TargetSpec): number => {
       setAttackVisual(null);
       setAttackVisualPos(null);
 
@@ -407,11 +447,9 @@ const BoardStage = () => {
     setInputLocked(true);
     setPresentationAttack(next);
 
-    const moveDuration = startAttackVisual(
-      next.attackerId,
-      next.target,
-      next.slam
-    );
+    const moveDuration = next.showVisual
+      ? startAttackVisual(next.attackerId, next.target)
+      : next.durationMs ?? COMBAT_TIMING.attackWindup + COMBAT_TIMING.impactPause;
 
     combatTimeoutRef.current = window.setTimeout(() => {
       isAnimatingRef.current = false;
@@ -431,37 +469,150 @@ const BoardStage = () => {
     [enemyHeroCenter, playerHeroCenter]
   );
 
-  const startGhostAttack = useCallback(
-    (attacker: MinionInstance, target: TargetSpec, slam: SlamProfile = "LIGHT") => {
-      if (!presentationEnabled) return;
-      setGhostAttack(null);
-      setGhostAttackPos(null);
+  const getMinionCenterById = useCallback(
+    (minionId: string) => {
+      const snapshot = lastMinionSnapshotRef.current.get(minionId);
+      if (snapshot) return snapshot.center;
+      const live = minionCentersRef.current.get(minionId);
+      if (live) return live;
+      const layout =
+        playerMinionLayout.find((minion) => minion.id === minionId) ??
+        enemyMinionLayout.find((minion) => minion.id === minionId);
+      if (!layout) return null;
+      return {
+        x: layout.slot.x + minionSize / 2,
+        y: layout.slot.y + minionSize / 2,
+      };
+    },
+    [playerMinionLayout, enemyMinionLayout]
+  );
 
-      const start =
-        lastMinionSnapshotRef.current.get(attacker.id)?.center ??
-        minionCentersRef.current.get(attacker.id);
-      if (!start) return;
+  const getMinionById = useCallback(
+    (minionId: string) =>
+      player.board.find((minion) => minion.id === minionId) ??
+      enemy.board.find((minion) => minion.id === minionId),
+    [player.board, enemy.board]
+  );
 
-      const end = getTargetCenter(target);
-      if (!end) return;
 
-      const duration =
-        slam === "LETHAL" ? 120 : slam === "HEAVY" ? 135 : 150;
+  const getSlamDurationMs = useCallback((slam?: SlamProfile) => {
+    switch (slam) {
+      case "LETHAL":
+      case "HEAVY":
+      case "LIGHT":
+      default:
+        return 1120;
+    }
+  }, []);
 
-      setGhostAttack({
-        id: `ghost-${attacker.id}-${Date.now()}`,
-        art: getCardArt(attacker.cardId) ?? "/assets/cards/sunlance-champion.png",
-        alt: getCardDef(attacker.cardId)?.name ?? "Attacker",
+  const playEventSlam = useCallback(
+    (attackerId: string, target: TargetSpec, slam: SlamProfile): boolean => {
+      if (!presentationEnabled) return false;
+      const animator = attackAnimatorRef.current;
+      const layer = attackLayerRef.current;
+      if (!animator || !layer) return false;
+      const attacker = getMinionById(attackerId);
+      if (!attacker) return false;
+      const from = getMinionCenterById(attackerId);
+      const to = getTargetCenter(target);
+      if (!from || !to) return false;
+      lastSlamTargetRef.current = target;
+      void animator.playAttackSlam({
+        layer,
+        from,
+        to,
+        artUrl: getCardArt(attacker.cardId) ?? "/assets/cards/sunlance-champion.png",
+        sizePx: minionSize,
+        slam: slam ?? "LIGHT",
         attack: attacker.attack,
         health: attacker.health,
-        start: { x: start.x - minionSize / 2, y: start.y - minionSize / 2 },
-        end: { x: end.x - minionSize / 2, y: end.y - minionSize / 2 },
-        startTime: performance.now(),
-        durationMs: duration,
+        onImpact: () => {
+          const currentTarget = lastSlamTargetRef.current;
+          if (currentTarget?.type === "MINION") {
+            const pending = pendingDeathEffectsRef.current.get(currentTarget.id);
+            if (pending) {
+              pending();
+              pendingDeathEffectsRef.current.delete(currentTarget.id);
+            }
+            const timeoutId = pendingDeathTimeoutsRef.current.get(currentTarget.id);
+            if (timeoutId) {
+              window.clearTimeout(timeoutId);
+              pendingDeathTimeoutsRef.current.delete(currentTarget.id);
+            }
+          }
+          lastSlamTargetRef.current = null;
+        },
       });
-      setGhostAttackPos({ x: start.x - minionSize / 2, y: start.y - minionSize / 2 });
+      return true;
     },
-    [presentationEnabled, getTargetCenter]
+    [presentationEnabled, getMinionById, getMinionCenterById, getTargetCenter]
+  );
+
+  const getRecoilDistance = (slam?: SlamProfile) => {
+    switch (slam) {
+      case "LETHAL":
+        return 6;
+      case "HEAVY":
+        return 4;
+      default:
+        return 2;
+    }
+  };
+
+  const playDefenderRecoil = useCallback(
+    (target: TargetSpec, slam?: SlamProfile, attackerCenter?: { x: number; y: number } | null) => {
+      const distance = getRecoilDistance(slam);
+      const targetCenter = getTargetCenter(target);
+      let dx = 0;
+      let dy = 0;
+
+      if (attackerCenter && targetCenter) {
+        const vx = targetCenter.x - attackerCenter.x;
+        const vy = targetCenter.y - attackerCenter.y;
+        const len = Math.hypot(vx, vy);
+        if (len > 0.001) {
+          dx = (vx / len) * distance;
+          dy = (vy / len) * distance;
+        }
+      } else if (target.type === "HERO") {
+        dy = target.player === "enemy" ? distance : -distance;
+      } else {
+        dy = target.owner === "enemy" ? -distance : distance;
+      }
+
+      const element =
+        target.type === "HERO"
+          ? (document.querySelector(`[data-hero-id=\"${target.player}\"]`) as HTMLElement | null)
+          : (document.querySelector(`[data-minion-id=\"${target.id}\"]`) as HTMLElement | null);
+
+      if (!element || typeof element.animate !== "function") return;
+
+      const existing = recoilAnimsRef.current.get(element);
+      if (existing) {
+        existing.cancel();
+      }
+
+      const anim = element.animate(
+        [
+          { transform: "translate(0px, 0px)" },
+          { transform: `translate(${dx}px, ${dy}px)` },
+          { transform: "translate(0px, 0px)" },
+        ],
+        { duration: 100, easing: "ease-out" }
+      );
+      recoilAnimsRef.current.set(element, anim);
+      anim.onfinish = () => {
+        if (recoilAnimsRef.current.get(element) === anim) {
+          recoilAnimsRef.current.delete(element);
+        }
+      };
+      anim.oncancel = () => {
+        if (recoilAnimsRef.current.get(element) === anim) {
+          recoilAnimsRef.current.delete(element);
+        }
+      };
+    },
+    [getTargetCenter]
   );
 
   const addSummonEffect = useCallback(
@@ -484,7 +635,7 @@ const BoardStage = () => {
         });
         summonTimeoutsRef.current.delete(minionId);
         summonRafRef.current.delete(minionId);
-      }, 170);
+      }, 520);
       summonTimeoutsRef.current.set(minionId, timeoutId);
     },
     [presentationEnabled]
@@ -516,23 +667,35 @@ const BoardStage = () => {
         });
         deathTimeoutsRef.current.delete(minionId);
         deathRafRef.current.delete(minionId);
-      }, 200);
+      }, 620);
       deathTimeoutsRef.current.set(minionId, timeoutId);
     },
     [presentationEnabled]
   );
 
   const addDamageNumber = useCallback(
-    (event: { id: number; payload: { target: TargetSpec; amount: number; slam?: SlamProfile } }) => {
+    (event: { id: number; payload: { target: TargetSpec; amount: number; slam?: SlamProfile } }, force = false) => {
       if (!presentationEnabled) return;
       const center =
         event.payload.target.type === "MINION"
           ? lastMinionSnapshotRef.current.get(event.payload.target.id)?.center ?? getTargetCenter(event.payload.target)
           : getTargetCenter(event.payload.target);
       if (!center) return;
-      const scale =
-        event.payload.slam === "LETHAL" ? 1.18 : event.payload.slam === "HEAVY" ? 1.08 : 1;
+      const slamScale =
+        event.payload.slam === "LETHAL" ? 1.12 : event.payload.slam === "HEAVY" ? 1.06 : 1;
+      const brightness =
+        event.payload.slam === "LETHAL" ? 1.08 : event.payload.slam === "HEAVY" ? 1.04 : 1;
       const isHealing = event.payload.amount < 0;
+      const delayMs = playerGestureAttackRef.current ? 80 : 0;
+      if (!force && delayMs > 0) {
+        const delayId = window.setTimeout(() => {
+          damageNumberDelayTimeoutsRef.current.delete(event.id);
+          addDamageNumber(event, true);
+        }, delayMs);
+        damageNumberDelayTimeoutsRef.current.set(event.id, delayId);
+        return;
+      }
+
       setDamageNumbers((prev) => ({
         ...prev,
         [event.id]: {
@@ -541,18 +704,31 @@ const BoardStage = () => {
           y: center.y,
           amount: Math.abs(event.payload.amount),
           isHealing,
-          scale,
-          phase: "start",
+          popScale: 1.25 * slamScale,
+          settleScale: 1.0 * slamScale,
+          brightness,
+          phase: "pop",
         },
       }));
-      const rafId = window.requestAnimationFrame(() => {
+
+      const popTimer = window.setTimeout(() => {
         setDamageNumbers((prev) => {
           const current = prev[event.id];
           if (!current) return prev;
-          return { ...prev, [event.id]: { ...current, phase: "end" } };
+          return { ...prev, [event.id]: { ...current, phase: "settle" } };
         });
-      });
-      damageNumberRafRef.current.set(event.id, rafId);
+      }, 400);
+
+      const driftTimer = window.setTimeout(() => {
+        setDamageNumbers((prev) => {
+          const current = prev[event.id];
+          if (!current) return prev;
+          return { ...prev, [event.id]: { ...current, phase: "drift" } };
+        });
+      }, 480);
+
+      damageNumberPhaseTimeoutsRef.current.set(event.id, [popTimer, driftTimer]);
+
       const timeoutId = window.setTimeout(() => {
         setDamageNumbers((prev) => {
           if (!prev[event.id]) return prev;
@@ -561,8 +737,11 @@ const BoardStage = () => {
           return next;
         });
         damageNumberTimeoutsRef.current.delete(event.id);
-        damageNumberRafRef.current.delete(event.id);
-      }, 560);
+        const timers = damageNumberPhaseTimeoutsRef.current.get(event.id);
+        if (timers) timers.forEach((timer) => window.clearTimeout(timer));
+        damageNumberPhaseTimeoutsRef.current.delete(event.id);
+        damageNumberDelayTimeoutsRef.current.delete(event.id);
+      }, 1500);
       damageNumberTimeoutsRef.current.set(event.id, timeoutId);
     },
     [presentationEnabled, getTargetCenter]
@@ -605,7 +784,7 @@ const BoardStage = () => {
         });
         hitFlashTimeoutsRef.current.delete(event.id);
         hitFlashRafRef.current.delete(event.id);
-      }, 90);
+      }, 320);
       hitFlashTimeoutsRef.current.set(event.id, timeoutId);
     },
     [presentationEnabled, getTargetCenter]
@@ -644,7 +823,7 @@ const BoardStage = () => {
         });
         impactPunchTimeoutsRef.current.delete(entry.id);
         impactPunchRafRef.current.delete(entry.id);
-      }, 90);
+      }, 320);
       impactPunchTimeoutsRef.current.set(entry.id, timeoutId);
     },
     [presentationEnabled]
@@ -659,7 +838,13 @@ const BoardStage = () => {
   }, []);
 
   const enqueueAttackPresentation = useCallback(
-    (entry: { attackerId: string; target: TargetSpec; slam: SlamProfile }) => {
+    (entry: {
+      attackerId: string;
+      target: TargetSpec;
+      slam: SlamProfile;
+      showVisual: boolean;
+      durationMs?: number;
+    }) => {
       if (!presentationEnabled) return;
       attackQueueRef.current.push(entry);
       runNextAttack();
@@ -682,7 +867,7 @@ const BoardStage = () => {
       damagePulseTimeoutRef.current = window.setTimeout(() => {
         setDamagePulse(null);
         damagePulseTimeoutRef.current = null;
-      }, 220);
+      }, 700);
     },
     [presentationEnabled, getTargetCenter, clearDamagePulse]
   );
@@ -696,6 +881,9 @@ const BoardStage = () => {
     summonRafRef.current.clear();
     deathTimeoutsRef.current.clear();
     deathRafRef.current.clear();
+    pendingDeathTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    pendingDeathTimeoutsRef.current.clear();
+    pendingDeathEffectsRef.current.clear();
     setSummonEffects({});
     setDeathEffects({});
   }, []);
@@ -703,8 +891,12 @@ const BoardStage = () => {
   const clearDamageNumbers = useCallback(() => {
     damageNumberTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     damageNumberRafRef.current.forEach((rafId) => window.cancelAnimationFrame(rafId));
+    damageNumberPhaseTimeoutsRef.current.forEach((timers) => timers.forEach((timer) => window.clearTimeout(timer)));
+    damageNumberDelayTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     damageNumberTimeoutsRef.current.clear();
     damageNumberRafRef.current.clear();
+    damageNumberPhaseTimeoutsRef.current.clear();
+    damageNumberDelayTimeoutsRef.current.clear();
     setDamageNumbers({});
   }, []);
 
@@ -746,6 +938,7 @@ const BoardStage = () => {
       clearHitFlashes();
       clearImpactPunches();
       clearPresentationEffects();
+      attackAnimatorRef.current?.stopAll();
       setGhostAttack(null);
       setGhostAttackPos(null);
       return;
@@ -767,6 +960,8 @@ const BoardStage = () => {
     clearHitFlashes();
     clearImpactPunches();
     clearPresentationEffects();
+    playerGestureAttackRef.current = false;
+    attackAnimatorRef.current?.stopAll();
     setGhostAttack(null);
     setGhostAttackPos(null);
   }, [
@@ -785,6 +980,8 @@ const BoardStage = () => {
     clearHitFlashes();
     clearImpactPunches();
     clearPresentationEffects();
+    playerGestureAttackRef.current = false;
+    attackAnimatorRef.current?.stopAll();
     setGhostAttack(null);
     setGhostAttackPos(null);
   }, [
@@ -807,6 +1004,71 @@ const BoardStage = () => {
     },
     [state.players]
   );
+
+  const getTargetAtPoint = useCallback(
+    (point: { x: number; y: number }): TargetSpec | null => {
+      const enemyHeroBounds = {
+        x: BoardSlots.HeroBottom.x + 58,
+        y: BoardSlots.HeroTop.y + 80,
+        width: heroFrameSize,
+        height: heroFrameSize,
+      };
+      const inEnemyHero =
+        point.x >= enemyHeroBounds.x &&
+        point.x <= enemyHeroBounds.x + enemyHeroBounds.width &&
+        point.y >= enemyHeroBounds.y &&
+        point.y <= enemyHeroBounds.y + enemyHeroBounds.height;
+      if (inEnemyHero) {
+        return { type: "HERO", player: "enemy" };
+      }
+
+      const enemyHit = enemyMinionLayout.find(
+        (minion) =>
+          point.x >= minion.slot.x &&
+          point.x <= minion.slot.x + minionSize &&
+          point.y >= minion.slot.y &&
+          point.y <= minion.slot.y + minionSize
+      );
+      if (enemyHit) {
+        return { type: "MINION", id: enemyHit.id, owner: "enemy" };
+      }
+
+      return null;
+    },
+    [enemyMinionLayout]
+  );
+
+  const previewAttackTarget = useMemo(() => {
+    if (!targetingFrom) return null;
+    if (targetingToHero) {
+      return { type: "HERO", player: targetingToHero.id === "enemy-hero" ? "enemy" : "player" } as TargetSpec;
+    }
+    if (targetingToId) {
+      return { type: "MINION", id: targetingToId, owner: "enemy" } as TargetSpec;
+    }
+    return getTargetAtPoint(cursor);
+  }, [cursor, getTargetAtPoint, targetingFrom, targetingToHero, targetingToId]);
+
+  const deathSkullTargets = useMemo(() => {
+    if (!targetingFrom || !previewAttackTarget || previewAttackTarget.type !== "MINION") return [];
+    const attacker = getMinionById(targetingFrom.id);
+    const defender = getMinionById(previewAttackTarget.id);
+    if (!attacker || !defender) return [];
+    const targets: string[] = [];
+    if (defender.attack >= attacker.health) targets.push(attacker.id);
+    if (attacker.attack >= defender.health) targets.push(defender.id);
+    return targets;
+  }, [getMinionById, previewAttackTarget, targetingFrom]);
+
+  const deathSkullPositions = useMemo(() => {
+    if (deathSkullTargets.length === 0) return [];
+    return deathSkullTargets
+      .map((id) => {
+        const center = getMinionCenterById(id);
+        return center ? { id, x: center.x, y: center.y } : null;
+      })
+      .filter((entry): entry is { id: string; x: number; y: number } => !!entry);
+  }, [deathSkullTargets, getMinionCenterById]);
 
   const presentationHandlers = useMemo(
     () => ({
@@ -839,15 +1101,35 @@ const BoardStage = () => {
       onAttackDeclared: (attackerId: string) => {
         console.debug("[presentation] attack declared", attackerId);
       },
-      onAttackQueued: (entry: { attackerId: string; target: TargetSpec; slam: SlamProfile }) => {
+      onAttackQueued: (entry: {
+        attackerId: string;
+        target: TargetSpec;
+        slam: SlamProfile;
+        showVisual: boolean;
+        durationMs?: number;
+      }) => {
         console.debug("[presentation] attack queued", entry.attackerId);
         enqueueAttackPresentation(entry);
       },
-      onDamageDealt: (event: { id: number; payload: { target: TargetSpec; amount: number } }) => {
+      onDamageDealt: (event: { id: number; payload: { target: TargetSpec; amount: number; slam?: SlamProfile } }) => {
         console.debug("[presentation] damage dealt", event.payload.amount);
         showDamagePulse(event);
         addDamageNumber(event);
         addHitFlash(event);
+        const attackerCenter = (() => {
+          if (!presentationAttack) return null;
+          const sameTarget =
+            (event.payload.target.type === "HERO" &&
+              presentationAttack.target.type === "HERO" &&
+              presentationAttack.target.player === event.payload.target.player) ||
+            (event.payload.target.type === "MINION" &&
+              presentationAttack.target.type === "MINION" &&
+              presentationAttack.target.id === event.payload.target.id &&
+              presentationAttack.target.owner === event.payload.target.owner);
+          if (!sameTarget) return null;
+          return getMinionCenterById(presentationAttack.attackerId);
+        })();
+        playDefenderRecoil(event.payload.target, event.payload.slam, attackerCenter);
         if (event.payload.target.type === "MINION") {
           addImpactPunch({
             id: event.id,
@@ -870,22 +1152,54 @@ const BoardStage = () => {
       },
       onMinionDied: (minionId: string) => {
         console.debug("[presentation] minion died", minionId);
-        addDeathEffect(minionId);
-        const center =
-          minionCentersRef.current.get(minionId) ??
-          { x: BoardSlots.BoardCenter.x, y: BoardSlots.BoardCenter.y };
-        setGraveyardBursts((prev) => [
-          ...prev,
-          {
-            id: `graveyard-${minionId}-${Date.now()}`,
-            bounds: {
-              x: center.x - minionSize / 2,
-              y: center.y - minionSize / 2,
-              width: minionSize,
-              height: minionSize,
-            },
-          },
-        ]);
+        const gestureTarget = lastSlamTargetRef.current;
+        const eventTarget = presentationAttack?.target ?? null;
+        const shouldDelay =
+          (gestureTarget?.type === "MINION" && gestureTarget.id === minionId) ||
+          (eventTarget?.type === "MINION" && eventTarget.id === minionId);
+        const runDeath = () => {
+          setDeathEffects((prev) => {
+            if (!prev[minionId]) return prev;
+            const next = { ...prev };
+            delete next[minionId];
+            return next;
+          });
+          const snapshot = lastMinionSnapshotRef.current.get(minionId);
+          const center =
+            snapshot?.center ??
+            minionCentersRef.current.get(minionId) ??
+            { x: BoardSlots.BoardCenter.x, y: BoardSlots.BoardCenter.y };
+          window.setTimeout(() => {
+            setGraveyardBursts((prev) => [
+              ...prev,
+              {
+                id: `graveyard-${minionId}-${Date.now()}`,
+                bounds: {
+                  x: center.x - minionSize / 2,
+                  y: center.y - minionSize / 2,
+                  width: minionSize,
+                  height: minionSize,
+                },
+                artSrc: snapshot?.artSrc ?? "/assets/cards/sunlance-champion.png",
+                frameSrc: "/assets/ui/frames/minion.png",
+              },
+            ]);
+          }, 260);
+        };
+        if (shouldDelay) {
+          pendingDeathEffectsRef.current.set(minionId, runDeath);
+          const timeoutId = window.setTimeout(() => {
+            const pending = pendingDeathEffectsRef.current.get(minionId);
+            if (pending) {
+              pending();
+              pendingDeathEffectsRef.current.delete(minionId);
+            }
+            pendingDeathTimeoutsRef.current.delete(minionId);
+          }, 240);
+          pendingDeathTimeoutsRef.current.set(minionId, timeoutId);
+          return;
+        }
+        runDeath();
       },
       onTurnStart: (playerId: string) => {
         console.debug("[presentation] turn start", playerId);
@@ -895,12 +1209,8 @@ const BoardStage = () => {
       },
       onCombatResolved: () => {
         console.debug("[presentation] combat resolved");
-        clearDamagePulse();
-        clearHitFlashes();
-        clearImpactPunches();
         setPresentationAttack(null);
-        setGhostAttack(null);
-        setGhostAttackPos(null);
+        playerGestureAttackRef.current = false;
       },
     }),
     [
@@ -915,6 +1225,8 @@ const BoardStage = () => {
       addImpactPunch,
       clearImpactPunches,
       presentationAttack,
+      getMinionCenterById,
+      playDefenderRecoil,
     ]
   );
 
@@ -950,14 +1262,23 @@ const BoardStage = () => {
           }
           break;
         }
-        case "ATTACK_DECLARED":
+        case "ATTACK_DECLARED": {
           presentationHandlers.onAttackDeclared(event.payload.attackerId);
-          presentationHandlers.onAttackQueued({
-            attackerId: event.payload.attackerId,
-            target: event.payload.target,
-            slam: event.payload.slam,
-          });
+          const shouldGhostSlam = event.payload.player === "enemy" || !playerGestureAttackRef.current;
+          const usedGhostSlam = shouldGhostSlam
+            ? playEventSlam(event.payload.attackerId, event.payload.target, event.payload.slam)
+            : false;
+          if (event.payload.player === "enemy" || !playerGestureAttackRef.current) {
+            presentationHandlers.onAttackQueued({
+              attackerId: event.payload.attackerId,
+              target: event.payload.target,
+              slam: event.payload.slam,
+              showVisual: event.payload.player === "enemy" && !usedGhostSlam,
+              durationMs: usedGhostSlam ? getSlamDurationMs(event.payload.slam) : undefined,
+            });
+          }
           break;
+        }
         case "DAMAGE_DEALT":
           presentationHandlers.onDamageDealt({ id: event.id, payload: event.payload });
           break;
@@ -973,7 +1294,7 @@ const BoardStage = () => {
     });
 
     presentationCursorRef.current = state.log.length;
-  }, [state.log, presentationHandlers, presentationEnabled, resolveSummonedMinionId]);
+  }, [state.log, presentationHandlers, presentationEnabled, resolveSummonedMinionId, playEventSlam, getSlamDurationMs]);
 
   useEffect(() => {
     if (!attackVisual) return;
@@ -1094,7 +1415,14 @@ const BoardStage = () => {
     setSpellTargetingToHero(null);
   };
 
-  const handleAttackCommit = () => {
+  const handleAttackCommit = (point?: { x: number; y: number }) => {
+    console.log("[AttackAnimationService] handleAttackCommit", {
+      attackerId: targetingFrom?.id ?? null,
+      targetingToId,
+      targetingToHero: targetingToHero?.id ?? null,
+      inputLocked,
+      turn: state.turn,
+    });
     if (!targetingFrom) return;
     if (state.turn !== "player" || inputLocked) {
       setTargetingFrom(null);
@@ -1106,10 +1434,53 @@ const BoardStage = () => {
       ? ({ type: "HERO", player: targetingToHero.id === "enemy-hero" ? "enemy" : "player" } as TargetSpec)
       : targetingToId
         ? ({ type: "MINION", id: targetingToId, owner: "enemy" } as TargetSpec)
-        : null;
+        : point
+          ? getTargetAtPoint(point)
+          : getTargetAtPoint(cursor);
     if (target) {
-      startGhostAttack(targetingFrom, target);
+      playerGestureAttackRef.current = true;
+      if (presentationEnabled && attackAnimatorRef.current && attackLayerRef.current) {
+        const from = getMinionCenterById(targetingFrom.id);
+        const to =
+          target.type === "HERO"
+            ? target.player === "enemy"
+              ? enemyHeroCenter
+              : playerHeroCenter
+            : getMinionCenterById(target.id);
+        console.log("[AttackAnimationService] slam (player)", { from, to, target });
+        if (from && to) {
+          lastSlamTargetRef.current = target;
+          void attackAnimatorRef.current.playAttackSlam({
+            layer: attackLayerRef.current,
+            from,
+            to,
+            artUrl: getCardArt(targetingFrom.cardId) ?? "/assets/cards/sunlance-champion.png",
+            sizePx: minionSize,
+            slam: "LIGHT",
+            attack: targetingFrom.attack,
+            health: targetingFrom.health,
+            onImpact: () => {
+              const currentTarget = lastSlamTargetRef.current;
+              if (currentTarget?.type === "MINION") {
+                const pending = pendingDeathEffectsRef.current.get(currentTarget.id);
+                if (pending) {
+                  pending();
+                  pendingDeathEffectsRef.current.delete(currentTarget.id);
+                }
+                const timeoutId = pendingDeathTimeoutsRef.current.get(currentTarget.id);
+                if (timeoutId) {
+                  window.clearTimeout(timeoutId);
+                  pendingDeathTimeoutsRef.current.delete(currentTarget.id);
+                }
+              }
+              lastSlamTargetRef.current = null;
+            },
+          });
+        }
+      }
       dispatchIntent({ type: "DECLARE_ATTACK", player: "player", attackerId: targetingFrom.id, target });
+    } else {
+      console.log("[AttackAnimationService] no target on commit");
     }
     setTargetingFrom(null);
     setTargetingToId(null);
@@ -1137,8 +1508,18 @@ const BoardStage = () => {
 
   useEffect(() => {
     if (!targetingFrom) return;
-    const handlePointerUp = () => {
-      handleAttackCommit();
+    const handlePointerUp = (event: PointerEvent) => {
+      const point = {
+        x: (event.clientX - offsetX) / scale,
+        y: (event.clientY - offsetY) / scale,
+      };
+      console.log("[AttackAnimationService] pointerup", {
+        attackerId: targetingFrom.id,
+        targetingToId,
+        targetingToHero: targetingToHero?.id ?? null,
+        point,
+      });
+      handleAttackCommit(point);
     };
     window.addEventListener("pointerup", handlePointerUp);
     return () => window.removeEventListener("pointerup", handlePointerUp);
@@ -1226,7 +1607,7 @@ const BoardStage = () => {
     const effect = summonEffects[minionId];
     if (!effect) return undefined;
     const base = {
-      transition: "transform 160ms ease-out, opacity 160ms ease-out",
+      transition: "transform 480ms ease-out, opacity 480ms ease-out",
       transformOrigin: "50% 50%",
     };
     if (effect.phase === "start") {
@@ -1236,10 +1617,14 @@ const BoardStage = () => {
   };
 
   const getDeathPresentationStyle = (phase: "start" | "end") => ({
-    transition: "transform 190ms ease-in, opacity 190ms ease-in",
+    transition: "transform 520ms ease-in, opacity 520ms ease-in, filter 520ms ease-in",
     transformOrigin: "50% 50%",
-    transform: phase === "start" ? "scale(1)" : "scale(0.85)",
+    transform: phase === "start" ? "scale(1)" : "scale(0.88)",
     opacity: phase === "start" ? 1 : 0,
+    filter:
+      phase === "start"
+        ? "drop-shadow(0 0 10px rgba(160, 90, 255, 0.45))"
+        : "drop-shadow(0 0 18px rgba(120, 60, 190, 0.2))",
   });
 
   return (
@@ -1262,6 +1647,7 @@ const BoardStage = () => {
         portraitSrc="/assets/heroes/tharos.png"
         frameSrc="/assets/ui/frames/player-frame.png"
         alt="Enemy hero"
+        heroId="enemy"
         health={enemy.hero.health}
         onTargetEnter={() => {
           if (targetingFrom) {
@@ -1290,6 +1676,7 @@ const BoardStage = () => {
         portraitSrc="/assets/heroes/lyra.png"
         frameSrc="/assets/ui/frames/player-frame.png"
         alt="Player hero"
+        heroId="player"
         health={player.hero.health}
       />
 
@@ -1383,15 +1770,127 @@ const BoardStage = () => {
         />
       ))}
 
+      {ghostSlot && draggingCard && (
+        <BoardMinion
+          slot={ghostSlot}
+          artSrc={getCardArt(draggingCard.cardId) ?? "/assets/cards/sunlance-champion.png"}
+          alt={getCardDef(draggingCard.cardId)?.name ?? "Card"}
+          isGhost
+        />
+      )}
+
+      {playerMinionLayout.map((minion) => (
+        <BoardMinion
+          key={minion.id}
+          slot={minion.slot}
+          artSrc={getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png"}
+          alt={getCardDef(minion.cardId)?.name ?? "Minion"}
+          attack={minion.attack}
+          health={minion.health}
+          isTaunt={minion.taunt}
+          isExhausted={minion.summoningSick}
+          isPlayable={state.turn === "player" && !inputLocked && minion.canAttack && !minion.summoningSick}
+          isInactive={state.turn === "player" && (minion.summoningSick || !minion.canAttack)}
+          presentationStyle={getSummonPresentationStyle(minion.id)}
+          dataMinionId={minion.id}
+          onTargetStart={(event) => {
+            if (state.turn !== "player" || inputLocked) return;
+            if (!minion.canAttack) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setTargetingFrom(minion);
+          }}
+          onTargetEnter={() => {
+            if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
+              setSpellTargetingToMinion({
+                id: minion.id,
+                owner: "player",
+                x: minion.slot.x + minionSize / 2,
+                y: minion.slot.y + minionSize / 2,
+              });
+            }
+          }}
+          onTargetLeave={() => {
+            if (spellTargetingToMinion?.id === minion.id && spellTargetingToMinion.owner === "player") {
+              setSpellTargetingToMinion(null);
+            }
+          }}
+        />
+      ))}
+
+      {enemyMinionLayout.map((minion) => (
+        <BoardMinion
+          key={minion.id}
+          slot={minion.slot}
+          artSrc={getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png"}
+          alt={getCardDef(minion.cardId)?.name ?? "Minion"}
+          attack={minion.attack}
+          health={minion.health}
+          isTaunt={minion.taunt}
+          isExhausted={minion.summoningSick}
+          presentationStyle={getSummonPresentationStyle(minion.id)}
+          dataMinionId={minion.id}
+          onTargetEnter={() => {
+            if (targetingFrom) {
+              setTargetingToId(minion.id);
+            }
+            if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
+              setSpellTargetingToMinion({
+                id: minion.id,
+                owner: "enemy",
+                x: minion.slot.x + minionSize / 2,
+                y: minion.slot.y + minionSize / 2,
+              });
+            }
+          }}
+          onTargetLeave={() => {
+            if (targetingToId === minion.id) {
+              setTargetingToId(null);
+            }
+            if (spellTargetingToMinion?.id === minion.id && spellTargetingToMinion.owner === "enemy") {
+              setSpellTargetingToMinion(null);
+            }
+          }}
+        />
+      ))}
+
+      <div
+        id="alto-attack-layer"
+        ref={attackLayerRef}
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 9999,
+        }}
+      />
+
       <div
         className="fx-overlay"
         style={{
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          zIndex: 2,
+          zIndex: 8,
         }}
       >
+        {deathSkullPositions.map((position) => (
+          <div
+            key={`death-warning-${position.id}`}
+            className="death-warning"
+            style={{
+              left: position.x - 48,
+              top: position.y - 48,
+            }}
+          >
+            <img
+              className="death-warning__icon"
+              src="/assets/ui/minnion-death.png"
+              alt=""
+              draggable={false}
+            />
+          </div>
+        ))}
+
         {ghostAttack && ghostAttackPos && (
           <BoardMinion
             slot={ghostAttackPos}
@@ -1399,13 +1898,13 @@ const BoardStage = () => {
             alt={ghostAttack.alt}
             attack={ghostAttack.attack}
             health={ghostAttack.health}
-            isGhost
             isPresentation
             presentationStyle={{
               transition: "transform 120ms ease-out, opacity 120ms ease-out",
               transformOrigin: "50% 50%",
-              transform: "scale(1.05)",
-              opacity: 0.9,
+              transform: "scale(1.06)",
+              opacity: 0.95,
+              filter: "drop-shadow(0 0 10px rgba(120, 170, 255, 0.65))",
             }}
           />
         )}
@@ -1445,15 +1944,26 @@ const BoardStage = () => {
               position: "absolute",
               left: entry.x - 6,
               top: entry.y - 12,
-              transform: entry.phase === "start" ? "translateY(0px) scale(0.85)" : `translateY(-18px) scale(${entry.scale})`,
-              opacity: entry.phase === "start" ? 1 : 0,
-              transition: "transform 520ms ease-out, opacity 520ms ease-out",
+              transform:
+                entry.phase === "pop"
+                  ? `translateY(0px) scale(${entry.popScale})`
+                  : entry.phase === "settle"
+                    ? `translateY(0px) scale(${entry.settleScale})`
+                    : `translateY(-14px) scale(${entry.settleScale})`,
+              opacity: entry.phase === "drift" ? 0 : 1,
+              transition:
+                entry.phase === "pop"
+                  ? "transform 400ms ease-out"
+                  : entry.phase === "settle"
+                    ? "transform 400ms ease-out, opacity 1300ms ease-out"
+                    : "transform 900ms ease-out, opacity 1300ms ease-out",
               color: entry.isHealing ? "rgba(120, 220, 200, 0.95)" : "rgba(255, 160, 90, 0.95)",
-              fontSize: "16px",
-              fontWeight: 700,
+              fontSize: "28px",
+              fontWeight: 800,
+              filter: `brightness(${entry.brightness})`,
               textShadow: entry.isHealing
-                ? "0 0 8px rgba(120, 220, 200, 0.9)"
-                : "0 0 8px rgba(255, 160, 90, 0.9)",
+                ? "0 0 10px rgba(120, 220, 200, 0.95)"
+                : "0 0 10px rgba(255, 160, 90, 0.95)",
               pointerEvents: "none",
             }}
           >
@@ -1466,15 +1976,15 @@ const BoardStage = () => {
             key={`hit-${entry.id}`}
             style={{
               position: "absolute",
-              left: entry.x - 26,
-              top: entry.y - 26,
-              width: 52,
-              height: 52,
+              left: entry.x - 36,
+              top: entry.y - 36,
+              width: 72,
+              height: 72,
               borderRadius: "50%",
-              border: "2px solid rgba(255, 220, 180, 0.65)",
-              opacity: entry.phase === "start" ? 0.6 : 0,
-              transform: entry.phase === "start" ? `scale(${entry.scale})` : `scale(${entry.scale * 1.05})`,
-              transition: "transform 80ms ease-out, opacity 80ms ease-out",
+              border: "3px solid rgba(255, 220, 180, 0.75)",
+              opacity: entry.phase === "start" ? 0.75 : 0,
+              transform: entry.phase === "start" ? `scale(${entry.scale})` : `scale(${entry.scale * 1.08})`,
+              transition: "transform 320ms ease-out, opacity 320ms ease-out",
               pointerEvents: "none",
             }}
           />
@@ -1491,7 +2001,7 @@ const BoardStage = () => {
             isGhost
             isPresentation
             presentationStyle={{
-              transition: "transform 80ms ease-out, opacity 80ms ease-out",
+              transition: "transform 320ms ease-out, opacity 320ms ease-out",
               transformOrigin: "50% 50%",
               transform: entry.phase === "start" ? "scale(1)" : `scale(${entry.scale})`,
               opacity: entry.phase === "start" ? 1 : 0.85,
@@ -1513,83 +2023,6 @@ const BoardStage = () => {
           />
         ))}
       </div>
-
-      {ghostSlot && draggingCard && (
-        <BoardMinion
-          slot={ghostSlot}
-          artSrc={getCardArt(draggingCard.cardId) ?? "/assets/cards/sunlance-champion.png"}
-          alt={getCardDef(draggingCard.cardId)?.name ?? "Card"}
-          isGhost
-        />
-      )}
-
-      {playerMinionLayout.map((minion) => (
-        <BoardMinion
-          key={minion.id}
-          slot={minion.slot}
-          artSrc={getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png"}
-          alt={getCardDef(minion.cardId)?.name ?? "Minion"}
-          attack={minion.attack}
-          health={minion.health}
-          isExhausted={minion.summoningSick}
-          presentationStyle={getSummonPresentationStyle(minion.id)}
-          onTargetStart={(event) => {
-            if (state.turn !== "player" || inputLocked) return;
-            if (!minion.canAttack) return;
-            event.currentTarget.setPointerCapture(event.pointerId);
-            setTargetingFrom(minion);
-          }}
-          onTargetEnter={() => {
-            if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
-              setSpellTargetingToMinion({
-                id: minion.id,
-                owner: "player",
-                x: minion.slot.x + minionSize / 2,
-                y: minion.slot.y + minionSize / 2,
-              });
-            }
-          }}
-          onTargetLeave={() => {
-            if (spellTargetingToMinion?.id === minion.id && spellTargetingToMinion.owner === "player") {
-              setSpellTargetingToMinion(null);
-            }
-          }}
-        />
-      ))}
-
-      {enemyMinionLayout.map((minion) => (
-        <BoardMinion
-          key={minion.id}
-          slot={minion.slot}
-          artSrc={getCardArt(minion.cardId) ?? "/assets/cards/sunlance-champion.png"}
-          alt={getCardDef(minion.cardId)?.name ?? "Minion"}
-          attack={minion.attack}
-          health={minion.health}
-          isExhausted={minion.summoningSick}
-          presentationStyle={getSummonPresentationStyle(minion.id)}
-          onTargetEnter={() => {
-            if (targetingFrom) {
-              setTargetingToId(minion.id);
-            }
-            if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
-              setSpellTargetingToMinion({
-                id: minion.id,
-                owner: "enemy",
-                x: minion.slot.x + minionSize / 2,
-                y: minion.slot.y + minionSize / 2,
-              });
-            }
-          }}
-          onTargetLeave={() => {
-            if (targetingToId === minion.id) {
-              setTargetingToId(null);
-            }
-            if (spellTargetingToMinion?.id === minion.id && spellTargetingToMinion.owner === "enemy") {
-              setSpellTargetingToMinion(null);
-            }
-          }}
-        />
-      ))}
 
       {activeTargetingFrom && activeTargetingEnd && (
         <svg className="targeting-overlay" viewBox="0 0 1536 1024">

@@ -1,6 +1,6 @@
 import { getCard } from "../cards/CardRegistry";
 import { getCardTargetType, getHeroPowerTargetTypeFor } from "../engine/engine";
-import type { GameState, Intent, PlayerId, TargetSpec } from "../engine/types";
+import type { GameState, Intent, TargetSpec } from "../engine/types";
 
 const getTargetableMinions = (minions: { id: string; health: number; maxHealth: number; taunt: boolean; stealth: boolean; cloaked: boolean }[]) =>
   minions.filter((minion) => !minion.stealth && !minion.cloaked && minion.health > 0);
@@ -46,10 +46,6 @@ export const chooseAiIntent = (state: GameState): Intent | null => {
       if (targetType === "FRIENDLY_MINION") {
         const target = pickLowestHealth(getTargetableMinions(ai.board));
         return target ? { type: "MINION", id: target.id, owner: "enemy" } : undefined;
-      }
-      if (targetType === "ENEMY_MINION") {
-        const target = pickLowestHealth(targetableEnemyMinions);
-        return target ? { type: "MINION", id: target.id, owner: "player" } : undefined;
       }
       if (targetType === "ANY_MINION") {
         const friendly = pickLowestHealth(getTargetableMinions(ai.board));

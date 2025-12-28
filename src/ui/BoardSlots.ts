@@ -8,7 +8,7 @@ export const BoardSlots = {
   HeroBottom: { x: -20, y: 640 },
   ManaBar: { x: 120, y: 740 },
   EndTurn: { x: 1062, y: 445 },
-  Hand: { x: 438, y: 785 },
+  Hand: { x: 348, y: 785 },
   EnemyHand: { x: 438, y: -285 },
   BoardCenter: { x: 768, y: 512 },
   AbilityFrame: { x: 1211, y: 700 },

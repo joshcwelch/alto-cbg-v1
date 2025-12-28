@@ -6,6 +6,7 @@ type HeroSlotProps = {
   frameSrc: string;
   alt: string;
   health?: number;
+  heroId?: "player" | "enemy";
   onTargetEnter?: () => void;
   onTargetLeave?: () => void;
   onTargetStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
@@ -17,6 +18,7 @@ const HeroSlot = ({
   frameSrc,
   alt,
   health = 30,
+  heroId,
   onTargetEnter,
   onTargetLeave,
   onTargetStart,
@@ -25,6 +27,7 @@ const HeroSlot = ({
     <div
       className="hero-slot"
       style={{ left: slot.x, top: slot.y }}
+      data-hero-id={heroId}
       onPointerEnter={() => onTargetEnter?.()}
       onPointerLeave={() => onTargetLeave?.()}
       onPointerDown={(event) => onTargetStart?.(event)}

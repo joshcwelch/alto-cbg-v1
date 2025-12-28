@@ -7,12 +7,16 @@ type BoardMinionProps = {
   alt: string;
   attack?: number;
   health?: number;
+  isTaunt?: boolean;
   isGhost?: boolean;
   isExhausted?: boolean;
+  isPlayable?: boolean;
+  isInactive?: boolean;
   isAttackVisual?: boolean;
   isPresentation?: boolean;
   presentationStyle?: React.CSSProperties;
   presentationClassName?: string;
+  dataMinionId?: string;
   onTargetStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
   onTargetEnter?: () => void;
   onTargetLeave?: () => void;
@@ -24,12 +28,16 @@ const BoardMinion = ({
   alt,
   attack = 2,
   health = 2,
+  isTaunt = false,
   isGhost = false,
   isExhausted = false,
+  isPlayable = false,
+  isInactive = false,
   isAttackVisual = false,
   isPresentation = false,
   presentationStyle,
   presentationClassName,
+  dataMinionId,
   onTargetStart,
   onTargetEnter,
   onTargetLeave,
@@ -38,8 +46,9 @@ const BoardMinion = ({
 
   return (
     <div
-      className={`board-minion${isGhost ? " is-ghost" : ""}${isExhausted ? " is-exhausted" : ""}${isAttackVisual ? " is-attack-visual" : ""}${presentationClassName ? ` ${presentationClassName}` : ""}`}
+      className={`board-minion${isTaunt ? " is-taunt" : ""}${isGhost ? " is-ghost" : ""}${isExhausted ? " is-exhausted" : ""}${isPlayable ? " is-playable" : ""}${isInactive ? " is-inactive" : ""}${isAttackVisual ? " is-attack-visual" : ""}${presentationClassName ? ` ${presentationClassName}` : ""}`}
       style={{ left: slot.x, top: slot.y, pointerEvents: isPresentation ? "none" : undefined, ...presentationStyle }}
+      data-minion-id={dataMinionId}
       onPointerLeave={() => {
         if (isAttackVisual) return;
         setCursorState("default");
@@ -60,6 +69,7 @@ const BoardMinion = ({
         onTargetEnter?.();
       }}
     >
+      {isTaunt && <div className="board-minion__taunt-shield" />}
       <img className="board-minion__art" src={artSrc} alt={alt} draggable={false} />
       <img className="board-minion__frame" src="/assets/ui/frames/minion.png" alt="" draggable={false} />
       {!isGhost && (
