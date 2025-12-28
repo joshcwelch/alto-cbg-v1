@@ -77,6 +77,8 @@ const SPRITE_PATHS = {
 
 const WISP_SHEET = { frames: 4, frameSize: 128 };
 const BURST_SHEET = { frames: 4, frameSize: 128 };
+const MAX_PARTICLES_TOTAL = 220;
+const HEAVY_PARTICLE_THRESHOLD = 170;
 
 const sampleImagePoints = (
   image: HTMLImageElement,
@@ -137,6 +139,9 @@ const GraveyardVoidFX = ({
   const lastTimeRef = useRef<number | null>(null);
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const imagePromiseRef = useRef<Map<string, Promise<HTMLImageElement>>>(new Map());
+  const pointCacheRef = useRef<Map<string, Array<{ x: number; y: number; brightness: number }>>>(
+    new Map()
+  );
   const isMountedRef = useRef(true);
   const spriteRefs = useRef<{
     smoke?: HTMLImageElement;
@@ -161,6 +166,22 @@ const GraveyardVoidFX = ({
       const promise = img.decode().then(() => img);
       imagePromiseRef.current.set(src, promise);
       return promise;
+    };
+
+    const getSampledPoints = (
+      image: HTMLImageElement,
+      width: number,
+      height: number,
+      step: number,
+      maxPoints: number,
+      alphaThreshold: number
+    ) => {
+      const key = `${image.src}|${width}x${height}|${step}|${maxPoints}|${alphaThreshold}`;
+      const cached = pointCacheRef.current.get(key);
+      if (cached) return cached;
+      const points = sampleImagePoints(image, width, height, step, maxPoints, alphaThreshold);
+      pointCacheRef.current.set(key, points);
+      return points;
     };
 
     // Role-specialized particles: staggered timing + force curves define the "claiming" feel.
@@ -243,9 +264,16 @@ const GraveyardVoidFX = ({
 
     const spawnParticleBurst = (burst: Burst, particles: Particle[]) => {
       if (particles.length === 0) return;
+      const room = MAX_PARTICLES_TOTAL - particlesRef.current.length;
+      if (room <= 0) return;
+      let picked = particles;
+      if (particles.length > room) {
+        const stride = Math.max(1, Math.ceil(particles.length / room));
+        picked = particles.filter((_, index) => index % stride === 0).slice(0, room);
+      }
       activeBurstIdsRef.current.add(burst.id);
-      burstCountsRef.current.set(burst.id, particles.length);
-      particlesRef.current = [...particlesRef.current, ...particles];
+      burstCountsRef.current.set(burst.id, picked.length);
+      particlesRef.current = [...particlesRef.current, ...picked];
       const centerX = burst.bounds.x + burst.bounds.width / 2;
       const centerY = burst.bounds.y + burst.bounds.height / 2;
       burstSpritesRef.current = [
@@ -297,8 +325,8 @@ const GraveyardVoidFX = ({
         const { width, height } = burst.bounds;
         const centerX = burst.bounds.x + width / 2;
         const centerY = burst.bounds.y + height / 2;
-        const artPoints = sampleImagePoints(art, Math.round(width), Math.round(height), 8, 58, 35);
-        const framePoints = sampleImagePoints(frame, Math.round(width), Math.round(height), 9, 36, 45);
+        const artPoints = getSampledPoints(art, Math.round(width), Math.round(height), 10, 36, 35);
+        const framePoints = getSampledPoints(frame, Math.round(width), Math.round(height), 11, 24, 45);
         const particles: Particle[] = [];
         artPoints.forEach((point) => {
           particles.push(
@@ -392,6 +420,7 @@ const GraveyardVoidFX = ({
 
       ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
       ctx.globalCompositeOperation = "source-over";
+      const heavyLoad = particles.length > HEAVY_PARTICLE_THRESHOLD;
 
       const remaining: Particle[] = [];
       const completedBursts: string[] = [];
@@ -528,7 +557,7 @@ const GraveyardVoidFX = ({
         }
 
         if (alpha > 0.01 && !collapseEndPhase) {
-          if ((pullPhase || collapsePhase || collapseEndPhase) && particle.trail > 0.01 && spriteBank.tendril) {
+          if (!heavyLoad && (pullPhase || collapsePhase || collapseEndPhase) && particle.trail > 0.01 && spriteBank.tendril) {
             const dx = particle.x - particle.px;
             const dy = particle.y - particle.py;
             const len = Math.hypot(dx, dy);
@@ -643,7 +672,7 @@ const GraveyardVoidFX = ({
         ctx.globalCompositeOperation = "source-over";
       }
 
-      if (particlesRef.current.length > 0) {
+      if (particlesRef.current.length > 0 && !heavyLoad) {
         // Cheap bloom pass to unify sprites without heavy post-processing.
         ctx.save();
         ctx.globalCompositeOperation = "lighter";

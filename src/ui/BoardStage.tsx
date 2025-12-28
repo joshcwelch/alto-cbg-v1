@@ -4,6 +4,7 @@ import AbilityFrame from "./AbilityFrame";
 import BoardCursor from "./BoardCursor";
 import BoardMinion from "./BoardMinion";
 import CardBack from "./CardBack";
+import CardPreview from "./CardPreview";
 import CursorCoords from "./CursorCoords";
 import EndTurnButton from "./EndTurnButton";
 import HandCard from "./HandCard";
@@ -82,6 +83,9 @@ type PresentationMinionSnapshot = {
 const minionSize = 130;
 const heroFrameSize = 223;
 const handSpacing = 120;
+const previewCardSize = { width: 220, height: 330 };
+const previewMargin = 12;
+const boardSize = { width: 1536, height: 1024 };
 
 const getCardDef = (cardId: string) => CardRegistry[cardId];
 const getCardArt = (cardId: string) => getCardDef(cardId)?.art;
@@ -117,6 +121,19 @@ const getEnemyHandSlot = (index: number) => ({
   x: BoardSlots.EnemyHand.x + index * 80,
   y: BoardSlots.EnemyHand.y,
 });
+
+const getPreviewPosition = (slot: { x: number; y: number }) => {
+  const preferRight = slot.x + minionSize + 16;
+  const preferLeft = slot.x - previewCardSize.width - 16;
+  let x =
+    preferRight + previewCardSize.width <= boardSize.width - previewMargin
+      ? preferRight
+      : preferLeft;
+  x = Math.max(previewMargin, Math.min(x, boardSize.width - previewCardSize.width - previewMargin));
+  let y = slot.y + minionSize / 2 - previewCardSize.height / 2;
+  y = Math.max(previewMargin, Math.min(y, boardSize.height - previewCardSize.height - previewMargin));
+  return { x, y };
+};
 
 const getSpellTarget = (
   targeting: MinionTargetHover,
@@ -172,6 +189,10 @@ const BoardStage = () => {
   const [ghostAttackPos, setGhostAttackPos] =
     useState<{ x: number; y: number } | null>(null);
   const [graveyardBursts, setGraveyardBursts] = useState<GraveyardBurst[]>([]);
+  const [minionPreview, setMinionPreview] = useState<{
+    minionId: string;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const attackVisualFrameRef = useRef<number | null>(null);
   const ghostAttackFrameRef = useRef<number | null>(null);
@@ -252,6 +273,8 @@ const BoardStage = () => {
 
   const player = state.players.player;
   const enemy = state.players.enemy;
+  const playerDeckCount = Math.max(0, player.deck.length - player.deckIndex);
+  const enemyDeckCount = Math.max(0, enemy.deck.length - enemy.deckIndex);
 
   const playerHeroPower = getHeroPowerFor(player.hero.id);
   const enemyHeroPower = getHeroPowerFor(enemy.hero.id);
@@ -493,6 +516,15 @@ const BoardStage = () => {
       enemy.board.find((minion) => minion.id === minionId),
     [player.board, enemy.board]
   );
+
+  const previewMinion = minionPreview ? getMinionById(minionPreview.minionId) : null;
+  const previewCardDef = previewMinion ? getCardDef(previewMinion.cardId) : null;
+
+  useEffect(() => {
+    if (minionPreview && !previewMinion) {
+      setMinionPreview(null);
+    }
+  }, [minionPreview, previewMinion]);
 
 
   const getSlamDurationMs = useCallback((slam?: SlamProfile) => {
@@ -1627,12 +1659,21 @@ const BoardStage = () => {
         : "drop-shadow(0 0 18px rgba(120, 60, 190, 0.2))",
   });
 
-  return (
-    <div className="board-stage">
-      <MenuStamp slot={{ x: 24, y: 24 }} src="/assets/ui/menus/menuBackground.png" alt="Menu background" width={1} height={1} />
-      <MenuStamp slot={{ x: 48, y: 24 }} src="/assets/ui/menus/map.png" alt="Map panel" width={1} height={1} />
-      <MenuStamp slot={{ x: 72, y: 24 }} src="/assets/ui/menus/heroPanel.png" alt="Hero panel" width={1} height={1} />
-      <GraveyardPortal center={graveyardCenter} />
+    return (
+      <div className="board-stage">
+        <MenuStamp slot={{ x: 24, y: 24 }} src="/assets/ui/menus/menuBackground.png" alt="Menu background" width={1} height={1} />
+        <MenuStamp slot={{ x: 48, y: 24 }} src="/assets/ui/menus/map.png" alt="Map panel" width={1} height={1} />
+        <MenuStamp slot={{ x: 72, y: 24 }} src="/assets/ui/menus/heroPanel.png" alt="Hero panel" width={1} height={1} />
+        <div className="menu-frame-group">
+          <img className="menu-frame" src="/assets/ui/menu-frame.png" alt="" draggable={false} />
+          <div className="menu-frame__icons">
+            <img className="menu-frame__icon" src="/assets/ui/exit.png" alt="Exit" draggable={false} />
+            <img className="menu-frame__icon" src="/assets/ui/sound-on.png" alt="Sound on" draggable={false} />
+            <img className="menu-frame__icon" src="/assets/ui/settings.png" alt="Settings" draggable={false} />
+            <img className="menu-frame__icon" src="/assets/ui/help.png" alt="Help" draggable={false} />
+          </div>
+        </div>
+        <GraveyardPortal center={graveyardCenter} />
       <GraveyardVoidFX
         bursts={graveyardBursts}
         portalCenter={graveyardCenter}
@@ -1681,6 +1722,34 @@ const BoardStage = () => {
       />
 
       <ManaBar current={player.mana} max={player.maxMana} />
+
+      <div
+        className="deck-count deck-count--enemy"
+        style={{ left: BoardSlots.EnemyDeckCount.x, top: BoardSlots.EnemyDeckCount.y }}
+        aria-label={`Enemy deck: ${enemyDeckCount} cards remaining`}
+      >
+        <img
+          className="deck-count__icon"
+          src="/assets/ui/deck-count-icon.png"
+          alt=""
+          draggable={false}
+        />
+        <span className="deck-count__text">{enemyDeckCount}</span>
+      </div>
+
+      <div
+        className="deck-count deck-count--player"
+        style={{ left: BoardSlots.PlayerDeckCount.x, top: BoardSlots.PlayerDeckCount.y }}
+        aria-label={`Player deck: ${playerDeckCount} cards remaining`}
+      >
+        <img
+          className="deck-count__icon"
+          src="/assets/ui/deck-count-icon.png"
+          alt=""
+          draggable={false}
+        />
+        <span className="deck-count__text">{playerDeckCount}</span>
+      </div>
 
       <EndTurnButton
         slot={BoardSlots.EndTurn}
@@ -1800,6 +1869,10 @@ const BoardStage = () => {
             setTargetingFrom(minion);
           }}
           onTargetEnter={() => {
+            setMinionPreview({
+              minionId: minion.id,
+              position: getPreviewPosition(minion.slot),
+            });
             if (spellTargetingFrom && !minion.stealth && !minion.cloaked) {
               setSpellTargetingToMinion({
                 id: minion.id,
@@ -1810,6 +1883,9 @@ const BoardStage = () => {
             }
           }}
           onTargetLeave={() => {
+            if (minionPreview?.minionId === minion.id) {
+              setMinionPreview(null);
+            }
             if (spellTargetingToMinion?.id === minion.id && spellTargetingToMinion.owner === "player") {
               setSpellTargetingToMinion(null);
             }
@@ -1830,6 +1906,10 @@ const BoardStage = () => {
           presentationStyle={getSummonPresentationStyle(minion.id)}
           dataMinionId={minion.id}
           onTargetEnter={() => {
+            setMinionPreview({
+              minionId: minion.id,
+              position: getPreviewPosition(minion.slot),
+            });
             if (targetingFrom) {
               setTargetingToId(minion.id);
             }
@@ -1843,6 +1923,9 @@ const BoardStage = () => {
             }
           }}
           onTargetLeave={() => {
+            if (minionPreview?.minionId === minion.id) {
+              setMinionPreview(null);
+            }
             if (targetingToId === minion.id) {
               setTargetingToId(null);
             }
@@ -1852,6 +1935,19 @@ const BoardStage = () => {
           }}
         />
       ))}
+
+      {minionPreview && previewMinion && previewCardDef && !targetingFrom && !spellTargetingFrom && (
+        <CardPreview
+          position={minionPreview.position}
+          artSrc={getCardArt(previewMinion.cardId) ?? "/assets/cards/sunlance-champion.png"}
+          name={previewCardDef.name}
+          text={previewCardDef.text}
+          cost={previewCardDef.cost}
+          attack={previewMinion.attack}
+          health={previewMinion.health}
+          type={previewCardDef.type}
+        />
+      )}
 
       <div
         id="alto-attack-layer"

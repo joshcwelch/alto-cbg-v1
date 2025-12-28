@@ -14,4 +14,6 @@ export const BoardSlots = {
   AbilityFrame: { x: 1211, y: 700 },
   Graveyard: { x: 78, y: 475 },
   EnemyAbilityFrame: { x: 1211, y: 160 },
+  PlayerDeckCount: { x: 250, y: 830 },
+  EnemyDeckCount: { x: 260, y: 180 },
 } as const satisfies Record<string, BoardPoint>;
