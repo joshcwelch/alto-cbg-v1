@@ -1,0 +1,724 @@
+:root {
+  --ui-ink: #f2e7d3;
+  --ui-ink-muted: rgba(242, 231, 211, 0.7);
+  --ui-gold: #e0c28b;
+  --ui-surface: rgba(12, 10, 9, 0.72);
+  --ui-panel: rgba(18, 15, 13, 0.78);
+  --ui-border: rgba(120, 95, 70, 0.5);
+  --ui-accent: #b48a4a;
+}
+
+.app-shell {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #050505;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--ui-ink);
+  overflow: hidden;
+}
+
+.app-shell__background {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(120, 90, 60, 0.28), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(40, 60, 80, 0.25), transparent 50%),
+    radial-gradient(circle at 30% 80%, rgba(30, 20, 20, 0.35), transparent 60%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.app-shell__nav {
+  position: relative;
+  z-index: 5;
+  padding: 16px 32px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-shell__nav-frame {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, 92vw);
+  height: auto;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.app-shell__nav-items {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+}
+
+.nav-item {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(18, 14, 12, 0.65);
+  border: 1px solid var(--ui-border);
+  color: var(--ui-ink);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.nav-item:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(210, 170, 120, 0.8);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.85);
+  outline-offset: 3px;
+}
+
+.nav-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.app-shell__content {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 2;
+  padding: 16px 24px 24px;
+}
+
+.app-shell__footer {
+  z-index: 3;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+  color: var(--ui-ink-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.screen-router {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.screen-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 240ms ease, transform 240ms ease;
+  pointer-events: none;
+}
+
+.screen-layer--active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.screen-layer--enter {
+  animation: screen-enter 240ms ease forwards;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.screen-layer--exit {
+  animation: screen-exit 240ms ease forwards;
+  z-index: 1;
+}
+
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes screen-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+}
+
+.screen {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-screen {
+  position: relative;
+  width: min(1200px, 92vw);
+  height: min(720px, 70vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-screen__background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+  filter: brightness(0.8);
+}
+
+.loading-screen__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.loading-screen__spinner {
+  width: 120px;
+  height: 120px;
+  animation: spin 2.6s linear infinite;
+}
+
+.loading-screen__bar {
+  position: relative;
+  width: 420px;
+  max-width: 70vw;
+}
+
+.loading-screen__bar img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.loading-screen__bar-fill {
+  position: absolute;
+  left: 4%;
+  top: 16%;
+  width: 72%;
+  animation: loading-fill 2.8s ease-in-out infinite;
+}
+
+.loading-screen__bar-glow {
+  position: absolute;
+  left: 4%;
+  top: 0;
+  width: 72%;
+  animation: loading-glow 2.8s ease-in-out infinite;
+}
+
+.loading-screen__prompt {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.loading-screen__prompt img {
+  width: min(360px, 70vw);
+  height: auto;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.loading-screen__prompt:hover img {
+  transform: translateY(-2px) scale(1.02);
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.6));
+}
+
+.loading-screen__prompt:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.85);
+  outline-offset: 4px;
+}
+
+.main-menu {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.main-menu__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  width: min(1100px, 92vw);
+  max-height: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+  mask-image: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+.main-menu__logo {
+  width: min(520px, 80vw);
+  height: auto;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55));
+}
+
+.main-menu__buttons {
+  display: grid;
+  gap: 12px;
+}
+
+.menu-button {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--ui-ink);
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.menu-button img {
+  width: min(360px, 74vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.menu-button span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-button:hover img {
+  transform: translateY(-2px) scale(1.01);
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.65));
+}
+
+.menu-button:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.85);
+  outline-offset: 4px;
+}
+
+.hub-screen {
+  width: min(1200px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hero-header {
+  position: relative;
+  height: 180px;
+  display: flex;
+  align-items: center;
+}
+
+.hero-header__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hero-header__content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+}
+
+.hero-header__portrait {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+}
+
+.hero-header h1 {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 36px;
+  letter-spacing: 0.12em;
+}
+
+.hero-header__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 12px;
+  color: var(--ui-ink-muted);
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.hub-grid--wide {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.ui-panel {
+  position: relative;
+  background: var(--ui-panel);
+  padding: 28px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
+  min-height: 180px;
+  overflow: hidden;
+}
+
+.ui-panel__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Art cleanup: remove opaque rectangles on decorative UI images. */
+.ui-art {
+  pointer-events: none;
+  background-color: transparent;
+}
+
+.ui-art--screen {
+  mix-blend-mode: screen;
+  opacity: 0.92;
+}
+
+/* Frame cleanup: gold/ornate frames should blend into backgrounds. */
+.ui-frame {
+  pointer-events: none;
+  background-color: transparent;
+}
+
+.ui-frame--multiply {
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+}
+
+.ui-panel__content {
+  position: relative;
+  z-index: 1;
+}
+
+.ui-panel__title {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.ui-button {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 24, 20, 0.7);
+  color: var(--ui-ink);
+  transition: transform 140ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.ui-button--primary {
+  border-color: rgba(220, 190, 130, 0.8);
+  background: linear-gradient(145deg, rgba(80, 60, 35, 0.85), rgba(30, 22, 16, 0.85));
+}
+
+.ui-button--secondary {
+  border-color: rgba(160, 130, 90, 0.6);
+  background: rgba(25, 20, 18, 0.85);
+}
+
+.ui-button--ghost {
+  border-color: rgba(140, 115, 80, 0.5);
+  background: transparent;
+}
+
+.ui-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.85);
+  outline-offset: 3px;
+}
+
+.ui-button__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-icon-button {
+  border: 1px solid rgba(140, 110, 80, 0.6);
+  background: rgba(20, 15, 12, 0.7);
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ui-icon-button img {
+  width: 22px;
+  height: 22px;
+}
+
+.ui-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 6, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.ui-modal {
+  position: relative;
+  width: min(520px, 86vw);
+  padding: 28px 24px;
+  background: rgba(12, 10, 9, 0.92);
+  border-radius: 16px;
+  border: 1px solid rgba(140, 115, 80, 0.6);
+}
+
+.ui-modal__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.ui-modal__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+}
+
+.ui-modal__title {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ui-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-header {
+  position: relative;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-header img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.settings-header h1 {
+  position: relative;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.settings-panel {
+  position: relative;
+  padding: 24px;
+}
+
+.settings-panel__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.settings-panel__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.settings-label {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-subtext {
+  font-size: 13px;
+  color: var(--ui-ink-muted);
+  margin-top: 4px;
+}
+
+.settings-audio-toggle img {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-slider input[type="range"] {
+  width: min(220px, 50vw);
+}
+
+.dev-hint {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.08em;
+  z-index: 25;
+}
+
+.board-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .app-shell__nav {
+    padding: 12px 14px;
+  }
+
+  .app-shell__content {
+    padding: 12px;
+  }
+
+  .hero-header {
+    height: auto;
+  }
+
+  .hero-header__content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-button img {
+    width: min(300px, 82vw);
+  }
+
+  .main-menu__logo {
+    width: min(380px, 86vw);
+  }
+
+  .loading-screen {
+    height: min(520px, 70vh);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-fill {
+  0% {
+    transform: translateX(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(24%);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.3;
+  }
+}
+
+@keyframes loading-glow {
+  0% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
