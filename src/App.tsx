@@ -1,7 +1,8 @@
-import Viewport from "./Viewport";
+import AppShell from "./ui/shell/AppShell";
+import "./ui/styles/ui.css";
 
 const App = () => {
-  return <Viewport />;
+  return <AppShell />;
 };
 
 export default App;
