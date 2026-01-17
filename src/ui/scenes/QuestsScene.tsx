@@ -1,4 +1,5 @@
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const QuestsScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -40,7 +41,7 @@ const QuestsScene = () => {
   return (
     <div className="quests-scene">
       <header className="quests-header">
-        <div className="quests-header__icon" aria-hidden="true" />
+        <ArtSlot assetKey="questsHeaderIcon" className="quests-header__icon" alt="" />
         <div className="quests-header__title">
           <p className="quests-header__eyebrow">Daily Rituals</p>
           <h1>Quests</h1>
@@ -60,9 +61,9 @@ const QuestsScene = () => {
             <div key={quest.id} className="quests-card">
               <div className="quests-card__timer">{quest.timer}</div>
               <div className="quests-card__title">{quest.title}</div>
-              <div className="quests-card__art" aria-hidden="true" />
+              <ArtSlot assetKey="questCardArt" className="quests-card__art" alt="" />
               <div className="quests-card__reward">
-                <span className="quests-card__reward-icon" aria-hidden="true" />
+                <ArtSlot assetKey="iconGold" className="quests-card__reward-icon" alt="" />
                 <span className="quests-card__reward-value">{quest.reward}</span>
               </div>
               <div
@@ -86,7 +87,7 @@ const QuestsScene = () => {
       </section>
 
       <section className="quests-weekly">
-        <div className="quests-weekly__chest" aria-hidden="true" />
+        <ArtSlot assetKey="questChest" className="quests-weekly__chest" alt="" />
         <div className="quests-weekly__details">
           <div className="quests-weekly__label">{weeklyQuest.label}</div>
           <div className="quests-weekly__title">{weeklyQuest.title}</div>
@@ -94,14 +95,22 @@ const QuestsScene = () => {
         </div>
         <div className="quests-weekly__rewards">
           <div className="quests-weekly__reward">
-            <span className="quests-weekly__reward-icon quests-weekly__reward-icon--gold" aria-hidden="true" />
+            <ArtSlot
+              assetKey="iconGold"
+              className="quests-weekly__reward-icon quests-weekly__reward-icon--gold"
+              alt=""
+            />
             <span className="quests-weekly__reward-value">{weeklyQuest.rewards.gold}</span>
           </div>
           <div className="quests-weekly__reward">
-            <span className="quests-weekly__reward-icon quests-weekly__reward-icon--shard" aria-hidden="true" />
+            <ArtSlot
+              assetKey="iconShard"
+              className="quests-weekly__reward-icon quests-weekly__reward-icon--shard"
+              alt=""
+            />
             <span className="quests-weekly__reward-value">{weeklyQuest.rewards.shards}</span>
           </div>
-          <div className="quests-weekly__pack" aria-hidden="true" />
+          <ArtSlot assetKey="questWeeklyPack" className="quests-weekly__pack" alt="" />
         </div>
       </section>
     </div>

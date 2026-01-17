@@ -1,5 +1,6 @@
 import { useUIStore } from "../state/useUIStore";
 import { usePlayFlowStore } from "../state/usePlayFlowStore";
+import ArtSlot from "../components/ArtSlot";
 
 const MainMenuScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -17,7 +18,7 @@ const MainMenuScene = () => {
           className="main-menu-profile"
           onClick={() => setScene("PROFILE")}
         >
-          <div className="main-menu-profile__avatar" aria-hidden="true" />
+          <ArtSlot assetKey="mainMenuProfileAvatar" className="main-menu-profile__avatar" alt="" />
           <div className="main-menu-profile__details">
             <div className="main-menu-profile__name">Player One</div>
             <div className="main-menu-profile__currency">
@@ -39,6 +40,7 @@ const MainMenuScene = () => {
           {/* TODO: Replace with quest list and reward indicators. */}
         </button>
         <div className="main-menu-hero">
+          <ArtSlot assetKey="mainMenuHeroFeature" className="main-menu-hero__art" alt="" />
           <div className="main-menu-hero__content">
             <div className="main-menu-hero__title">Adventure Awaits</div>
             <div className="main-menu-hero__detail">Main menu feature art placeholder.</div>

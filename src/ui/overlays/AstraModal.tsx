@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAstraStore } from "../state/useAstraStore";
+import ArtSlot from "../components/ArtSlot";
 
 type Topic = {
   label: string;
@@ -78,19 +79,7 @@ const AstraModal = () => {
   return (
     <div className="astra-modal" role="dialog" aria-modal="true" ref={modalRef}>
       <div className="astra-modal__header">
-        <div
-          className="astra-modal__portrait"
-          aria-hidden="true"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: "50%",
-            border: "1px solid rgba(220, 190, 130, 0.7)",
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.7), rgba(40, 30, 25, 0.9))",
-            boxShadow: "0 10px 18px rgba(0, 0, 0, 0.45)",
-          }}
-        />
+        <ArtSlot assetKey="astraPortrait" className="astra-modal__portrait" alt="" />
         <div className="astra-modal__title">
           Greetings! How can I assist you today?
         </div>

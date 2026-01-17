@@ -1,4 +1,5 @@
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const achievements = [
   { title: "Quest Master", progress: 0.7, value: "7 / 10" },
@@ -16,7 +17,7 @@ const ProfileScene = () => {
   return (
     <div className="profile-scene">
       <header className="profile-header">
-        <div className="profile-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="profileHeaderCrest" className="profile-header__crest" alt="" />
         <h1>PROFILE</h1>
         <div className="profile-header__spacer" aria-hidden="true" />
       </header>
@@ -28,7 +29,7 @@ const ProfileScene = () => {
             <div className="profile-achievement-list">
               {achievements.map((achievement) => (
                 <div className="profile-achievement" key={achievement.title}>
-                  <div className="profile-achievement__icon" aria-hidden="true" />
+                  <ArtSlot assetKey="profileAchievementIcon" className="profile-achievement__icon" alt="" />
                   <div className="profile-achievement__content">
                     <div className="profile-achievement__title">{achievement.title}</div>
                     <div className="profile-achievement__progress">
@@ -53,7 +54,7 @@ const ProfileScene = () => {
             className="ui-panel profile-portrait-panel profile-portrait-link"
             onClick={() => setScene("HERO_PROFILE")}
           >
-            <div className="profile-portrait__image" aria-hidden="true" />
+            <ArtSlot assetKey="profilePortrait" className="profile-portrait__image" alt="" />
             <div className="profile-nameplate">
               <div className="profile-hero-name">Stormcaller</div>
               <div className="profile-player-name">Joshua</div>
@@ -105,7 +106,7 @@ const ProfileScene = () => {
             </div>
             <div className="profile-ability-row">
               {["A1", "A2", "A3", "A4", "A5"].map((ability) => (
-                <div className="profile-ability-icon" key={ability} aria-hidden="true" />
+                <ArtSlot assetKey="profileAbilityIcon" className="profile-ability-icon" alt="" key={ability} />
               ))}
             </div>
             <div className="profile-stats__actions">

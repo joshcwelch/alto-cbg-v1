@@ -1,6 +1,7 @@
 import { playFlowDecks, playFlowHeroes } from "../data/playFlowData";
 import { usePlayFlowStore } from "../state/usePlayFlowStore";
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const DeckSelectScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -22,12 +23,16 @@ const DeckSelectScene = () => {
   return (
     <div className="playflow-scene deck-select-scene">
       <header className="playflow-header">
-        <div className="playflow-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="playflowHeaderCrest" className="playflow-header__crest" alt="" />
         <div className="playflow-header__title">
           <h1>Select Deck</h1>
           <p>{selectedHero ? `${selectedHero.name} decks available.` : "Select a hero to continue."}</p>
         </div>
-        <div className="playflow-header__crest playflow-header__crest--spacer" aria-hidden="true" />
+        <ArtSlot
+          assetKey="playflowHeaderCrest"
+          className="playflow-header__crest playflow-header__crest--spacer"
+          alt=""
+        />
       </header>
 
       <div className="deck-select-list" role="list">

@@ -1,4 +1,5 @@
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const StoreScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -49,7 +50,7 @@ const StoreScene = () => {
                 className="store-pack"
                 onClick={() => window.alert(`TODO: Purchase ${pack.label}.`)}
               >
-                <div className="store-pack__art" aria-hidden="true" />
+                <ArtSlot assetKey="storePackArt" className="store-pack__art" alt="" />
                 <div className="store-pack__label">{pack.label}</div>
                 <div className="store-pack__price">{pack.price}</div>
               </button>
@@ -59,7 +60,7 @@ const StoreScene = () => {
 
         <section className="store-featured">
           <div className="store-featured__header">Featured Items</div>
-          <div className="store-featured__art" aria-hidden="true" />
+          <ArtSlot assetKey="storeFeaturedArt" className="store-featured__art" alt="" />
           <div className="store-featured__name">{featured.title}</div>
           <div className="store-featured__subtext">{featured.subtext}</div>
           <button
@@ -74,12 +75,12 @@ const StoreScene = () => {
 
       <footer className="store-footer">
         <div className="store-current-pack">
-          <div className="store-current-pack__portrait" aria-hidden="true" />
+          <ArtSlot assetKey="storeCurrentPackPortrait" className="store-current-pack__portrait" alt="" />
           <div className="store-current-pack__text">
             <span className="store-current-pack__label">Current Pack:</span>
             <span className="store-current-pack__name">Arcane Enigma</span>
           </div>
-          <div className="store-current-pack__icon" aria-hidden="true" />
+          <ArtSlot assetKey="storeCurrentPackIcon" className="store-current-pack__icon" alt="" />
         </div>
         <button type="button" className="ui-button ui-button--ghost" onClick={() => setScene("MAIN_MENU")}>
           Back

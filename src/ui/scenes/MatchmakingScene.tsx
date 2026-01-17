@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { playFlowHeroes } from "../data/playFlowData";
 import { usePlayFlowStore } from "../state/usePlayFlowStore";
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const getRandomOpponentId = (excludeId: string | null) => {
   const candidates = playFlowHeroes.filter((hero) => hero.id !== excludeId);
@@ -32,6 +33,7 @@ const MatchmakingScene = () => {
     () => playFlowHeroes.find((hero) => hero.id === enemyHeroId) ?? null,
     [enemyHeroId],
   );
+  const enemyPortraitKey = matchmakingState === "found" ? "opponentHeroPortrait" : "heroPortraitPlaceholder";
 
   const clearTimers = () => {
     if (findTimeoutRef.current) {
@@ -84,12 +86,16 @@ const MatchmakingScene = () => {
   return (
     <div className="playflow-scene matchmaking-scene">
       <header className="playflow-header">
-        <div className="playflow-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="playflowHeaderCrest" className="playflow-header__crest" alt="" />
         <div className="playflow-header__title">
           <h1>{matchmakingState === "found" ? "Match Found" : "Searching for Opponent..."}</h1>
           <p>{matchmakingState === "found" ? "Match is starting now." : "Hold tight while we find a rival."}</p>
         </div>
-        <div className="playflow-header__crest playflow-header__crest--spacer" aria-hidden="true" />
+        <ArtSlot
+          assetKey="playflowHeaderCrest"
+          className="playflow-header__crest playflow-header__crest--spacer"
+          alt=""
+        />
       </header>
 
       <div className="matchmaking-stage">
@@ -97,11 +103,7 @@ const MatchmakingScene = () => {
           <div className="matchmaking-panel__title">Joshua</div>
           <div className="matchmaking-panel__hero">
             <div className="matchmaking-panel__portrait">
-              {playerHero?.portraitSrc ? (
-                <img src={playerHero.portraitSrc} alt={playerHero.name} draggable={false} />
-              ) : (
-                <div className="matchmaking-panel__placeholder" aria-hidden="true" />
-              )}
+              <ArtSlot assetKey="selectedHeroPortrait" className="matchmaking-panel__portrait-art" alt="" />
             </div>
             <div className="matchmaking-panel__meta">
               <div className="matchmaking-panel__name">{playerHero?.name ?? "Hero"}</div>
@@ -118,12 +120,10 @@ const MatchmakingScene = () => {
         <div className={`matchmaking-panel ${matchmakingState !== "found" ? "matchmaking-panel--ghost" : ""}`}>
           <div className="matchmaking-panel__title">{matchmakingState === "found" ? "Opponent" : "Unknown"}</div>
           <div className="matchmaking-panel__hero">
-            <div className="matchmaking-panel__portrait">
-              {matchmakingState === "found" && enemyHero?.portraitSrc ? (
-                <img src={enemyHero.portraitSrc} alt={enemyHero.name} draggable={false} />
-              ) : (
-                <div className="matchmaking-panel__placeholder" aria-hidden="true" />
-              )}
+            <div
+              className={`matchmaking-panel__portrait ${matchmakingState !== "found" ? "matchmaking-panel__portrait--ghost" : ""}`}
+            >
+              <ArtSlot assetKey={enemyPortraitKey} className="matchmaking-panel__portrait-art" alt="" />
             </div>
             <div className="matchmaking-panel__meta">
               <div className="matchmaking-panel__name">

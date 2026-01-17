@@ -1,4 +1,5 @@
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const HeroProfileScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -6,22 +7,26 @@ const HeroProfileScene = () => {
   return (
     <div className="hero-profile-scene">
       <header className="hero-profile-header">
-        <div className="hero-profile-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="heroProfileHeaderCrest" className="hero-profile-header__crest" alt="" />
         <h1>HERO PROFILE</h1>
-        <div className="hero-profile-header__crest hero-profile-header__crest--spacer" aria-hidden="true" />
+        <ArtSlot
+          assetKey="heroProfileHeaderCrest"
+          className="hero-profile-header__crest hero-profile-header__crest--spacer"
+          alt=""
+        />
       </header>
 
       <div className="hero-profile-body">
         <div className="hero-profile-left">
           <section className="ui-panel hero-profile-left-panel">
             <div className="hero-profile-name-row">
-              <span className="hero-profile-name-icon" aria-hidden="true" />
+              <ArtSlot assetKey="heroProfileNameIcon" className="hero-profile-name-icon" alt="" />
               <span className="hero-profile-name">STORMCALLER</span>
             </div>
 
             <div className="hero-profile-portrait">
               <div className="hero-profile-portrait__frame">
-                <div className="hero-profile-portrait__image" aria-hidden="true" />
+                <ArtSlot assetKey="heroProfilePortrait" className="hero-profile-portrait__image" alt="" />
                 <div className="hero-profile-level-badge">25</div>
               </div>
             </div>
