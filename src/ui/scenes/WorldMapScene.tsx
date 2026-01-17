@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { playFlowFactions } from "../data/playFlowData";
 import { usePlayFlowStore } from "../state/usePlayFlowStore";
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 const WorldMapScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -31,19 +32,26 @@ const WorldMapScene = () => {
   return (
     <div className="playflow-scene world-map-scene">
       <header className="playflow-header">
-        <div className="playflow-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="playflowHeaderCrest" className="playflow-header__crest" alt="" />
         <div className="playflow-header__title">
           <h1>World Map</h1>
           <p>Select a capital to choose your faction.</p>
         </div>
-        <div className="playflow-header__crest playflow-header__crest--spacer" aria-hidden="true" />
+        <ArtSlot
+          assetKey="playflowHeaderCrest"
+          className="playflow-header__crest playflow-header__crest--spacer"
+          alt=""
+        />
       </header>
 
       <div className="world-map-layout">
         <section className="world-map-panel">
-          <div className="world-map-panel__title">Map Placeholder</div>
-          <div className="world-map-panel__subtext">
-            Capital routes and landmarks will appear here.
+          <ArtSlot assetKey="worldMapPanel" className="world-map-panel__art" alt="" />
+          <div className="world-map-panel__content">
+            <div className="world-map-panel__title">Map Placeholder</div>
+            <div className="world-map-panel__subtext">
+              Capital routes and landmarks will appear here.
+            </div>
           </div>
         </section>
         <aside className="world-map-sidebar">

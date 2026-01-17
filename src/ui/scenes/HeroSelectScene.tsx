@@ -1,6 +1,8 @@
 import { playFlowFactions, playFlowHeroes } from "../data/playFlowData";
 import { usePlayFlowStore } from "../state/usePlayFlowStore";
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
+import { HERO_PORTRAIT_KEYS } from "../assets/uiAssets";
 
 const HeroSelectScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -20,17 +22,22 @@ const HeroSelectScene = () => {
   return (
     <div className="playflow-scene hero-select-scene">
       <header className="playflow-header">
-        <div className="playflow-header__crest" aria-hidden="true" />
+        <ArtSlot assetKey="playflowHeaderCrest" className="playflow-header__crest" alt="" />
         <div className="playflow-header__title">
           <h1>Choose Hero</h1>
           <p>{selectedFaction ? `${selectedFaction.name} champions are ready.` : "Select a faction to continue."}</p>
         </div>
-        <div className="playflow-header__crest playflow-header__crest--spacer" aria-hidden="true" />
+        <ArtSlot
+          assetKey="playflowHeaderCrest"
+          className="playflow-header__crest playflow-header__crest--spacer"
+          alt=""
+        />
       </header>
 
       <div className="hero-select-grid" role="list">
         {heroes.map((hero) => {
           const isActive = hero.id === selectedHeroId;
+          const portraitKey = HERO_PORTRAIT_KEYS[hero.id] ?? "heroPortraitPlaceholder";
           return (
             <button
               key={hero.id}
@@ -39,13 +46,7 @@ const HeroSelectScene = () => {
               className={`hero-select-card ${isActive ? "hero-select-card--active" : ""}`}
               onClick={() => handleSelectHero(hero.id)}
             >
-              <div className="hero-select-card__portrait">
-                {hero.portraitSrc ? (
-                  <img src={hero.portraitSrc} alt={hero.name} draggable={false} />
-                ) : (
-                  <div className="hero-select-card__placeholder" aria-hidden="true" />
-                )}
-              </div>
+              <ArtSlot assetKey={portraitKey} className="hero-select-card__portrait" alt={hero.name} />
               <div className="hero-select-card__content">
                 <div className="hero-select-card__name">{hero.name}</div>
                 <div className="hero-select-card__epithet">{hero.epithet}</div>

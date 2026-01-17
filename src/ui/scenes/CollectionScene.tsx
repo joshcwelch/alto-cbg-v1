@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUIStore } from "../state/useUIStore";
+import ArtSlot from "../components/ArtSlot";
 
 type CollectionTab = "DECK_BUILDER" | "COLLECTION";
 
@@ -268,12 +269,12 @@ const CollectionScene = () => {
                     <div className="collection-deck-title">{activeDeck?.name ?? "Deck"}</div>
                     <div className="collection-deck-meta">{activeDeck?.heroClass ?? "Hero"}</div>
                   </div>
-                  <div className="collection-hero-portrait" aria-hidden="true" />
+                  <ArtSlot assetKey="collectionHeroPortrait" className="collection-hero-portrait" alt="" />
                 </div>
                 <div className="collection-deck-icons">
-                  <span className="collection-deck-icon" aria-hidden="true" />
-                  <span className="collection-deck-icon" aria-hidden="true" />
-                  <span className="collection-deck-icon" aria-hidden="true" />
+                  <ArtSlot assetKey="collectionDeckIcon" className="collection-deck-icon" alt="" />
+                  <ArtSlot assetKey="collectionDeckIcon" className="collection-deck-icon" alt="" />
+                  <ArtSlot assetKey="collectionDeckIcon" className="collection-deck-icon" alt="" />
                 </div>
               </div>
 
@@ -404,7 +405,7 @@ const CollectionScene = () => {
               {cardCatalog.map((card) => (
                 <button type="button" key={card.id} className="collection-card" onClick={() => handleAddCard(card)}>
                   <div className="collection-card__mana">{card.mana}</div>
-                  <div className="collection-card__art" aria-hidden="true" />
+                  <ArtSlot assetKey="collectionCardArt" className="collection-card__art" alt="" />
                   <div className="collection-card__name">{card.name}</div>
                 </button>
               ))}

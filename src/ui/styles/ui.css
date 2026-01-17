@@ -435,6 +435,25 @@
   opacity: 0.85;
 }
 
+.art-slot {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+}
+
+.art-img {
+  object-position: center;
+}
+
+.art-bg {
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.art-fallback {
+  background: linear-gradient(145deg, rgba(110, 90, 60, 0.4), rgba(30, 22, 16, 0.85));
+}
+
 .ui-panel__content {
   position: relative;
   z-index: 1;
@@ -817,11 +836,12 @@
   height: 36px;
   border-radius: 50%;
   border: 1px solid rgba(220, 190, 130, 0.7);
-  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.75), rgba(40, 30, 25, 0.9));
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   pointer-events: auto;
   z-index: 45;
+  padding: 0;
+  background: transparent;
 }
 
 .astra-orb:disabled {
@@ -832,6 +852,42 @@
 .astra-orb:focus-visible {
   outline: 2px solid rgba(240, 215, 165, 0.85);
   outline-offset: 3px;
+}
+
+.astra-orb__art {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.astra-orb__art.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.75), rgba(40, 30, 25, 0.9));
+}
+
+.astra-modal__portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid rgba(220, 190, 130, 0.7);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.astra-modal__portrait.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.7), rgba(40, 30, 25, 0.9));
+}
+
+.astra-coachmark__portrait {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid rgba(220, 190, 130, 0.7);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.astra-coachmark__portrait.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.7), rgba(40, 30, 25, 0.9));
 }
 
 .astra-modal {
@@ -980,6 +1036,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
+}
+
+.main-menu-profile__avatar.art-fallback {
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -1043,6 +1102,18 @@
   border: 1px solid var(--ui-border);
   background: rgba(10, 10, 10, 0.25);
   min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-menu-hero__art {
+  position: absolute;
+  inset: 0;
+}
+
+.main-menu-hero__content {
+  position: relative;
+  z-index: 1;
 }
 
 .main-menu-hero__title {
@@ -1109,10 +1180,12 @@
   height: 46px;
   border-radius: 50%;
   border: 1px solid rgba(220, 190, 130, 0.7);
-  background: radial-gradient(circle at 30% 30%, rgba(120, 170, 210, 0.6), rgba(40, 30, 25, 0.9));
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
 }
 
+.quests-header__icon.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(120, 170, 210, 0.6), rgba(40, 30, 25, 0.9));
+}
 .quests-header__title {
   text-align: center;
 }
@@ -1176,6 +1249,9 @@
   max-height: clamp(110px, 16vh, 170px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.quests-card__art.art-fallback {
   background: radial-gradient(circle at 30% 30%, rgba(120, 170, 210, 0.4), rgba(30, 20, 18, 0.8));
 }
 
@@ -1195,10 +1271,12 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 150, 0.9), rgba(150, 100, 40, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
+.quests-card__reward-icon.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 150, 0.9), rgba(150, 100, 40, 0.9));
+}
 .quests-card__reward-value {
   font-size: 13px;
   letter-spacing: 0.08em;
@@ -1249,10 +1327,12 @@
   aspect-ratio: 1;
   border-radius: 14px;
   border: 1px solid rgba(220, 190, 130, 0.6);
-  background: radial-gradient(circle at 30% 30%, rgba(120, 180, 210, 0.55), rgba(30, 22, 18, 0.85));
   box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
+.quests-weekly__chest.art-fallback {
+  background: radial-gradient(circle at 30% 30%, rgba(120, 180, 210, 0.55), rgba(30, 22, 18, 0.85));
+}
 .quests-weekly__details {
   display: flex;
   flex-direction: column;
@@ -1307,11 +1387,11 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.quests-weekly__reward-icon--gold {
+.quests-weekly__reward-icon--gold.art-fallback {
   background: radial-gradient(circle at 30% 30%, rgba(255, 220, 150, 0.9), rgba(150, 100, 40, 0.9));
 }
 
-.quests-weekly__reward-icon--shard {
+.quests-weekly__reward-icon--shard.art-fallback {
   background: radial-gradient(circle at 30% 30%, rgba(150, 210, 255, 0.9), rgba(40, 80, 140, 0.9));
 }
 
@@ -1324,10 +1404,12 @@
   height: 60px;
   border-radius: 10px;
   border: 1px solid rgba(220, 190, 130, 0.5);
-  background: linear-gradient(160deg, rgba(80, 70, 60, 0.7), rgba(20, 16, 14, 0.9));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+.quests-weekly__pack.art-fallback {
+  background: linear-gradient(160deg, rgba(80, 70, 60, 0.7), rgba(20, 16, 14, 0.9));
+}
 .scene-placeholder {
   display: flex;
   flex-direction: column;
@@ -1706,10 +1788,12 @@
   width: 84px;
   height: 90px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.collection-hero-portrait.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .collection-deck-icons {
   display: flex;
   gap: 8px;
@@ -1719,10 +1803,12 @@
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.collection-deck-icon.art-fallback {
+  background: rgba(255, 255, 255, 0.12);
+}
 .collection-deck-list {
   flex: 1;
   min-height: 0;
@@ -1935,10 +2021,12 @@
   height: 100%;
   min-height: 86px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.collection-card__art.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .collection-card__name {
   font-size: 13px;
   letter-spacing: 0.08em;
@@ -2208,11 +2296,14 @@
   height: auto;
   min-height: 150px;
   aspect-ratio: 4 / 5;
+  max-height: clamp(140px, 24vh, 200px);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.store-pack__art.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .store-pack__label {
   font-size: 13px;
 }
@@ -2246,10 +2337,12 @@
   width: 100%;
   height: clamp(190px, 26vh, 250px);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.store-featured__art.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .store-featured__name {
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -2290,10 +2383,12 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.store-current-pack__portrait.art-fallback {
+  background: rgba(255, 255, 255, 0.12);
+}
 .store-current-pack__text {
   display: flex;
   flex-direction: column;
@@ -2313,10 +2408,12 @@
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.store-current-pack__icon.art-fallback {
+  background: rgba(255, 255, 255, 0.1);
+}
 .profile-scene {
   width: 100%;
   height: 100%;
@@ -2356,10 +2453,12 @@
 }
 
 .profile-header__crest {
-  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+.profile-header__crest.art-fallback {
+  background: rgba(255, 255, 255, 0.12);
+}
 .profile-header__spacer {
   justify-self: end;
 }
@@ -2414,11 +2513,14 @@
 .profile-portrait__image {
   width: 100%;
   aspect-ratio: 3 / 4;
+  max-height: clamp(220px, 46vh, 420px);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.profile-portrait__image.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .profile-nameplate {
   width: 100%;
   padding: 10px 12px;
@@ -2473,10 +2575,12 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(90, 140, 190, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.profile-achievement__icon.art-fallback {
+  background: rgba(90, 140, 190, 0.5);
+}
 .profile-achievement__content {
   display: flex;
   flex-direction: column;
@@ -2619,10 +2723,12 @@
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: rgba(90, 140, 190, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.profile-ability-icon.art-fallback {
+  background: rgba(90, 140, 190, 0.45);
+}
 .profile-stats__actions {
   display: flex;
   justify-content: center;
@@ -2685,10 +2791,12 @@
   height: 42px;
   border-radius: 10px;
   justify-self: start;
-  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+.hero-profile-header__crest.art-fallback {
+  background: rgba(255, 255, 255, 0.12);
+}
 .hero-profile-header__crest--spacer {
   justify-self: end;
 }
@@ -2738,10 +2846,12 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: rgba(90, 140, 190, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+.hero-profile-name-icon.art-fallback {
+  background: rgba(90, 140, 190, 0.6);
+}
 .hero-profile-portrait {
   padding: 0;
 }
@@ -2756,10 +2866,12 @@
   max-height: clamp(240px, 38vh, 420px);
   height: auto;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.hero-profile-portrait__image.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
 .hero-profile-level-badge {
   position: absolute;
   left: 50%;
@@ -2913,10 +3025,12 @@
   height: 42px;
   border-radius: 10px;
   justify-self: start;
-  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+.playflow-header__crest.art-fallback {
+  background: rgba(255, 255, 255, 0.12);
+}
 .playflow-header__crest--spacer {
   justify-self: end;
 }
@@ -2947,9 +3061,7 @@
 
 .world-map-panel {
   position: relative;
-  background: radial-gradient(circle at 35% 25%, rgba(220, 190, 130, 0.16), transparent 48%),
-    radial-gradient(circle at 65% 70%, rgba(80, 120, 180, 0.12), transparent 50%),
-    rgba(16, 13, 11, 0.72);
+  background: rgba(16, 13, 11, 0.72);
   border: 1px solid var(--ui-border);
   border-radius: 14px;
   padding: 24px;
@@ -2962,6 +3074,20 @@
   overflow: hidden;
 }
 
+.world-map-panel__art {
+  position: absolute;
+  inset: 0;
+}
+
+.world-map-panel__art.art-fallback {
+  background: radial-gradient(circle at 35% 25%, rgba(220, 190, 130, 0.16), transparent 48%),
+    radial-gradient(circle at 65% 70%, rgba(80, 120, 180, 0.12), transparent 50%);
+}
+
+.world-map-panel__content {
+  position: relative;
+  z-index: 1;
+}
 .world-map-panel__title {
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -3090,22 +3216,13 @@
   width: 90px;
   height: 110px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
   display: grid;
   place-items: center;
 }
 
-.hero-select-card__portrait img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-select-card__placeholder {
-  width: 100%;
-  height: 100%;
+.hero-select-card__portrait.art-fallback {
   background: linear-gradient(135deg, rgba(110, 90, 60, 0.4), rgba(40, 30, 25, 0.7));
 }
 
@@ -3232,24 +3349,31 @@
 .matchmaking-panel__portrait {
   width: 96px;
   height: 120px;
+  max-height: clamp(120px, 24vh, 180px);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
   display: grid;
   place-items: center;
 }
 
-.matchmaking-panel__portrait img {
+.matchmaking-panel__portrait-art {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
-.matchmaking-panel__placeholder {
-  width: 100%;
-  height: 100%;
+.matchmaking-panel__portrait.art-fallback {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.matchmaking-panel__portrait-art.art-fallback {
   background: linear-gradient(135deg, rgba(80, 80, 80, 0.35), rgba(20, 20, 20, 0.7));
+}
+
+.matchmaking-panel__portrait--ghost .art-img,
+.matchmaking-panel__portrait--ghost .art-bg {
+  filter: grayscale(1) brightness(0.6);
+  opacity: 0.55;
 }
 
 .matchmaking-panel__name {
