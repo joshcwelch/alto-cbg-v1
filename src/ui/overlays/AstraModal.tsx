@@ -78,33 +78,46 @@ const AstraModal = () => {
 
   return (
     <div className="astra-modal" role="dialog" aria-modal="true" ref={modalRef}>
-      <div className="astra-modal__header">
-        <ArtSlot assetKey="astraPortrait" className="astra-modal__portrait" alt="" />
-        <div className="astra-modal__title">
-          Greetings! How can I assist you today?
+      <div className="astra-modal__layout">
+        <div className="astra-modal__stage">
+          <div className="astra-modal__frameLayer">
+            <ArtSlot assetKey="astraContextFrame" className="astra-modal__frameArt" alt="" />
+          </div>
+          <div className="astra-modal__contentLayer">
+            <div className="astra-modal__contentBounds">
+              <div className="astra-modal__header">
+                <div className="astra-modal__title">
+                  Greetings! How can I assist you today?
+                </div>
+              </div>
+              <div className="astra-buttons" role="list">
+                {topics.map((topic) => (
+                  <button
+                    key={topic.label}
+                    type="button"
+                    className="ui-button ui-button--primary"
+                    onClick={() => setSelectedTopic(topic)}
+                  >
+                    {topic.label}
+                  </button>
+                ))}
+                <button type="button" className="ui-button ui-button--ghost" onClick={close}>
+                  Close
+                </button>
+              </div>
+              {selectedTopic ? (
+                <div className="astra-modal__body">
+                  <strong>{selectedTopic.label}</strong>
+                  <p>{selectedTopic.body}</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+          <div className="astra-modal__portraitLayer">
+            <ArtSlot assetKey="astraPortrait" className="astra-modal-portrait__art" alt="" fit="contain" />
+          </div>
         </div>
       </div>
-      <div className="astra-buttons" role="list">
-        {topics.map((topic) => (
-          <button
-            key={topic.label}
-            type="button"
-            className="ui-button ui-button--primary"
-            onClick={() => setSelectedTopic(topic)}
-          >
-            {topic.label}
-          </button>
-        ))}
-        <button type="button" className="ui-button ui-button--ghost" onClick={close}>
-          Close
-        </button>
-      </div>
-      {selectedTopic ? (
-        <div className="astra-modal__body">
-          <strong>{selectedTopic.label}</strong>
-          <p>{selectedTopic.body}</p>
-        </div>
-      ) : null}
     </div>
   );
 };

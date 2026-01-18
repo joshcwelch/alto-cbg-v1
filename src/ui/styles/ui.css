@@ -806,6 +806,7 @@
   justify-content: center;
   pointer-events: none;
   z-index: 40;
+  overflow: visible;
 }
 
 .astra-safe-frame {
@@ -820,7 +821,7 @@
 .astra-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(4, 4, 6, 0.7);
+  background: rgba(4, 4, 6, 0.88);
   border: none;
   padding: 0;
   margin: 0;
@@ -832,8 +833,8 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 36px;
-  height: 36px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   border: 1px solid rgba(220, 190, 130, 0.7);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
@@ -858,6 +859,8 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(120, 190, 255, 0.35)) drop-shadow(0 0 18px rgba(120, 190, 255, 0.18));
 }
 
 .astra-orb__art.art-fallback {
@@ -874,7 +877,7 @@
 }
 
 .astra-modal__portrait.art-fallback {
-  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.7), rgba(40, 30, 25, 0.9));
+  background: none;
 }
 
 .astra-coachmark__portrait {
@@ -891,20 +894,152 @@
 }
 
 .astra-modal {
-  position: absolute;
+  position: fixed;
   top: clamp(24px, 6vh, 72px);
-  right: 0;
-  width: min(460px, 46vw);
+  right: 24px;
+  left: auto;
+  width: min(820px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
   padding: 20px 18px;
   border-radius: 16px;
-  border: 1px solid rgba(140, 115, 80, 0.6);
-  background: rgba(12, 10, 9, 0.92);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+  border: none;
+  background: transparent;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 16px;
   pointer-events: auto;
   z-index: 45;
+}
+
+.astra-modal__layout {
+  position: relative;
+  display: block;
+  overflow: visible;
+}
+
+.astra-modal__stage {
+  position: relative;
+  width: 100%;
+  min-height: clamp(440px, 56vh, 560px);
+  min-width: 320px;
+}
+
+.astra-modal__frameLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+  -webkit-mask-image: linear-gradient(120deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 1) 100%);
+  mask-image: linear-gradient(120deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 1) 100%);
+}
+
+.astra-modal__frameLayer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  -webkit-mask-image: url("/assets/ui/astra/astra-context-frame.png");
+  mask-image: url("/assets/ui/astra/astra-context-frame.png");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  pointer-events: none;
+}
+
+.astra-modal__frameArt,
+.astra-modal__frameLayer .art-slot,
+.astra-modal__frameLayer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.92;
+}
+
+.astra-modal__contentLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.astra-modal__contentBounds {
+  position: absolute;
+  top: 92px;
+  right: 54px;
+  bottom: 84px;
+  left: 106px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.astra-modal__contentBounds .astra-modal__header {
+  margin: 8px 0 0;
+  align-self: flex-end;
+  width: min(380px, 100%);
+  max-width: 380px;
+  justify-content: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.astra-modal__contentBounds .astra-buttons {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: flex-end;
+  width: 400px;
+}
+
+.astra-modal__portraitLayer {
+  position: absolute;
+  left: -105px;
+  top: 55px;
+  width: 420px;
+  height: 520px;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: visible;
+  isolation: isolate;
+  filter: drop-shadow(0 0 18px rgba(120, 190, 255, 0.28))
+    drop-shadow(0 0 34px rgba(120, 190, 255, 0.16))
+    drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35));
+}
+
+.astra-modal__portraitLayer .art-slot,
+.astra-modal__portraitLayer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.05);
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+
+.astra-modal__portraitLayer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: none;
+  pointer-events: none;
+}
+
+.astra-modal__portraitLayer::after {
+  content: "";
+  position: absolute;
+  inset: 40px -20px 80px 80px;
+  background: none;
+  pointer-events: none;
 }
 
 .astra-modal__header {
@@ -918,11 +1053,14 @@
   font-size: 18px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding-top: 45px;
+  text-align: center;
+  width: 100%;
 }
 
 .astra-buttons {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .astra-modal__body {
@@ -944,6 +1082,25 @@
 
 .astra-modal__body p {
   margin: 0;
+}
+
+@media (max-width: 980px) {
+  .astra-modal {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
+
+  .astra-modal__portraitLayer {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: min(320px, 70vw);
+    height: auto;
+    aspect-ratio: 7 / 9;
+    margin: 0 auto 12px;
+  }
 }
 
 .astra-coachmark {
