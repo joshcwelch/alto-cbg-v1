@@ -303,6 +303,13 @@ const UI_ASSETS_RAW = {
     fit: "cover",
     aspect: "1 / 1",
   },
+  astraContextFrame: {
+    key: "astraContextFrame",
+    path: "/assets/ui/astra/astra-context-frame.png",
+    type: "img",
+    fallback: "gradient",
+    fit: "contain",
+  },
 } as const satisfies Record<string, UIAsset>;
 
 export type UIAssetKey = keyof typeof UI_ASSETS_RAW;
