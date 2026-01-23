@@ -35,7 +35,7 @@ const ArtSlot = ({ assetKey, className = "", alt = "", fit, radius }: ArtSlotPro
   }, [radius]);
 
   const sharedStyle: CSSProperties = {
-    aspectRatio: asset.aspect,
+    ...(asset.aspect && asset.aspect !== "free" ? { aspectRatio: asset.aspect } : {}),
     borderRadius: radiusValue,
   };
 

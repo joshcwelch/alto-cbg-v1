@@ -1,0 +1,237 @@
+/* Menu polish: contact shadows + lighting + button micro-interactions. */
+.alto-menu--polish {
+  /* Tune here:
+     - adjust --cs-soft/medium/strong blur/offsets
+     - tweak --cs-color alpha (keep warm charcoal, not black)
+     - reduce --mm-light-warm/--mm-occlusion if overlays read clearly
+     - if the shadow reads clearly, reduce blur or alpha */
+  --cs-color: rgba(32, 22, 14, 0.45);
+  --cs-soft: 0 4px 8px;
+  --cs-medium: 0 8px 14px;
+  --cs-strong: 0 12px 20px;
+  --mm-light-warm: rgba(255, 223, 178, 0.16);
+  --mm-occlusion: rgba(24, 16, 10, 0.22);
+  --mm-highlight-fade: 62%;
+  --mm-occlusion-fade: 68%;
+}
+
+.alto-menu--polish .main-menu-header .main-menu-title__art,
+.alto-menu--polish .main-menu-header .ui-art {
+  filter: drop-shadow(var(--cs-soft) var(--cs-color));
+}
+
+.alto-menu--polish .mainmenu__questsBadge:not(:hover):not(:active):not(:focus-visible) {
+  filter: drop-shadow(var(--cs-medium) var(--cs-color));
+}
+
+.alto-menu--polish .mainmenu__playerPanel:not(:hover):not(:active):not(:focus-visible) {
+  filter: drop-shadow(var(--cs-medium) var(--cs-color));
+}
+
+.alto-menu--polish .main-menu-nav-button {
+  box-shadow: var(--cs-soft) var(--cs-color);
+  transition: transform 120ms ease, filter 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.alto-menu--polish .main-menu-nav-button__art {
+  filter: drop-shadow(var(--cs-soft) var(--cs-color));
+  position: relative;
+  transition: transform 120ms ease, filter 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.alto-menu--polish .main-menu-nav-button__label {
+  transition: transform 120ms ease, filter 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.alto-menu--polish .main-menu-nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--cs-medium) var(--cs-color);
+}
+
+.alto-menu--polish .main-menu-nav-button:hover .main-menu-nav-button__art {
+  transform: translateY(-1px);
+  filter: drop-shadow(var(--cs-medium) var(--cs-color));
+}
+
+.alto-menu--polish .main-menu-nav-button:hover .main-menu-nav-button__label {
+  transform: translateY(-1px);
+  color: #ffe6b2;
+}
+
+.alto-menu--polish .main-menu-nav-button:active {
+  transform: translateY(1px);
+  box-shadow: var(--cs-soft) var(--cs-color);
+}
+
+.alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__art {
+  transform: translateY(1px);
+  filter: drop-shadow(var(--cs-soft) var(--cs-color));
+}
+
+.alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__label {
+  transform: translateY(1px);
+  color: #f5d9a2;
+}
+
+.alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__art::before {
+  opacity: 0.65;
+}
+
+.alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__art::after {
+  opacity: 0.85;
+}
+
+.alto-menu--polish .main-menu-nav-button:focus-visible {
+  outline: 2px solid rgba(210, 190, 140, 0.85);
+  outline-offset: 4px;
+  box-shadow: var(--cs-soft) var(--cs-color), 0 0 0 2px rgba(120, 150, 180, 0.35);
+}
+}
+
+.alto-menu--polish .mainmenu-bg::before,
+.alto-menu--polish .main-menu-nav-button__art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 80% at 50% 0%,
+    var(--mm-light-warm) 0%,
+    rgba(0, 0, 0, 0) var(--mm-highlight-fade)
+  );
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.alto-menu--polish .mainmenu-bg::after,
+.alto-menu--polish .main-menu-nav-button__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--mm-occlusion) 0%,
+    rgba(0, 0, 0, 0) var(--mm-occlusion-fade)
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.alto-menu--fx .mainmenu-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.alto-menu--fx .mainmenu-fx--rays {
+  background: linear-gradient(135deg, rgba(255, 210, 150, 0.06) 0%, rgba(255, 210, 150, 0) 55%);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  animation: mm-rays-drift 16s ease-in-out infinite;
+  transform: translate3d(0, 0, 0);
+}
+
+.alto-menu--fx .mainmenu-fx--dust {
+  background:
+    radial-gradient(60% 40% at 20% 30%, rgba(255, 240, 210, 0.03) 0%, rgba(255, 240, 210, 0) 60%),
+    radial-gradient(50% 35% at 80% 60%, rgba(255, 230, 200, 0.02) 0%, rgba(255, 230, 200, 0) 65%);
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+  animation: mm-dust-breathe 14s ease-in-out infinite;
+}
+
+.alto-menu--fx .mainmenu-fx--torch {
+  width: 280px;
+  height: 280px;
+  inset: auto;
+  top: 48%;
+  margin-top: -140px;
+  background: radial-gradient(circle, rgba(255, 200, 120, 0.18) 0%, rgba(255, 200, 120, 0) 65%);
+  mix-blend-mode: screen;
+  opacity: 0.25;
+  animation: mm-torch-flicker 4.2s ease-in-out infinite;
+}
+
+.alto-menu--fx .mainmenu-fx--torch-left {
+  left: 10%;
+  animation-duration: 4.6s;
+}
+
+.alto-menu--fx .mainmenu-fx--torch-right {
+  right: 10%;
+  animation-duration: 3.8s;
+}
+
+@keyframes mm-rays-drift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(1.5%, 1%, 0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(-1.5%, -1%, 0);
+    opacity: 0.5;
+  }
+}
+
+@keyframes mm-dust-breathe {
+  0% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes mm-torch-flicker {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+  22% {
+    opacity: 0.26;
+    transform: scale(1.01);
+  }
+  48% {
+    opacity: 0.22;
+    transform: scale(0.99);
+  }
+  71% {
+    opacity: 0.28;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alto-menu--polish .main-menu-nav-button,
+  .alto-menu--polish .main-menu-nav-button__art,
+  .alto-menu--polish .main-menu-nav-button__label {
+    transition: none;
+    transform: none;
+  }
+
+  .alto-menu--polish .main-menu-nav-button:hover,
+  .alto-menu--polish .main-menu-nav-button:active,
+  .alto-menu--polish .main-menu-nav-button:hover .main-menu-nav-button__art,
+  .alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__art,
+  .alto-menu--polish .main-menu-nav-button:hover .main-menu-nav-button__label,
+  .alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__label {
+    transform: none;
+  }
+
+  .alto-menu--fx .mainmenu-fx {
+    animation: none;
+  }
+}

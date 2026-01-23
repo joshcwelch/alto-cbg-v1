@@ -8,7 +8,7 @@ import HeroSelectScene from "./HeroSelectScene";
 import MainMenuScene from "./MainMenuScene";
 import MatchmakingScene from "./MatchmakingScene";
 import OptionsScene from "./OptionsScene";
-import ProfileScene from "./ProfileScene";
+import ProfileScreen from "../../screens/ProfileScreen";
 import QuestsScene from "./QuestsScene";
 import StoreScene from "./StoreScene";
 import WorldMapScene from "./WorldMapScene";
@@ -48,7 +48,7 @@ const UISceneRoot = () => {
     case "OPTIONS":
       return <OptionsScene />;
     case "PROFILE":
-      return <ProfileScene />;
+      return <ProfileScreen />;
     case "HERO_PROFILE":
       return <HeroProfileScene />;
     case "MATCHMAKING":
