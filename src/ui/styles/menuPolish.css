@@ -48,6 +48,10 @@
   box-shadow: var(--cs-medium) var(--cs-color);
 }
 
+.alto-menu--polish .main-menu-nav-button.main-menu-nav__exit:hover {
+  transform: translateY(calc(var(--exit-offset) - 1px));
+}
+
 .alto-menu--polish .main-menu-nav-button:hover .main-menu-nav-button__art {
   transform: translateY(-1px);
   filter: drop-shadow(var(--cs-medium) var(--cs-color));
@@ -61,6 +65,10 @@
 .alto-menu--polish .main-menu-nav-button:active {
   transform: translateY(1px);
   box-shadow: var(--cs-soft) var(--cs-color);
+}
+
+.alto-menu--polish .main-menu-nav-button.main-menu-nav__exit:active {
+  transform: translateY(calc(var(--exit-offset) + 1px));
 }
 
 .alto-menu--polish .main-menu-nav-button:active .main-menu-nav-button__art {

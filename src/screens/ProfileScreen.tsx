@@ -4,6 +4,7 @@ import { useUIStore } from "../ui/state/useUIStore";
 const ProfileScreen = () => {
   const setScene = useUIStore((state) => state.setScene);
   const heroLevel = 25;
+  const heroLevelProgress = 0.65;
 
   useEffect(() => {
     const safeFrame = document.querySelector(".ui-safe-frame");
@@ -29,6 +30,19 @@ const ProfileScreen = () => {
           </div>
           <div className="profile-screen__hero-level-value">{heroLevel}</div>
         </div>
+        <div
+          className="profile-screen__hero-level-progress"
+          style={{ "--hero-progress": `${Math.round(heroLevelProgress * 100)}%` } as CSSProperties}
+          aria-hidden="true"
+        >
+          <div className="profile-screen__hero-level-progress-fill">
+            <img
+              className="profile-screen__hero-level-progress-img"
+              src="/assets/ui/profile/hero-level-progress_fill_blue.png"
+              alt=""
+            />
+          </div>
+        </div>
         <div className="profile-screen__title profile-screen__title--hero-level">HERO LEVEL</div>
         <div className="profile-screen__title profile-screen__title--win-count">WIN COUNT:</div>
         <div className="profile-screen__win-count-value">343</div>
@@ -40,6 +54,7 @@ const ProfileScreen = () => {
         <div className="profile-screen__title profile-screen__title--friends">FRIENDS:</div>
         <div className="profile-screen__friends-value">27</div>
         <div className="profile-screen__label profile-screen__label--showcase">SHOWCASE</div>
+        <div className="profile-screen__placeholder profile-screen__placeholder--showcase">--empty--</div>
         <img
           className="profile-screen__achievement-icon"
           src="/assets/ui/profile/profile-achievment-icon_fallback.png"
@@ -134,6 +149,38 @@ const ProfileScreen = () => {
         >
           CUSTOMIZE
         </button>
+        <button
+          type="button"
+          className="profile-screen__label profile-screen__label--skills"
+          onClick={() => {
+            // TODO: Navigate to hero profile screen when available.
+          }}
+          aria-label="View hero profile"
+        >
+          HERO PROFILE
+        </button>
+        <button
+          type="button"
+          className="profile-screen__label profile-screen__label--masques"
+          onClick={() => {
+            // TODO: Navigate to masques screen when available.
+          }}
+          aria-label="View masques"
+        >
+          MASQUES
+        </button>
+        <img
+          className="profile-screen__skill-art profile-screen__skill-art--left"
+          src="/assets/ui/profile/profile-tharos-skill_1.png"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="profile-screen__skill-art profile-screen__skill-art--right"
+          src="/assets/ui/profile/profile-tharos-skill_2.png"
+          alt=""
+          aria-hidden="true"
+        />
         <div className="profile-screen__nav">
           <button
             type="button"

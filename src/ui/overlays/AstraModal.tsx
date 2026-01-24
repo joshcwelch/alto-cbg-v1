@@ -10,6 +10,7 @@ type Topic = {
 const AstraModal = () => {
   const close = useAstraStore((state) => state.close);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [message, setMessage] = useState("");
   const modalRef = useRef<HTMLDivElement | null>(null);
 
   const topics = useMemo<Topic[]>(
@@ -85,30 +86,72 @@ const AstraModal = () => {
           </div>
           <div className="astra-modal__contentLayer">
             <div className="astra-modal__contentBounds">
-              <div className="astra-modal__header">
-                <div className="astra-modal__title">
-                  Greetings! How can I assist you today?
+              {!selectedTopic ? (
+                <div className="astra-modal__header">
+                  <div className="astra-modal__title">
+                    Greetings! How can I assist you today?
+                  </div>
                 </div>
-              </div>
-              <div className="astra-buttons" role="list">
-                {topics.map((topic) => (
-                  <button
-                    key={topic.label}
-                    type="button"
-                    className="ui-button ui-button--primary"
-                    onClick={() => setSelectedTopic(topic)}
-                  >
-                    {topic.label}
+              ) : null}
+              {!selectedTopic ? (
+                <div className="astra-buttons" role="list">
+                  {topics.map((topic) => (
+                    <button
+                      key={topic.label}
+                      type="button"
+                      className="ui-button ui-button--primary"
+                      onClick={() => setSelectedTopic(topic)}
+                    >
+                      {topic.label}
+                    </button>
+                  ))}
+                  <button type="button" className="ui-button ui-button--ghost" onClick={close}>
+                    Close
                   </button>
-                ))}
-                <button type="button" className="ui-button ui-button--ghost" onClick={close}>
-                  Close
-                </button>
-              </div>
+                </div>
+              ) : null}
               {selectedTopic ? (
-                <div className="astra-modal__body">
-                  <strong>{selectedTopic.label}</strong>
-                  <p>{selectedTopic.body}</p>
+                <div className="astra-modal__body astra-chat">
+                  <div className="astra-chat__panel">
+                    <div className="astra-chat__bubble astra-chat__bubble--incoming">
+                      {selectedTopic.body}
+                    </div>
+                    <div className="astra-chat__bubble astra-chat__bubble--outgoing">
+                      {selectedTopic.label}
+                    </div>
+                    {/* TODO: Replace placeholder replies with GPT-backed guidance. */}
+                    <form
+                      className="astra-chat__input"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="astra-chat__back"
+                        onClick={() => setSelectedTopic(null)}
+                        aria-label="Back to help topics"
+                      >
+                        <span aria-hidden="true">{"<-"}</span>
+                      </button>
+                      <input
+                        type="text"
+                        className="astra-chat__field"
+                        placeholder="Type a message..."
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        aria-label="Message Astra"
+                      />
+                      <button type="submit" className="astra-chat__send" aria-label="Send message">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path
+                            d="M3 12l17-9-5.6 8H3zm11.4 4L20 21 3 12h11.4z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -123,3 +166,4 @@ const AstraModal = () => {
 };
 
 export default AstraModal;
+

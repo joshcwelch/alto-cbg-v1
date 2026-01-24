@@ -834,6 +834,31 @@
   pointer-events: none;
 }
 
+.ui-screen-fade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+}
+
+.ui-screen-fade--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-screen-fade__label {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(28px, 4vw, 64px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f2e7d3;
+}
+
 .ui-layer {
   position: relative;
   z-index: 1;
@@ -1108,6 +1133,120 @@
   min-height: 0;
   align-self: flex-end;
   width: 400px;
+}
+
+.astra-chat {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-self: flex-end;
+  text-align: left;
+  transform: translateY(5px);
+}
+
+.astra-chat__panel {
+  position: relative;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 150px;
+  padding-bottom: 64px;
+}
+
+.astra-chat__bubble {
+  max-width: min(420px, 100%);
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.astra-chat__bubble--outgoing {
+  align-self: flex-end;
+  margin-left: auto;
+  background: #3a7bff;
+  color: #f8fbff;
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 8px 14px rgba(10, 15, 30, 0.35);
+}
+
+.astra-chat__bubble--incoming {
+  align-self: flex-start;
+  margin-right: auto;
+  background: rgba(18, 16, 20, 0.9);
+  color: #f2e7d3;
+  border: 1px solid rgba(120, 110, 100, 0.5);
+  border-top-left-radius: 6px;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+}
+
+.astra-chat__back {
+  background: transparent;
+  border: 1px solid rgba(120, 110, 100, 0.5);
+  color: #f2e7d3;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.astra-chat__back span {
+  font-size: 14px;
+}
+
+.astra-chat__input {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 110, 100, 0.5);
+  background: rgba(0, 0, 0, 0.86);
+  position: absolute;
+  left: 150px;
+  right: 0;
+  bottom: 0;
+}
+
+.astra-chat__field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f2e7d3;
+  font-family: "IM Fell English", serif;
+  font-size: 14px;
+  outline: none;
+}
+
+.astra-chat__field::placeholder {
+  color: rgba(242, 231, 211, 0.6);
+}
+
+.astra-chat__send {
+  border: none;
+  background: rgba(58, 123, 255, 0.15);
+  color: #cfe0ff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.astra-chat__send svg {
+  width: 18px;
+  height: 18px;
+  transform: rotate(180deg);
+}
+
+.astra-chat__send:hover {
+  background: rgba(58, 123, 255, 0.3);
 }
 
 .astra-modal__portraitLayer {
@@ -1665,10 +1804,11 @@
 }
 
 .main-menu-nav__exit {
+  --exit-offset: 96px;
   margin-left: auto;
   align-self: flex-end;
   margin-top: clamp(6px, 1.2vh, 14px);
-  transform: translateY(96px);
+  transform: translateY(var(--exit-offset));
 }
 
 .main-menu-nav__exit .main-menu-nav-button__art {
