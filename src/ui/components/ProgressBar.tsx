@@ -12,13 +12,6 @@ type ProgressBarProps = {
   thicknessScale?: number;
 };
 
-const FILL_ASSET: Record<ProgressBarProps["variant"], string> = {
-  blue: "/assets/ui/profile/progress_fill_blue.png",
-  green: "/assets/ui/profile/progress_fill_green.png",
-  orange: "/assets/ui/profile/progress_fill_orange.png",
-  purple: "/assets/ui/profile/progress_fill_purple.png",
-};
-
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 const ProgressBar = ({
@@ -36,12 +29,16 @@ const ProgressBar = ({
 }: ProgressBarProps) => {
   const pct = clamp01(max > 0 ? value / max : 0);
   const pipSize = Math.max(10, Math.round(height * 1.4));
-  const pipLeft = Math.min(Math.max(pct * width - pipSize / 2, 0), width - pipSize);
+  const pipScaleX = thicknessScale * 2 * 1.2;
+  const pipScaleY = thicknessScale * 2 * 0.85;
+  const pipVisualWidth = pipSize * pipScaleX;
+  const pipVisualHeight = pipSize * pipScaleY;
+  const pipLeft = Math.min(Math.max(pct * width - pipVisualWidth / 2, 0), width - pipVisualWidth);
   const debugLabel = `${Math.round(pct * 100)}%`;
 
   return (
     <div
-      className="progress-bar"
+      className={`progress-bar progress-bar--${variant}`}
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -53,36 +50,31 @@ const ProgressBar = ({
       }}
       aria-hidden="true"
     >
-      {debug ? <div className="progress-bar__debug-label">{debugLabel}</div> : null}
-      <div
-        className="progress-bar__inner"
-        style={{
-          transform: `scaleY(${debugScale})`,
-        }}
-      >
-        <div className="progress-bar__fill-wrap" style={{ width: `${pct * 100}%` }}>
-          <div className="progress-bar__visual-wrap" style={{ transform: `scaleY(${thicknessScale})` }}>
-            <img className="progress-bar__fill" src={FILL_ASSET[variant]} alt="" />
-            {showHighlight ? (
-              <img
-                className="progress-bar__highlight"
-                src="/assets/ui/profile/progress_fill_highlight.png"
-                alt=""
-              />
-            ) : null}
+      <div className="progress-bar__clip">
+        <div
+          className="progress-bar__inner"
+          style={{
+            transform: `scaleY(${debugScale})`,
+          }}
+        >
+          <div className="progress-bar__fill-wrap" style={{ width: `${pct * 100}%` }}>
+            <div className="progress-bar__visual-wrap" style={{ transform: `scaleY(${thicknessScale})` }}>
+              <div className="progress-bar__fill" />
+              {showHighlight ? <div className="progress-bar__highlight" /> : null}
+            </div>
           </div>
         </div>
-        <img
-          className="progress-bar__pip"
-          src="/assets/ui/profile/progress_pip.png"
-          alt=""
-          style={{
-            width: `${pipSize}px`,
-            height: `${pipSize}px`,
-            left: `${pipLeft}px`,
-            transform: `translateY(-50%) scale(${thicknessScale * 0.9})`,
-          }}
-        />
+      </div>
+      <div
+        className="progress-bar__pip-wrap"
+        style={{
+          left: `${pipLeft}px`,
+          width: `${pipVisualWidth}px`,
+          height: `${pipVisualHeight}px`,
+        }}
+      >
+        {debug ? <div className="progress-bar__debug-label">{debugLabel}</div> : null}
+        <div className="progress-bar__pip" />
       </div>
     </div>
   );

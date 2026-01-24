@@ -21,7 +21,7 @@ const UI_ASSETS_RAW = {
   },
   mainMenuProfileAvatar: {
     key: "mainMenuProfileAvatar",
-    path: "/assets/ui/portraits/player-avatar.png",
+    path: "/assets/heroes/tharos.png",
     type: "img",
     fallback: "gradient",
     fit: "cover",

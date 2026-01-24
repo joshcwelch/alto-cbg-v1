@@ -1382,6 +1382,20 @@ body {
   --label-x: 450px;
   --label-y: 35px;
   font-size: 18px;
+  pointer-events: none;
+  cursor: default;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ffe08a;
+  text-shadow:
+    0 1px 0 rgba(255, 252, 210, 0.85),
+    0 3px 8px rgba(0, 0, 0, 0.85),
+    0 8px 16px rgba(0, 0, 0, 0.7);
+  filter:
+    drop-shadow(0 0 8px rgba(255, 230, 140, 0.6))
+    drop-shadow(0 0 18px rgba(210, 150, 60, 0.55));
 }
 
 .profile-screen__title {
@@ -1410,9 +1424,138 @@ body {
   font-size: 22px;
 }
 
+.profile-screen__hero-level-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% + 387px), calc(-50% - 272px));
+  width: 87px;
+  height: 87px;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 12px rgba(80, 150, 255, 0.35),
+    inset 0 0 24px rgba(20, 40, 80, 0.45);
+}
+
+.profile-screen__hero-level-frame::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(40, 120, 240, 0) 45%,
+    rgba(40, 120, 240, 1) 78%,
+    rgba(40, 120, 240, 0) 100%
+  );
+  filter: blur(10px);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.profile-screen__hero-level-frame::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(130, 200, 255, 0.55), rgba(20, 40, 80, 0) 45%),
+    radial-gradient(circle at 75% 78%, rgba(10, 20, 40, 0.55), rgba(10, 20, 40, 0) 60%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: profile-hero-level-spin 80s linear infinite reverse;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.profile-screen__hero-level-value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: transparent;
+  background: linear-gradient(180deg, #f0cf78 0%, #d2a554 35%, #8c5a1a 70%, #c9963c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow:
+    0 1px 0 rgba(255, 220, 150, 0.55),
+    0 2px 3px rgba(0, 0, 0, 0.6),
+    0 4px 8px rgba(0, 0, 0, 0.55),
+    0 -1px 2px rgba(255, 230, 160, 0.25),
+    0 0 14px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(0, 0, 0, 0.65),
+    0 0 8px rgba(80, 200, 230, 0.35),
+    0 0 14px rgba(80, 200, 230, 0.22);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.profile-screen__hero-level-frame-rotor {
+  position: absolute;
+  inset: 0;
+  animation: profile-hero-level-spin 80s linear infinite;
+  transform-origin: center;
+  clip-path: circle(calc(50% - 2px) at 50% 50%);
+}
+
+.profile-screen__hero-level-frame-rotor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("/assets/ui/profile/hero-level_frame.png") center/contain no-repeat;
+  filter: blur(1.6px);
+  opacity: 0.9;
+  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 1) 76%, rgba(0, 0, 0, 1) 100%);
+  mask-image: radial-gradient(circle, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 1) 76%, rgba(0, 0, 0, 1) 100%);
+  clip-path: circle(calc(50% - 2px) at 50% 50%);
+  pointer-events: none;
+}
+
+.profile-screen__hero-level-frame-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.99;
+  clip-path: circle(calc(50% - 2px) at 50% 50%);
+  transform: translateY(2px);
+}
+
+@keyframes profile-hero-level-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .profile-screen__title--win-count {
   transform: translate(calc(-50% + 407px), calc(-50% - 160px));
   font-size: 14px;
+}
+
+.profile-screen__win-count-value {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% + 505px), calc(-50% - 160px));
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #d9c6a7;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
 }
 
 .profile-screen__title--season-rank {
@@ -1427,6 +1570,21 @@ body {
   font-size: 14px;
   text-align: left;
   line-height: 1.1;
+}
+
+.profile-screen__friends-value {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% + 465px), calc(-50% - 25px));
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #d9c6a7;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
 }
 
 .profile-screen__rank {
@@ -1511,6 +1669,263 @@ body {
   transform: translate(calc(-50% - 517px), calc(-50% + 57px));
 }
 
+.profile-screen__achievement-progress {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% - 468px), calc(-50% - 22px));
+  width: 255px;
+  display: grid;
+  gap: 100px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.profile-screen__achievement-progress .achievement-progress:nth-child(2) {
+  --bar-offset: -19px;
+}
+
+.profile-screen__achievement-progress .achievement-progress:nth-child(3) {
+  --bar-offset: -38px;
+}
+
+.profile-screen__achievement-progress .achievement-progress:nth-child(4) {
+  --bar-offset: -60px;
+}
+
+.profile-screen__achievement-progress .achievement-progress:nth-child(1) {
+  --bar-offset: 1px;
+}
+
+.achievement-progress {
+  --progress: 60%;
+  --delay: 0s;
+  --value: "60%";
+  --bar-offset: 0px;
+  --bar-fill-image: none;
+  --bar-color-1: rgba(255, 175, 85, 0.95);
+  --bar-color-2: rgba(255, 234, 176, 0.98);
+  --bar-glow: rgba(255, 170, 90, 0.55);
+  --bar-glow-soft: rgba(255, 210, 150, 0.35);
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(12, 10, 8, 0.9), rgba(40, 28, 20, 0.95)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.25));
+  border: 1px solid rgba(255, 220, 170, 0.2);
+  box-shadow:
+    inset 0 0 8px rgba(0, 0, 0, 0.8),
+    inset 0 0 16px rgba(255, 255, 255, 0.05),
+    0 0 12px rgba(0, 0, 0, 0.55);
+  overflow: visible;
+  animation: achievement-bar-float 6.8s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.achievement-progress::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0));
+  opacity: 0.5;
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.achievement-progress::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.achievement-progress__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--progress);
+  border-radius: 999px;
+  background:
+    var(--bar-fill-image),
+    linear-gradient(90deg, var(--bar-color-1), var(--bar-color-2)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(0, 0, 0, 0.35));
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+  background-position: 0 50%, 0 0, 0 0;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 0 6px rgba(255, 255, 255, 0.4),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+    0 0 14px var(--bar-glow),
+    0 0 24px var(--bar-glow-soft);
+  filter: saturate(1.1);
+  overflow: hidden;
+  animation:
+    achievement-fill-pulse 4.6s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.achievement-progress__fill::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20%;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0) 35%, rgba(180, 230, 255, 0.4) 50%, rgba(255, 255, 255, 0) 65%),
+    radial-gradient(circle at 20% 50%, rgba(120, 200, 255, 0.35), rgba(0, 0, 0, 0) 65%);
+  opacity: 0.65;
+  transform: translateX(-35%) skewX(-10deg);
+  mix-blend-mode: screen;
+  animation: achievement-sheen 6.5s linear infinite;
+  animation-delay: var(--delay);
+}
+
+.achievement-progress__fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    url("/assets/ui/profile/progress_fill_highlight.png"),
+    linear-gradient(90deg, rgba(80, 150, 220, 0) 0%, rgba(120, 200, 255, 0.35) 50%, rgba(80, 150, 220, 0) 100%),
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 55%);
+  opacity: 0.65;
+  mix-blend-mode: screen;
+  background-size: 100% 100%, 220% 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+  animation: achievement-energy-flow 5.2s linear infinite;
+  animation-delay: var(--delay);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #000 12%, #000 88%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #000 12%, #000 88%, rgba(0, 0, 0, 0) 100%);
+}
+
+.achievement-progress__pip {
+  position: absolute;
+  left: var(--progress);
+  top: 7px;
+  width: 8px;
+  height: 26px;
+  transform: translate(-50%, -60%);
+  border-radius: 50% 50% 52% 52%;
+  background:
+    radial-gradient(circle at 45% 30%, rgba(220, 245, 255, 0.9), rgba(120, 190, 255, 0.35) 35%, rgba(20, 60, 130, 0) 60%),
+    linear-gradient(160deg, rgba(20, 80, 160, 0.95), rgba(12, 30, 70, 0.95)),
+    radial-gradient(circle at 50% 70%, rgba(50, 140, 255, 0.55), rgba(0, 0, 0, 0) 65%);
+  border: 1px solid rgba(160, 210, 255, 0.55);
+  box-shadow:
+    inset 0 0 8px rgba(200, 235, 255, 0.6),
+    inset 0 -4px 8px rgba(10, 25, 60, 0.8),
+    0 0 10px rgba(80, 160, 255, 0.6),
+    0 0 20px rgba(40, 120, 220, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 5px;
+  padding-top: 4px;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f5fbff;
+  text-shadow:
+    0 0 6px rgba(80, 210, 255, 0.8),
+    0 0 12px rgba(40, 160, 220, 0.7),
+    -1px 0 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.85),
+    0 -1px 0 rgba(0, 0, 0, 0.85),
+    0 1px 0 rgba(0, 0, 0, 0.85);
+  filter: saturate(1.1);
+}
+
+.achievement-progress__pip::after {
+  content: var(--value);
+}
+
+.achievement-progress--ember {
+  --bar-fill-image: url("/assets/ui/profile/progress_fill_blue.png");
+  --bar-color-1: rgba(40, 160, 255, 0.98);
+  --bar-color-2: rgba(120, 230, 255, 0.98);
+  --bar-glow: rgba(90, 190, 255, 0.75);
+  --bar-glow-soft: rgba(130, 230, 255, 0.5);
+}
+
+.achievement-progress--verdant {
+  --bar-fill-image: url("/assets/ui/profile/progress_fill_blue.png");
+  --bar-color-1: rgba(40, 160, 255, 0.98);
+  --bar-color-2: rgba(120, 230, 255, 0.98);
+  --bar-glow: rgba(90, 190, 255, 0.75);
+  --bar-glow-soft: rgba(130, 230, 255, 0.5);
+}
+
+.achievement-progress--cobalt {
+  --bar-fill-image: url("/assets/ui/profile/progress_fill_blue.png");
+  --bar-color-1: rgba(40, 160, 255, 0.98);
+  --bar-color-2: rgba(120, 230, 255, 0.98);
+  --bar-glow: rgba(90, 190, 255, 0.75);
+  --bar-glow-soft: rgba(130, 230, 255, 0.5);
+}
+
+.achievement-progress--ruby {
+  --bar-fill-image: url("/assets/ui/profile/progress_fill_blue.png");
+  --bar-color-1: rgba(40, 160, 255, 0.98);
+  --bar-color-2: rgba(120, 230, 255, 0.98);
+  --bar-glow: rgba(90, 190, 255, 0.75);
+  --bar-glow-soft: rgba(130, 230, 255, 0.5);
+}
+
+@keyframes achievement-sheen {
+  0% {
+    transform: translateX(-45%) skewX(-10deg);
+  }
+  100% {
+    transform: translateX(45%) skewX(-10deg);
+  }
+}
+
+@keyframes achievement-fill-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    filter: saturate(1.05) brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: saturate(1.2) brightness(1.08);
+  }
+}
+
+@keyframes achievement-energy-flow {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 200% 0, 0 0, 0 0;
+  }
+}
+
+@keyframes achievement-energy-flow {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 220% 0, 0 0, 0 0;
+  }
+}
+
+@keyframes achievement-bar-float {
+  0%,
+  100% {
+    transform: translateY(var(--bar-offset));
+  }
+  50% {
+    transform: translateY(calc(var(--bar-offset) - 1px));
+  }
+}
+
 .profile-screen__username {
   position: absolute;
   left: 50%;
@@ -1554,6 +1969,12 @@ body {
   pointer-events: none;
 }
 
+.progress-bar__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
 .progress-bar__inner {
   position: relative;
   width: 100%;
@@ -1571,7 +1992,12 @@ body {
   width: 100%;
   height: 100%;
   display: block;
-  animation: progress-fill-drift 6s ease-in-out infinite, progress-fill-pulse 3.8s ease-in-out infinite;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 10px rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(80, 180, 255, 0.25);
+  animation: progress-fill-drift 7s ease-in-out infinite, progress-fill-pulse 4.2s ease-in-out infinite;
 }
 
 .progress-bar__highlight {
@@ -1585,10 +2011,49 @@ body {
   animation: progress-highlight-drift 14s linear infinite;
 }
 
+.progress-bar--blue .progress-bar__fill {
+  background:
+    linear-gradient(90deg, rgba(70, 170, 255, 0.92), rgba(140, 230, 255, 0.95)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2));
+}
+
+.progress-bar--green .progress-bar__fill {
+  background:
+    linear-gradient(90deg, rgba(80, 220, 140, 0.92), rgba(170, 255, 210, 0.95)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2));
+}
+
+.progress-bar--orange .progress-bar__fill {
+  background:
+    linear-gradient(90deg, rgba(255, 150, 70, 0.94), rgba(255, 210, 140, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2));
+}
+
+.progress-bar--purple .progress-bar__fill {
+  background:
+    linear-gradient(90deg, rgba(180, 110, 255, 0.94), rgba(220, 180, 255, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.2));
+}
+
+.progress-bar__highlight {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+}
+
 .progress-bar__pip {
-  position: absolute;
-  top: 50%;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.98), rgba(140, 210, 255, 0.9) 40%, rgba(30, 80, 160, 0.95) 85%),
+    radial-gradient(circle at 60% 65%, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
+  border: 1px solid rgba(210, 235, 255, 0.7);
+  box-shadow:
+    0 0 10px rgba(90, 180, 255, 0.6),
+    0 0 20px rgba(60, 140, 220, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.45);
   filter: drop-shadow(0 2px 6px rgba(40, 200, 255, 0.35));
+  z-index: 1;
 }
 
 .progress-bar__visual-wrap {
@@ -1599,11 +2064,28 @@ body {
 
 .progress-bar__debug-label {
   position: absolute;
-  left: 2px;
-  top: 2px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  font-family: Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 1px rgba(0, 0, 0, 0.85),
+    0 0 6px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 0, 0, 0.75);
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.7));
   pointer-events: none;
+  z-index: 2;
+}
+
+.progress-bar__pip-wrap {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: progress-fill-drift 6s ease-in-out infinite;
 }
 
 @keyframes progress-fill-drift {
@@ -1637,12 +2119,18 @@ body {
   }
 }
 
+
 .profile-screen__nav {
   position: absolute;
   bottom: calc(clamp(24px, 6vh, 64px) + 35px);
   left: 50%;
   transform: translateX(calc(-50% - 535px));
   z-index: 2;
+}
+
+.profile-screen__nav .main-menu-nav-button__label {
+  font-size: clamp(22px, 2.2vw, 28px);
+  transform: translateY(-2px);
 }
 
 .profile-screen__nav .main-menu-nav-button {

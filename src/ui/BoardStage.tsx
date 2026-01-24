@@ -1659,6 +1659,11 @@ const BoardStage = () => {
         : "drop-shadow(0 0 18px rgba(120, 60, 190, 0.2))",
   });
 
+  const handleOpenMenu = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("board-menu-open"));
+  };
+
     return (
       <div className="board-stage">
         <MenuStamp slot={{ x: 24, y: 24 }} src="/assets/ui/menus/menuBackground.png" alt="Menu background" width={1} height={1} />
@@ -1669,7 +1674,21 @@ const BoardStage = () => {
           <div className="menu-frame__icons">
             <img className="menu-frame__icon" src="/assets/ui/exit.png" alt="Exit" draggable={false} />
             <img className="menu-frame__icon" src="/assets/ui/sound-on.png" alt="Sound on" draggable={false} />
-            <img className="menu-frame__icon" src="/assets/ui/settings.png" alt="Settings" draggable={false} />
+            <img
+              className="menu-frame__icon"
+              src="/assets/ui/settings.png"
+              alt="Settings"
+              draggable={false}
+              role="button"
+              tabIndex={0}
+              onClick={handleOpenMenu}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleOpenMenu();
+                }
+              }}
+            />
             <img className="menu-frame__icon" src="/assets/ui/help.png" alt="Help" draggable={false} />
           </div>
         </div>

@@ -592,6 +592,56 @@
   flex-wrap: wrap;
 }
 
+.board-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.board-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 4, 6, 0.68);
+  z-index: 15;
+}
+
+.board-menu__panel {
+  width: min(420px, 86vw);
+  padding: 24px;
+  background: rgba(12, 10, 9, 0.94);
+  border-radius: 16px;
+  border: 1px solid rgba(140, 115, 80, 0.6);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.board-menu__title {
+  font-family: "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.board-menu__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.board-menu__hint {
+  font-size: 12px;
+  color: var(--ui-ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .settings-header {
   position: relative;
   height: 140px;
@@ -795,6 +845,10 @@
   padding: 24px;
 }
 
+.ui-shell--board .ui-layer {
+  padding: 0;
+}
+
 .ui-safe-frame {
   width: auto;
   max-width: 100%;
@@ -810,6 +864,20 @@
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
+}
+
+.ui-shell--board .ui-safe-frame {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  padding: 0;
+  gap: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: hidden;
 }
 
 .ui-safe-frame.ui-safe-frame--profile {
@@ -848,19 +916,41 @@
 }
 
 .astra-orb {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 72px;
-  height: 72px;
+  position: fixed;
+  width: 106px;
+  height: 106px;
   border-radius: 50%;
-  border: 1px solid rgba(220, 190, 130, 0.7);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+  border: none;
+  box-shadow: none;
   cursor: pointer;
   pointer-events: auto;
   z-index: 45;
   padding: 0;
   background: transparent;
+  touch-action: none;
+}
+
+.astra-orb--attention {
+  animation: astra-orb-shake 640ms ease-in-out;
+}
+
+@keyframes astra-orb-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
 }
 
 .astra-orb:disabled {
@@ -881,8 +971,12 @@
   filter: drop-shadow(0 0 10px rgba(120, 190, 255, 0.35)) drop-shadow(0 0 18px rgba(120, 190, 255, 0.18));
 }
 
+.astra-orb--right .astra-orb__art {
+  transform: scaleX(-1);
+}
+
 .astra-orb__art.art-fallback {
-  background: radial-gradient(circle at 30% 30%, rgba(130, 190, 240, 0.75), rgba(40, 30, 25, 0.9));
+  background: none;
 }
 
 .astra-modal__portrait {
@@ -913,9 +1007,10 @@
 
 .astra-modal {
   position: fixed;
-  top: clamp(24px, 6vh, 72px);
-  right: 24px;
-  left: auto;
+  top: 50%;
+  right: auto;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: min(820px, calc(100vw - 48px));
   max-width: calc(100vw - 48px);
   padding: 20px 18px;
@@ -1356,6 +1451,10 @@
   z-index: 2;
   pointer-events: none;
   object-fit: cover;
+  object-position: 50% 22%;
+  clip-path: circle(44% at 50% 50%);
+  transform: scale(1.12);
+  transform-origin: center;
 }
 
 .mainmenu__playerPanelAvatar.art-fallback {
