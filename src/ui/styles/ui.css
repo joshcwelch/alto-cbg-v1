@@ -1922,11 +1922,826 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  gap: clamp(10px, 1.6vh, 16px);
   padding: var(--menu-frame-pad);
-  background: rgba(10, 10, 10, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.quests-scene__bg {
+  position: fixed;
+  inset: 0;
+  background-image: url("/assets/ui/quests/quest-background_main.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 2;
+  background-color: #000;
+}
+
+.quests-scene__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 120px 60px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.quests-scene__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.quests-scene__fog {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.quests-scene__ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.quests-ambient__particle {
+  position: absolute;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(180, 220, 255, 0.9) 0%, rgba(90, 140, 200, 0.2) 70%);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow:
+    0 0 10px rgba(120, 190, 255, 0.45),
+    0 0 18px rgba(70, 120, 200, 0.25);
+  animation: quests-ambient-drift var(--dur) ease-out var(--delay) forwards;
+}
+
+.quests-ambient__particle--ember {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 170, 90, 0.95) 0%, rgba(200, 70, 30, 0.2) 70%);
+  box-shadow:
+    0 0 10px rgba(255, 160, 90, 0.55),
+    0 0 18px rgba(200, 80, 40, 0.3);
+}
+
+@keyframes quests-ambient-drift {
+  0% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.15);
+    opacity: 0;
+  }
+}
+.quests-scene__weekly-label {
+  position: absolute;
+  left: 50%;
+  bottom: 134px;
+  transform: translateX(calc(-50% - 150px));
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(14px, 1.36vw, 19px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  background-image: linear-gradient(
+    110deg,
+    rgba(236, 202, 160, 0.95) 0%,
+    rgba(246, 214, 178, 0.95) 42%,
+    rgba(255, 240, 215, 1) 50%,
+    rgba(242, 205, 170, 0.95) 58%,
+    rgba(218, 184, 146, 0.95) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 0%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #efd1a6;
+  -webkit-text-fill-color: #efd1a6;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 18px rgba(255, 200, 140, 0.35);
+}
+
+.quests-scene__weekly-label::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 7px);
+  width: clamp(200px, 20vw, 320px);
+  height: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(12, 10, 9, 0.8) 50%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
+.quests-scene__weekly-title {
+  position: absolute;
+  left: 50%;
+  bottom: 89px;
+  transform: translateX(calc(-50% - 155px));
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(14px, 1.4vw, 20px);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 200, 140, 0.2);
+}
+
+.quests-scene__daily-quest-1 {
+  position: absolute;
+  left: 50%;
+  bottom: 790px;
+  transform: translateX(calc(-50% - 473px));
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 200, 140, 0.2);
+}
+
+.quests-scene__daily-icon-play {
+  position: absolute;
+  left: 50%;
+  bottom: 615px;
+  transform: translateX(calc(-50% - 473px));
+  width: 230px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(80, 190, 255, 0.5)) drop-shadow(0 0 18px rgba(60, 140, 220, 0.45));
+  animation: quest-play-glow 3.6s ease-in-out infinite;
+}
+
+.quests-scene__daily-icon-lyra {
+  position: absolute;
+  left: 50%;
+  bottom: 615px;
+  transform: translateX(calc(-50% + 3px));
+  width: 207px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(40, 12, 70, 0.7)) drop-shadow(0 0 26px rgba(18, 6, 36, 0.6));
+  animation: quest-lyra-void 4.2s ease-in-out infinite;
+  isolation: isolate;
+}
+
+.quests-scene__daily-icon-lyra img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.quests-scene__daily-icon-damage {
+  position: absolute;
+  left: 50%;
+  bottom: 615px;
+  transform: translateX(calc(-50% + 481px));
+  width: 170px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(255, 200, 120, 0.55)) drop-shadow(0 0 14px rgba(255, 120, 50, 0.45));
+  animation: quest-damage-flare 7.5s ease-in-out infinite;
+}
+
+.quests-scene__daily-icon-damage img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+
+@keyframes quest-play-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(80, 190, 255, 0.35)) drop-shadow(0 0 14px rgba(60, 140, 220, 0.3));
+    opacity: 0.92;
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(100, 210, 255, 0.65)) drop-shadow(0 0 24px rgba(60, 140, 220, 0.55));
+    opacity: 1;
+  }
+}
+
+@keyframes quest-lyra-void {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 10px rgba(35, 10, 60, 0.6))
+      drop-shadow(0 0 20px rgba(14, 5, 28, 0.5));
+    opacity: 0.88;
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 22px rgba(70, 18, 120, 0.85))
+      drop-shadow(0 0 36px rgba(24, 8, 52, 0.7));
+    opacity: 1;
+  }
+}
+
+.quests-scene__daily-quest-2 {
+  position: absolute;
+  left: 50%;
+  bottom: 790px;
+  transform: translateX(calc(-50% - 2px));
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 200, 140, 0.2);
+}
+
+.quests-scene__daily-quest-3 {
+  position: absolute;
+  left: 50%;
+  bottom: 790px;
+  transform: translateX(calc(-50% + 481px));
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 200, 140, 0.2);
+}
+
+.quests-scene__daily-reward-1,
+.quests-scene__daily-reward-2,
+.quests-scene__daily-reward-3 {
+  position: absolute;
+  left: 50%;
+  bottom: 550px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quests-scene__daily-reward-1 {
+  transform: translateX(calc(-50% - 481px));
+}
+
+.quests-scene__daily-reward-2 {
+  transform: translateX(calc(-50% - 2px));
+}
+
+.quests-scene__daily-reward-3 {
+  transform: translateX(calc(-50% + 479px));
+}
+
+.quests-scene__daily-reward-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.quests-scene__daily-reward-value {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  letter-spacing: normal;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 200, 140, 0.2);
+}
+
+.quests-scene__daily-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 455px;
+  display: block;
+  width: 180px;
+}
+
+.quests-scene__daily-progress-body {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+.quests-scene__daily-progress--1 {
+  transform: translateX(calc(-50% - 473px));
+}
+
+.quests-scene__daily-progress--2 {
+  transform: translateX(calc(-50% - 2px));
+}
+
+.quests-scene__daily-progress--3 {
+  transform: translateX(calc(-50% + 481px));
+}
+
+.quests-scene__progress-track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  padding: 2px;
+  background:
+    linear-gradient(180deg, rgba(90, 70, 55, 0.8), rgba(20, 16, 14, 0.9)),
+    linear-gradient(90deg, rgba(200, 170, 120, 0.3), rgba(80, 60, 40, 0.6));
+  border: 1px solid rgba(150, 120, 85, 0.6);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.quests-scene__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(70, 170, 240, 0.9), rgba(120, 220, 255, 0.9));
+  box-shadow:
+    0 0 6px rgba(120, 210, 255, 0.6),
+    inset 0 0 3px rgba(255, 255, 255, 0.35);
+  min-width: 4px;
+}
+
+.quests-scene__progress-text {
+  text-align: center;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 700;
+  color: #d8c2a2;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.quests-scene__progress-complete {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(calc(-50% - 3px));
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7ddc8a;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.quests-scene__progress-check {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(18, 40, 20, 0.8);
+  border: 1px solid rgba(125, 220, 138, 0.8);
+  box-shadow: 0 0 10px rgba(100, 220, 130, 0.4);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.quests-scene__progress-abandon {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(calc(-50% - 3px));
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e06f6f;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.quests-scene__progress-x {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(40, 18, 18, 0.85);
+  border: 1px solid rgba(220, 110, 110, 0.85);
+  box-shadow: 0 0 10px rgba(200, 90, 90, 0.4);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.quests-scene__progress-abandon:hover .quests-scene__progress-x,
+.quests-scene__progress-abandon:focus-visible .quests-scene__progress-x {
+  box-shadow: 0 0 12px rgba(230, 110, 110, 0.6);
+  border-color: rgba(235, 130, 130, 0.95);
+}
+
+.quests-scene__progress-abandon:hover,
+.quests-scene__progress-abandon:focus-visible {
+  color: #f08c8c;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    0 0 12px rgba(230, 110, 110, 0.35);
+}
+
+.quests-scene__progress-abandon:active {
+  transform: translateX(calc(-50% - 3px)) translateY(1px);
+}
+
+.quests-scene__weekly-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(calc(-50% - 155px));
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(10px, 1vw, 13px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 162, 0.85);
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 10px rgba(255, 200, 140, 0.18);
+}
+
+.quests-scene__weekly-reward {
+  position: absolute;
+  left: 50%;
+  bottom: 114px;
+  transform: translateX(calc(-50% + 123px));
+  align-items: center;
+  justify-content: center;
+}
+
+.quests-scene__weekly-reward-value {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(18px, 2vw, 26px);
+  letter-spacing: normal;
+  text-transform: uppercase;
+  color: #f2e0c8;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 14px rgba(255, 200, 140, 0.25);
+}
+
+.quests-scene__weekly-reward-value--minor {
+  font-size: clamp(18px, 2vw, 26px);
+  color: #f2e0c8;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 14px rgba(255, 200, 140, 0.25);
+}
+
+.quests-scene__weekly-reward--minor {
+  bottom: 75px;
+  transform: translateX(calc(-50% + 121px));
+}
+
+.quests-scene__timer {
+  position: absolute;
+  left: 50%;
+  bottom: 883px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f2e0c8;
+  display: grid;
+  align-items: baseline;
+}
+
+.quests-scene__timer--1 {
+  transform: translateX(-540px);
+}
+
+.quests-scene__timer--2 {
+  transform: translateX(-61px);
+}
+
+.quests-scene__timer--3 {
+  transform: translateX(414px) translateY(-2px);
+}
+
+.quests-scene__weekly-timer {
+  position: absolute;
+  left: 50%;
+  bottom: 204px;
+  transform: translateX(calc(-50% - 30px));
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(10px, 0.9vw, 12px);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #d8c2a2;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 16px rgba(130, 230, 255, 0.95),
+    0 0 32px rgba(80, 170, 255, 0.85),
+    0 0 48px rgba(40, 110, 220, 0.75);
+}
+
+.quests-scene__weekly-timer-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.quests-scene__weekly-timer-num {
+  font-family: "Times New Roman", Times, serif;
+  font-size: clamp(12px, 1vw, 14px);
+  letter-spacing: 0.32em;
+}
+
+.quests-scene__weekly-timer-unit {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+}
+
+.quests-scene__weekly-timer-sep {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.32em;
+  opacity: 0.75;
+}
+
+.quests-scene__timer-value {
+  font-size: 16px;
+  letter-spacing: 0.24em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  background-image: linear-gradient(
+    110deg,
+    rgba(240, 205, 160, 0.95) 0%,
+    rgba(248, 210, 170, 0.95) 42%,
+    rgba(255, 242, 220, 1) 50%,
+    rgba(244, 195, 150, 0.95) 58%,
+    rgba(215, 170, 130, 0.95) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 0%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #f0c88f;
+  -webkit-text-fill-color: #f0c88f;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.95),
+    0 4px 8px rgba(0, 0, 0, 0.85),
+    0 0 22px rgba(255, 210, 120, 0.9),
+    0 0 36px rgba(255, 100, 25, 0.8),
+    0 0 52px rgba(255, 60, 10, 0.6);
+  animation: quests-fire-text 1.6s ease-in-out infinite, quests-text-sweep 3.2s linear infinite;
+}
+
+.quests-scene__timer-num {
+  font-family: "Times New Roman", Times, serif;
+  letter-spacing: 0.18em;
+  font-size: 20px;
+  color: #6aa6d6;
+  -webkit-text-fill-color: #6aa6d6;
+}
+
+.quests-scene__timer-unit {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+}
+
+@keyframes quests-fire-text {
+  0%,
+  100% {
+    text-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.95),
+      0 4px 6px rgba(0, 0, 0, 0.9),
+      0 0 18px rgba(255, 170, 80, 0.7),
+      0 0 30px rgba(255, 100, 25, 0.6),
+      0 0 44px rgba(255, 60, 10, 0.45);
+  }
+  50% {
+    text-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.95),
+      0 4px 12px rgba(0, 0, 0, 0.95),
+      0 0 28px rgba(255, 220, 130, 1),
+      0 0 46px rgba(255, 120, 30, 0.9),
+      0 0 64px rgba(255, 70, 15, 0.75);
+  }
+}
+
+@keyframes quests-text-sweep {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 220% 0%;
+  }
+}
+
+.quests-scene__nav .main-menu-nav-button__label {
+  font-size: clamp(16px, 1.6vw, 20px);
+  transform: translateY(-2px);
+  max-width: 72%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.quests-scene__nav .main-menu-nav-button__art {
+  width: clamp(120px, 9.2vw, 165px);
+}
+
+.quests-scene__nav {
+  margin-top: 868px;
+  transform: translateX(-190px);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.quests-scene__store-button {
+  position: absolute;
+  left: 50%;
+  bottom: 105px;
+  transform: translateX(-170px);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.quest-store-crest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  overflow: visible;
+}
+
+.quest-store-crest__img {
+  width: 120px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.quest-store-crest__label {
+  display: inline-flex;
+  flex-direction: column;
+  margin-left: 14px;
+  text-align: left;
+  min-width: 320px;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: clamp(12px, 1.2vw, 16px);
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: #f2e0c8;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(255, 200, 140, 0.2);
+  pointer-events: none;
+}
+
+.quest-store-crest__label-subtle {
+  font-family: "Times New Roman", Times, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+}
+
+.quest-store-crest:hover .quest-store-crest__img,
+.quest-store-crest:focus-visible .quest-store-crest__img {
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.6)) brightness(1.06) saturate(1.08);
+  transform: scale(1.01);
+}
+
+.quest-store-crest:hover .quest-store-crest__label,
+.quest-store-crest:focus-visible .quest-store-crest__label {
+  color: #ffe9c4;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    0 0 12px rgba(255, 200, 140, 0.35);
+}
+
+.quest-store-crest:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.85);
+  outline-offset: 4px;
+}
+
+.quest-store-crest.is-click-flash::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 20%;
+  width: 46%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(120, 200, 255, 0.55), rgba(40, 90, 180, 0));
+  opacity: 0;
+  pointer-events: none;
+  animation: quest-store-flash 180ms ease-out;
+  mix-blend-mode: screen;
+}
+
+.quest-store-crest.is-click-flash .quest-store-crest__img {
+  animation: quest-store-click 160ms ease-out;
+}
+
+.quest-store-crest__particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: radial-gradient(circle, rgba(180, 230, 255, 0.95), rgba(120, 180, 240, 0.25));
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(160, 220, 255, 0.75)) drop-shadow(0 0 16px rgba(90, 160, 220, 0.55));
+  animation: quest-store-particle 700ms ease-out forwards;
+}
+
+@keyframes quest-store-particle {
+  0% {
+    transform: translate(0, 0) scale(0.75);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes quest-store-click {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes quest-store-flash {
+  0% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-store-crest.is-click-flash::before,
+  .quest-store-crest__particle,
+  .quest-store-crest.is-click-flash {
+    animation: none;
+  }
+
+  .quest-store-crest:hover .quest-store-crest__img,
+  .quest-store-crest:focus-visible .quest-store-crest__img {
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.55)) brightness(1.04);
+  }
 }
 
 .quests-header {
@@ -4456,5 +5271,20 @@
 
   .hero-profile-footer {
     justify-content: center;
+  }
+}
+@keyframes quest-damage-flare {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 6px rgba(255, 190, 110, 0.45))
+      drop-shadow(0 0 12px rgba(255, 110, 40, 0.4));
+    opacity: 0.85;
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 12px rgba(255, 220, 140, 0.65))
+      drop-shadow(0 0 20px rgba(255, 130, 55, 0.55));
+    opacity: 0.9;
   }
 }

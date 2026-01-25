@@ -3,9 +3,12 @@ import { useAstraStore } from "../state/useAstraStore";
 import { useUIStore } from "../state/useUIStore";
 import CollectionScene from "./CollectionScene";
 import DeckSelectScene from "./DeckSelectScene";
+import AchievementsScene from "./AchievementsScene";
+import CustomizeScene from "./CustomizeScene";
 import HeroProfileScene from "./HeroProfileScene";
 import HeroSelectScene from "./HeroSelectScene";
 import MainMenuScene from "./MainMenuScene";
+import MasquesScene from "./MasquesScene";
 import MatchmakingScene from "./MatchmakingScene";
 import OptionsScene from "./OptionsScene";
 import ProfileScreen from "../../screens/ProfileScreen";
@@ -51,6 +54,12 @@ const UISceneRoot = () => {
       return <ProfileScreen />;
     case "HERO_PROFILE":
       return <HeroProfileScene />;
+    case "ACHIEVEMENTS":
+      return <AchievementsScene />;
+    case "CUSTOMIZE":
+      return <CustomizeScene />;
+    case "MASQUES":
+      return <MasquesScene />;
     case "MATCHMAKING":
       return <MatchmakingScene />;
     case "BOARD":

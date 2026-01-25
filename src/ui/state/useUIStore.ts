@@ -11,6 +11,9 @@ export type UIScene =
   | "OPTIONS"
   | "PROFILE"
   | "HERO_PROFILE"
+  | "ACHIEVEMENTS"
+  | "CUSTOMIZE"
+  | "MASQUES"
   | "MATCHMAKING"
   | "BOARD";
 

@@ -35,8 +35,8 @@ const HeroProfileScene = () => {
               <button type="button" className="ui-button ui-button--primary">
                 CHANGE HERO
               </button>
-              <button type="button" className="ui-button ui-button--secondary">
-                COSMETICS
+              <button type="button" className="ui-button ui-button--secondary" onClick={() => setScene("MASQUES")}>
+                MASQUES
               </button>
             </div>
           </section>

@@ -1,10 +1,25 @@
+/**
+ * PROFILE V1 (FROZEN)
+ * Layout/classes are locked. Only allow: bug fixes, wiring, data binding.
+ * Do NOT change positioning, wrappers, or classNames without explicit approval.
+ */
 import { useEffect, type CSSProperties } from "react";
 import { useUIStore } from "../ui/state/useUIStore";
+import { profileData } from "../ui/data/profileData";
 
 const ProfileScreen = () => {
   const setScene = useUIStore((state) => state.setScene);
-  const heroLevel = 25;
-  const heroLevelProgress = 0.65;
+  const {
+    heroLevel,
+    heroLevelProgress,
+    winCount,
+    friendsCount,
+    username,
+    title,
+    achievements,
+  } = profileData;
+  const [baseAchievement, top1Achievement, top2Achievement, bottom1Achievement] = achievements;
+  const achievementProgressDelays = ["0s", "0.6s", "1.1s", "1.6s"];
 
   useEffect(() => {
     const safeFrame = document.querySelector(".ui-safe-frame");
@@ -45,14 +60,14 @@ const ProfileScreen = () => {
         </div>
         <div className="profile-screen__title profile-screen__title--hero-level">HERO LEVEL</div>
         <div className="profile-screen__title profile-screen__title--win-count">WIN COUNT:</div>
-        <div className="profile-screen__win-count-value">343</div>
+        <div className="profile-screen__win-count-value">{winCount}</div>
         <div className="profile-screen__title profile-screen__title--season-rank">
           HIGHEST
           <br />
           SEASON RANK:
         </div>
         <div className="profile-screen__title profile-screen__title--friends">FRIENDS:</div>
-        <div className="profile-screen__friends-value">27</div>
+        <div className="profile-screen__friends-value">{friendsCount}</div>
         <div className="profile-screen__label profile-screen__label--showcase">SHOWCASE</div>
         <div className="profile-screen__placeholder profile-screen__placeholder--showcase">--empty--</div>
         <img
@@ -76,53 +91,41 @@ const ProfileScreen = () => {
           alt=""
         />
         <div className="profile-screen__achievement-text profile-screen__achievement-text--top-2">
-          ACHIEVMENT TITLE
+          {top2Achievement?.title}
         </div>
         <div className="profile-screen__achievement-text profile-screen__achievement-text--top-1">
-          ACHIEVMENT TITLE
+          {top1Achievement?.title}
         </div>
         <div className="profile-screen__achievement-text profile-screen__achievement-text--base">
-          ACHIEVMENT TITLE
+          {baseAchievement?.title}
         </div>
         <div className="profile-screen__achievement-text profile-screen__achievement-text--bottom-1">
-          ACHIEVMENT TITLE
+          {bottom1Achievement?.title}
         </div>
         <div className="profile-screen__achievement-progress" aria-hidden="true">
-          <div
-            className="achievement-progress achievement-progress--ember"
-            style={{ "--progress": "78%", "--delay": "0s", "--value": '"78%"' } as CSSProperties}
-          >
-            <span className="achievement-progress__fill" />
-            <span className="achievement-progress__pip" />
-          </div>
-          <div
-            className="achievement-progress achievement-progress--verdant"
-            style={{ "--progress": "62%", "--delay": "0.6s", "--value": '"62%"' } as CSSProperties}
-          >
-            <span className="achievement-progress__fill" />
-            <span className="achievement-progress__pip" />
-          </div>
-          <div
-            className="achievement-progress achievement-progress--cobalt"
-            style={{ "--progress": "46%", "--delay": "1.1s", "--value": '"46%"' } as CSSProperties}
-          >
-            <span className="achievement-progress__fill" />
-            <span className="achievement-progress__pip" />
-          </div>
-          <div
-            className="achievement-progress achievement-progress--ruby"
-            style={{ "--progress": "88%", "--delay": "1.6s", "--value": '"88%"' } as CSSProperties}
-          >
-            <span className="achievement-progress__fill" />
-            <span className="achievement-progress__pip" />
-          </div>
+          {achievements.map((achievement, index) => (
+            <div
+              key={achievement.id}
+              className={`achievement-progress achievement-progress--${achievement.theme}`}
+              style={
+                {
+                  "--progress": `${achievement.progress}%`,
+                  "--delay": achievementProgressDelays[index] ?? "0s",
+                  "--value": `"${achievement.progress}%"`,
+                } as CSSProperties
+              }
+            >
+              <span className="achievement-progress__fill" />
+              <span className="achievement-progress__pip" />
+            </div>
+          ))}
         </div>
         <img className="profile-screen__rank" src="/assets/ui/profile/player-rank_gold.png" alt="" />
         <button
           type="button"
           className="profile-screen__label profile-screen__label--achievements"
           onClick={() => {
-            // TODO: Navigate to achievements screen when available.
+            setScene("ACHIEVEMENTS");
           }}
           aria-label="View achievements"
         >
@@ -134,16 +137,16 @@ const ProfileScreen = () => {
           </defs>
           <text className="profile-screen__username-text">
             <textPath href="#profile-username-arc" startOffset="50%" textAnchor="middle">
-              USERNAME
+              {username}
             </textPath>
           </text>
         </svg>
-        <div className="profile-screen__subtitle">TITLE</div>
+        <div className="profile-screen__subtitle">{title}</div>
         <button
           type="button"
           className="profile-screen__label profile-screen__label--customize"
           onClick={() => {
-            // TODO: Navigate to customize profile screen when available.
+            setScene("CUSTOMIZE");
           }}
           aria-label="Customize profile"
         >
@@ -153,7 +156,7 @@ const ProfileScreen = () => {
           type="button"
           className="profile-screen__label profile-screen__label--skills"
           onClick={() => {
-            // TODO: Navigate to hero profile screen when available.
+            setScene("HERO_PROFILE");
           }}
           aria-label="View hero profile"
         >
@@ -163,7 +166,7 @@ const ProfileScreen = () => {
           type="button"
           className="profile-screen__label profile-screen__label--masques"
           onClick={() => {
-            // TODO: Navigate to masques screen when available.
+            setScene("MASQUES");
           }}
           aria-label="View masques"
         >
