@@ -65,11 +65,11 @@ const QuestStoreCrestButton = ({
       }}
       aria-label={ariaLabel}
     >
-      <img className="quest-store-crest__img" src="/assets/ui/quests/quest-store_icon.png" alt="" />
       <span className="quest-store-crest__label" aria-hidden="true">
         <span>Need more Resources?</span>
         <span className="quest-store-crest__label-subtle">Visit the store!</span>
       </span>
+      <img className="quest-store-crest__img" src="/assets/ui/quests/quest-store_icon.png" alt="" />
     </button>
   );
 };

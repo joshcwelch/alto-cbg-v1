@@ -8,6 +8,7 @@ const QuestsScene = () => {
   const [weeklyTimeLeft, setWeeklyTimeLeft] = useState({ days: "00", hours: "00", minutes: "00", seconds: "00" });
   const ambientRef = useRef<HTMLDivElement | null>(null);
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const ambienceRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -45,6 +46,63 @@ const QuestsScene = () => {
     update();
     const intervalId = window.setInterval(update, 1000);
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const rafId = window.requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent("ui-animations-ready"));
+    });
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ambience = new Audio("/assets/sounds/ambience-roomtone-22-404098.mp3");
+    ambience.loop = true;
+    const ambienceVolume = 0.6;
+    ambience.volume = ambienceVolume;
+    ambienceRef.current = ambience;
+
+    const startLoopFade = () => {
+      const fadeMs = 1400;
+      const intervalId = window.setInterval(() => {
+        if (!ambience.duration || Number.isNaN(ambience.duration)) return;
+        const remaining = ambience.duration - ambience.currentTime;
+        if (remaining <= fadeMs / 1000) {
+          const t = Math.max(0, remaining / (fadeMs / 1000));
+          ambience.volume = ambienceVolume * t;
+        } else if (ambience.volume !== ambienceVolume) {
+          ambience.volume = ambienceVolume;
+        }
+      }, 200);
+      return () => window.clearInterval(intervalId);
+    };
+
+    const startAudio = () => {
+      ambience.play().catch(() => undefined);
+    };
+
+    startAudio();
+    const stopLoopFade = startLoopFade();
+
+    const resumeOnGesture = () => {
+      startAudio();
+      window.removeEventListener("pointerdown", resumeOnGesture);
+      window.removeEventListener("keydown", resumeOnGesture);
+    };
+
+    window.addEventListener("pointerdown", resumeOnGesture);
+    window.addEventListener("keydown", resumeOnGesture);
+
+    return () => {
+      window.removeEventListener("pointerdown", resumeOnGesture);
+      window.removeEventListener("keydown", resumeOnGesture);
+      stopLoopFade();
+      ambience.pause();
+      ambience.currentTime = 0;
+      ambienceRef.current = null;
+    };
   }, []);
 
   useEffect(() => {

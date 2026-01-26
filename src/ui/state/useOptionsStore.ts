@@ -26,7 +26,7 @@ export const useOptionsStore = create<OptionsState>()(
       language: "English",
       screenShake: true,
       masterVolume: 85,
-      musicVolume: 70,
+      musicVolume: 20,
       highQualityEffects: true,
       showAstraAssistant: true,
       setLanguage: (language) => set({ language }),
