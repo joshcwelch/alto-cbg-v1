@@ -1,9 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../state/useUIStore";
 
 const StoreScene = () => {
   const setScene = useUIStore((state) => state.setScene);
   const [refreshNonce, setRefreshNonce] = useState(0);
+  const countdownTargetRef = useRef(Date.now() + 14 * 24 * 60 * 60 * 1000);
+  const [timeLeft, setTimeLeft] = useState({ days: 14, hours: 0 });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const msInHour = 1000 * 60 * 60;
+    const msInDay = msInHour * 24;
+
+    const tick = () => {
+      const diff = Math.max(0, countdownTargetRef.current - Date.now());
+      const days = Math.floor(diff / msInDay);
+      const hours = Math.floor((diff % msInDay) / msInHour);
+      setTimeLeft({ days, hours });
+    };
+
+    tick();
+    const intervalId = window.setInterval(tick, 60000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -13,7 +32,7 @@ const StoreScene = () => {
     ambience.volume = ambienceVolume;
 
     const startLoopFade = () => {
-      const fadeMs = 2400;
+      const fadeMs = 4200;
       const intervalId = window.setInterval(() => {
         if (!ambience.duration || Number.isNaN(ambience.duration)) return;
         const remaining = ambience.duration - ambience.currentTime;
@@ -26,14 +45,6 @@ const StoreScene = () => {
       }, 200);
       return () => window.clearInterval(intervalId);
     };
-
-    const startAudio = () => {
-      ambience.volume = 0;
-      ambience.play().catch(() => undefined);
-    };
-
-    startAudio();
-    const stopLoopFade = startLoopFade();
 
     const fadeIn = () => {
       const fadeMs = 4200;
@@ -48,7 +59,14 @@ const StoreScene = () => {
       window.requestAnimationFrame(step);
     };
 
-    fadeIn();
+    const startAudio = () => {
+      ambience.volume = 0;
+      ambience.play().catch(() => undefined);
+      fadeIn();
+    };
+
+    startAudio();
+    const stopLoopFade = startLoopFade();
 
     const bellCtx = new AudioContext();
     let bellBuffer: AudioBuffer | null = null;
@@ -171,6 +189,10 @@ const StoreScene = () => {
       }
     );
 
+    const gemParticleBox = document.createElement("div");
+    gemParticleBox.className = "store-scene__gem-particle-box";
+    root.appendChild(gemParticleBox);
+
     const smokeBoxes = ["store-scene__smoke-box", "store-scene__smoke-box store-scene__smoke-box--right"].map(
       (className) => {
         const box = document.createElement("div");
@@ -179,6 +201,10 @@ const StoreScene = () => {
         return box;
       }
     );
+
+    const atmosphereBox = document.createElement("div");
+    atmosphereBox.className = "store-scene__atmosphere-box";
+    root.appendChild(atmosphereBox);
 
     const sparkleBoxes = [
       "store-scene__sparkle-box",
@@ -360,6 +386,40 @@ const StoreScene = () => {
       }
     }, 420);
 
+    const spawnGemParticle = () => {
+      const rect = gemParticleBox.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const particle = document.createElement("span");
+      const palette = ["store-scene__gem-particle--white", "store-scene__gem-particle--blue", "store-scene__gem-particle--gold"];
+      particle.className = `store-scene__gem-particle ${palette[Math.floor(Math.random() * palette.length)]}`;
+      const size = 2 + Math.random() * 3.5;
+      const startX = rect.width * 0.5 + (Math.random() * 2 - 1) * rect.width * 0.18;
+      const startY = rect.height * (0.72 + Math.random() * 0.22);
+      const dx = (Math.random() * 2 - 1) * rect.width * (0.28 + Math.random() * 0.18);
+      const dy = -(rect.height * (0.45 + Math.random() * 0.4));
+      const duration = 5200 + Math.random() * 2400;
+      const delay = Math.random() * 800;
+      particle.style.left = `${startX}px`;
+      particle.style.top = `${startY}px`;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.setProperty("--dx", `${dx}px`);
+      particle.style.setProperty("--dy", `${dy}px`);
+      particle.style.setProperty("--dur", `${duration}ms`);
+      particle.style.setProperty("--delay", `${delay}ms`);
+      gemParticleBox.appendChild(particle);
+      particle.addEventListener("animationend", () => {
+        particle.remove();
+      });
+    };
+
+    const gemParticleInterval = window.setInterval(() => {
+      const count = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i += 1) {
+        spawnGemParticle();
+      }
+    }, 800);
+
     const smokeInterval = window.setInterval(() => {
       const count = 1 + Math.floor(Math.random() * 2);
       for (let i = 0; i < count; i += 1) {
@@ -398,6 +458,38 @@ const StoreScene = () => {
       }
     }, 260);
 
+    const spawnAtmosphereParticle = () => {
+      const particle = document.createElement("span");
+      const isGold = Math.random() > 0.6;
+      particle.className = `store-scene__atmosphere-particle ${
+        isGold ? "store-scene__atmosphere-particle--gold" : "store-scene__atmosphere-particle--white"
+      }`;
+      const size = 1 + Math.random() * 2.2;
+      const drift = Math.round(Math.random() * 16 - 8);
+      const rise = 30 + Math.random() * 70;
+      const duration = 4200 + Math.random() * 2200;
+      const delay = Math.random() * 600;
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.setProperty("--drift", `${drift}px`);
+      particle.style.setProperty("--rise", `${rise}px`);
+      particle.style.setProperty("--dur", `${duration}ms`);
+      particle.style.setProperty("--delay", `${delay}ms`);
+      atmosphereBox.appendChild(particle);
+      particle.addEventListener("animationend", () => {
+        particle.remove();
+      });
+    };
+
+    const atmosphereInterval = window.setInterval(() => {
+      const count = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i += 1) {
+        spawnAtmosphereParticle();
+      }
+    }, 900);
+
     const frame = (now: number) => {
       const time = now / 1000;
       ctx.clearRect(0, 0, flameCanvas.clientWidth, flameCanvas.clientHeight);
@@ -421,12 +513,16 @@ const StoreScene = () => {
     return () => {
       window.removeEventListener("resize", resize);
       window.clearInterval(pipInterval);
+      window.clearInterval(gemParticleInterval);
       window.clearInterval(smokeInterval);
       window.clearInterval(sparkleInterval);
+      window.clearInterval(atmosphereInterval);
       window.cancelAnimationFrame(rafId);
       pipBoxes.forEach((box) => box.remove());
+      gemParticleBox.remove();
       smokeBoxes.forEach((box) => box.remove());
       sparkleBoxes.forEach((box) => box.remove());
+      atmosphereBox.remove();
       flameCanvas.remove();
     };
   }, [refreshNonce]);
@@ -464,6 +560,12 @@ const StoreScene = () => {
     <div className="store-scene">
       <div className="store-scene__bg" aria-hidden="true" />
       <div className="store-scene__content">
+        <button
+          type="button"
+          className="store-scene__featured-hitbox"
+          onClick={() => window.alert("TODO: Buy Magistrate Bundle.")}
+          aria-label="Buy Magistrate Bundle"
+        />
         <div className="store-scene__featured-wrap" aria-hidden="true">
           <img
             className="store-scene__featured-art"
@@ -475,8 +577,30 @@ const StoreScene = () => {
           <div className="store-scene__dialog-frame" />
         </div>
         <div className="store-scene__featured-label">FEATURED</div>
+        <div className="store-scene__featured-cta" aria-hidden="true">
+          <img src="/assets/ui/store/store-featured-bundle-btn.png" alt="" />
+        </div>
         <div className="store-scene__featured-label store-scene__featured-title">
           MAGISTRATE BUNDLE
+        </div>
+        <div className="store-scene__featured-subtitle">
+          INCLUDES LORA CALDAIR, THE MAGISTRATE
+        </div>
+        <div className="store-scene__featured-meta">
+          <div className="store-scene__featured-includes">
+            <span>- 2000 GOLD</span>
+            <span>- 1000 SHARDS</span>
+            <span className="store-scene__featured-includes-title">- "The Magistrate" Title</span>
+          </div>
+          <div className="store-scene__featured-countdown" aria-label="Time left in store rotation">
+            <span className="store-scene__featured-countdown-label">TIME LEFT</span>
+            <span className="store-scene__featured-countdown-value">
+              {String(timeLeft.days).padStart(2, "0")}
+              <span className="store-scene__featured-countdown-unit">D</span>{" "}
+              {String(timeLeft.hours).padStart(2, "0")}
+              <span className="store-scene__featured-countdown-unit">H</span>
+            </span>
+          </div>
         </div>
         <div className="store-scene__lantern-flicker" aria-hidden="true" />
         <div className="store-scene__lantern-flicker store-scene__lantern-flicker--left" aria-hidden="true" />
@@ -484,9 +608,23 @@ const StoreScene = () => {
         <div className="store-scene__lantern-flicker store-scene__lantern-flicker--mid-right" aria-hidden="true" />
         <div className="store-scene__lantern-flicker store-scene__lantern-flicker--right" aria-hidden="true" />
         <div className="store-scene__lantern-flicker store-scene__lantern-flicker--far-right" aria-hidden="true" />
+        <div className="store-scene__gem-pip" aria-hidden="true" />
+        <div className="store-scene__gem-pip store-scene__gem-pip--orange" aria-hidden="true" />
+        <div className="store-scene__gem-pip store-scene__gem-pip--blue-low" aria-hidden="true" />
+        <div className="store-scene__gem-pip store-scene__gem-pip--blue-low store-scene__gem-pip--blue-bottom" aria-hidden="true" />
+        <div className="store-scene__count-pip" aria-hidden="true">1</div>
         <div className="store-scene__pack-label">1 PACK</div>
         <div className="store-scene__pack-label store-scene__pack-label--right">3 PACKS</div>
         <div className="store-scene__pack-label store-scene__pack-label--far-right">5 PACKS</div>
+        <button
+          type="button"
+          className="store-scene__inventory-button"
+          onClick={() => setScene("INVENTORY")}
+          aria-label="Open inventory"
+        >
+          <span className="store-scene__inventory-radiance" aria-hidden="true" />
+          <img src="/assets/ui/store/store-inventory-button.png" alt="" />
+        </button>
         <img
           className="store-scene__pack-icon store-scene__pack-icon--one"
           src="/assets/ui/store/store-pack-icon_one.png"
@@ -538,6 +676,30 @@ const StoreScene = () => {
           />
           <span>400</span>
         </button>
+        <button
+          type="button"
+          className="store-scene__shards-button"
+          onClick={() => window.alert("TODO: Buy more shards.")}
+          aria-label="Buy more shards"
+        >
+          <img src="/assets/ui/store/store-gold-button_add.png" alt="" />
+        </button>
+        <button
+          type="button"
+          className="store-scene__shards-button store-scene__shards-button--right"
+          onClick={() => window.alert("TODO: Buy more gold.")}
+          aria-label="Buy more gold"
+        >
+          <img src="/assets/ui/store/store-gold-button_add.png" alt="" />
+        </button>
+        <span className="store-scene__currency-label store-scene__currency-label--left" aria-hidden="true">
+          <img src="/assets/ui/store/store-shard_icon.png" alt="" />
+          <span>350</span>
+        </span>
+        <span className="store-scene__currency-label store-scene__currency-label--right" aria-hidden="true">
+          <img src="/assets/ui/store/store-gold_icon.png" alt="" />
+          <span>1250</span>
+        </span>
         <button
           type="button"
           className="main-menu-nav-button store-scene__back"

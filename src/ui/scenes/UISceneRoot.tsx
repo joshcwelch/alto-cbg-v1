@@ -7,6 +7,7 @@ import AchievementsScene from "./AchievementsScene";
 import CustomizeScene from "./CustomizeScene";
 import HeroProfileScene from "./HeroProfileScene";
 import HeroSelectScene from "./HeroSelectScene";
+import InventoryScene from "./InventoryScene";
 import MainMenuScene from "./MainMenuScene";
 import MasquesScene from "./MasquesScene";
 import MatchmakingScene from "./MatchmakingScene";
@@ -48,6 +49,8 @@ const UISceneRoot = () => {
       return <DeckSelectScene />;
     case "STORE":
       return <StoreScene />;
+    case "INVENTORY":
+      return <InventoryScene />;
     case "OPTIONS":
       return <OptionsScene />;
     case "PROFILE":

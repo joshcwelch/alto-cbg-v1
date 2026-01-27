@@ -8,6 +8,7 @@ export type UIScene =
   | "QUESTS"
   | "COLLECTION"
   | "STORE"
+  | "INVENTORY"
   | "OPTIONS"
   | "PROFILE"
   | "HERO_PROFILE"
