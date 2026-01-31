@@ -35,10 +35,10 @@ const InventoryInteractionFX = () => {
       const rect = (detail as { rect?: DOMRect | null })?.rect ?? null;
       if (root && rect) {
         const x = rect.left + rect.width * 0.5;
-        const y = rect.top - Math.max(24, rect.height * 0.15);
+        const y = rect.top + rect.height * 0.25;
         root.style.setProperty("--fx-lens-x", `${x}px`);
         root.style.setProperty("--fx-lens-y", `${y}px`);
-        root.style.setProperty("--fx-lens-w", `${Math.max(220, rect.width * 1.1)}px`);
+        root.style.setProperty("--fx-lens-w", `${rect.width}px`);
       }
       if (isRare || ENABLE_PLACEHOLDER_RARE_STREAK) {
         setLensKey((prev) => prev + 1);

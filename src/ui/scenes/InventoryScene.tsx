@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import InventoryFoundationFX from "../components/InventoryFoundationFX";
 import InventoryInteractionFX from "../components/InventoryInteractionFX";
 import { useUIStore } from "../state/useUIStore";
@@ -676,7 +676,7 @@ const InventoryScene = () => {
     }, 1518);
   };
 
-  const handleCardFlip = (index: number) => {
+  const handleCardFlip = (index: number, event?: MouseEvent<HTMLButtonElement>) => {
     if (openPhase !== "revealing") return;
     if (flipped[index]) return;
     setFlipped((prev) => {
@@ -686,10 +686,8 @@ const InventoryScene = () => {
     });
     setRevealedCount((prev) => Math.min(5, prev + 1));
     if (typeof window !== "undefined") {
-      const cards = document.querySelectorAll(".inventory-card");
-      const card = cards[index] as HTMLElement | undefined;
-      const row = document.querySelector(".inventory-cardrow") as HTMLElement | null;
-      const rect = card?.getBoundingClientRect() ?? row?.getBoundingClientRect() ?? null;
+      const fallbackCard = document.querySelectorAll(".inventory-card")[index] as HTMLElement | undefined;
+      const rect = event?.currentTarget?.getBoundingClientRect() ?? fallbackCard?.getBoundingClientRect() ?? null;
       window.dispatchEvent(new CustomEvent("alto:openpack:card-flip", { detail: { index, rect } }));
     }
   };
@@ -910,7 +908,7 @@ const InventoryScene = () => {
                   ["--exit-rot" as any]: vector ? `${vector.rot}deg` : "0deg",
                   ["--exit-delay" as any]: vector ? `${vector.delay}ms` : "0ms",
                 }}
-                onClick={() => handleCardFlip(index)}
+                onClick={(event) => handleCardFlip(index, event)}
                 disabled={flipped[index] || openPhase !== "revealing"}
                 aria-label={flipped[index] ? `Card ${index + 1} revealed` : `Reveal card ${index + 1}`}
               >
