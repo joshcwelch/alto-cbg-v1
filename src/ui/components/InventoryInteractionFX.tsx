@@ -8,7 +8,8 @@ const FX_INTENSITY = {
 };
 
 const DEBUG_EXAGGERATE_FX = false;
-const ENABLE_PLACEHOLDER_RARE_STREAK = false;
+// Temporary: keep lens streak on card flips until rarity is wired into the event detail.
+const ENABLE_PLACEHOLDER_RARE_STREAK = true;
 
 const InventoryInteractionFX = () => {
   const rootRef = useRef<HTMLDivElement | null>(null);
