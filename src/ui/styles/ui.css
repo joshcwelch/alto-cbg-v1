@@ -4124,7 +4124,9 @@
 
 .inventory-foundation-fx__post--bloom {
   background: radial-gradient(circle at 50% 46%, rgba(130, 220, 255, 0.16), rgba(0, 0, 0, 0) 62%);
-  filter: blur(4px);
+  filter: blur(4px) brightness(0.98);
+  transform-origin: center;
+  will-change: transform, filter;
   mix-blend-mode: screen;
   opacity: 0.07;
   animation: inventory-foundation-bloom-breathe 9.2s ease-in-out infinite;
