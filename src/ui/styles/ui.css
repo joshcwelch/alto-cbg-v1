@@ -4214,6 +4214,9 @@
   --fx-lens: 1;
   --fx-parallax-x: 0px;
   --fx-parallax-y: 0px;
+  --fx-lens-x: 50%;
+  --fx-lens-y: 58%;
+  --fx-lens-w: min(72vw, 960px);
 }
 
 .inventory-juice__dust {
@@ -4280,9 +4283,9 @@
 
 .inventory-juice__lens {
   position: absolute;
-  left: 50%;
-  top: 58%;
-  width: min(72vw, 960px);
+  left: var(--fx-lens-x);
+  top: var(--fx-lens-y);
+  width: var(--fx-lens-w);
   height: 180px;
   transform: translate(-50%, -50%);
   opacity: 0;

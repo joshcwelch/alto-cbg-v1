@@ -686,7 +686,11 @@ const InventoryScene = () => {
     });
     setRevealedCount((prev) => Math.min(5, prev + 1));
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("alto:openpack:card-flip", { detail: { index } }));
+      const cards = document.querySelectorAll(".inventory-card");
+      const card = cards[index] as HTMLElement | undefined;
+      const row = document.querySelector(".inventory-cardrow") as HTMLElement | null;
+      const rect = card?.getBoundingClientRect() ?? row?.getBoundingClientRect() ?? null;
+      window.dispatchEvent(new CustomEvent("alto:openpack:card-flip", { detail: { index, rect } }));
     }
   };
 
