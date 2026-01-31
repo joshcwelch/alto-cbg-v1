@@ -4285,16 +4285,16 @@
   position: absolute;
   left: var(--fx-lens-x);
   top: var(--fx-lens-y);
-  width: clamp(360px, calc(var(--fx-lens-w) * 1.7), 1400px);
-  height: clamp(10px, calc(var(--fx-lens-w) * 0.04), 30px);
+  width: clamp(380px, calc(var(--fx-lens-w) * 1.9), 1500px);
+  height: clamp(8px, calc(var(--fx-lens-w) * 0.035), 24px);
   transform: translate(-50%, -50%);
   opacity: 0;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(160, 225, 255, 0.22) 28%,
-    rgba(210, 245, 255, 0.9) 50%,
-    rgba(160, 225, 255, 0.22) 72%,
+    rgba(160, 225, 255, 0.12) 38%,
+    rgba(220, 250, 255, 0.95) 50%,
+    rgba(160, 225, 255, 0.12) 62%,
     rgba(255, 255, 255, 0) 100%
   );
   background-size: 220% 100%;
@@ -4314,7 +4314,7 @@
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(210, 245, 255, 0.95) 50%,
+    rgba(235, 250, 255, 0.98) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   filter: blur(1.4px) brightness(1.2);
