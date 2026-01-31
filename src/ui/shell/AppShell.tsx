@@ -9,10 +9,13 @@ const AppShell = () => {
   const pendingScene = useUIStore((state) => state.pendingScene);
   const transitionKey = useUIStore((state) => state.transitionKey);
   const endTransition = useUIStore((state) => state.endTransition);
+  const scene = useUIStore((state) => state.scene);
   const masterVolume = useOptionsStore((state) => state.masterVolume);
   const musicVolume = useOptionsStore((state) => state.musicVolume);
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const musicBaseRef = useRef(0);
+  const whispersRef = useRef<HTMLAudioElement | null>(null);
+  const whispersIntervalRef = useRef<number | null>(null);
   const clickContextRef = useRef<AudioContext | null>(null);
   const clickBufferRef = useRef<AudioBuffer | null>(null);
 
@@ -148,6 +151,11 @@ const AppShell = () => {
   useEffect(() => {
     const music = musicRef.current;
     if (!music) return;
+    if (scene === "INVENTORY") {
+      music.volume = 0;
+      music.pause();
+      return;
+    }
     const base = 0.45 * (masterVolume / 100) * (musicVolume / 100);
     musicBaseRef.current = base;
     if (base <= 0) {
@@ -157,7 +165,45 @@ const AppShell = () => {
     }
     music.volume = base;
     music.play().catch(() => undefined);
-  }, [masterVolume, musicVolume]);
+  }, [masterVolume, musicVolume, scene]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (scene !== "INVENTORY") {
+      if (whispersIntervalRef.current) {
+        window.clearInterval(whispersIntervalRef.current);
+        whispersIntervalRef.current = null;
+      }
+      if (whispersRef.current) {
+        whispersRef.current.pause();
+        whispersRef.current.currentTime = 0;
+      }
+      return;
+    }
+
+    if (!whispersRef.current) {
+      whispersRef.current = new Audio("/assets/sounds/strange-whispers-415245.mp3");
+    }
+    const whispers = whispersRef.current;
+    whispers.volume = 0.3 * (masterVolume / 100);
+
+    const playWhispers = () => {
+      whispers.currentTime = 0;
+      whispers.play().catch(() => undefined);
+    };
+
+    playWhispers();
+    whispersIntervalRef.current = window.setInterval(playWhispers, 30000);
+
+    return () => {
+      if (whispersIntervalRef.current) {
+        window.clearInterval(whispersIntervalRef.current);
+        whispersIntervalRef.current = null;
+      }
+      whispers.pause();
+      whispers.currentTime = 0;
+    };
+  }, [scene, masterVolume]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

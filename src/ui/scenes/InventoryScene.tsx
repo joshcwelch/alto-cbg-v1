@@ -1,10 +1,122 @@
 import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../state/useUIStore";
 
+type OpenPhase = "idle" | "shaking" | "burst" | "spawning" | "revealing" | "claiming" | "resetting";
+
+type ExitVector = {
+  x: number;
+  y: number;
+  rot: number;
+  delay: number;
+};
+
+type DebrisChunk = {
+  id: string;
+  x: number;
+  y: number;
+  xFast: number;
+  yFast: number;
+  rot: number;
+  delay: number;
+  duration: number;
+  scale: number;
+};
+
 const InventoryScene = () => {
   const setScene = useUIStore((state) => state.setScene);
-  const [refreshNonce, setRefreshNonce] = useState(0);
   const ambienceRef = useRef<HTMLAudioElement | null>(null);
+  const timersRef = useRef<number[]>([]);
+  const debrisRef = useRef<DebrisChunk[]>([]);
+  const poofBoxRef = useRef<HTMLDivElement | null>(null);
+  const packs = [{ id: "standard", name: "ALTO STANDARD PACK - SINGLE (1)" }];
+  const [openPhase, setOpenPhase] = useState<OpenPhase>("idle");
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [flipped, setFlipped] = useState<boolean[]>(() => Array.from({ length: 5 }, () => false));
+  const [cardExitVectors, setCardExitVectors] = useState<ExitVector[]>([]);
+  const [vfxActive, setVfxActive] = useState(false);
+  const [vfxKey, setVfxKey] = useState(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const glowOverlayHidden = false;
+  const prefersReducedMotion =
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const openPhaseRef = useRef(openPhase);
+  const [glowHovered, setGlowHovered] = useState(false);
+  const [glowPinned, setGlowPinned] = useState(false);
+  const isPackUiHidden = openPhase !== "idle" && openPhase !== "shaking";
+  const cardsVisible = openPhase === "spawning" || openPhase === "revealing" || openPhase === "claiming";
+
+  const setTimeoutSafe = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(fn, ms);
+    timersRef.current.push(id);
+    return id;
+  };
+
+  const clearTimers = () => {
+    timersRef.current.forEach((id) => window.clearTimeout(id));
+    timersRef.current = [];
+  };
+
+  const createDebrisChunks = () => {
+    const count = 6 + Math.floor(Math.random() * 7);
+    return Array.from({ length: count }, (_, index) => {
+      const x = Math.round(Math.random() * 900 - 450);
+      const y = Math.random() > 0.5 ? Math.round(650 + Math.random() * 450) : Math.round(-1100 + Math.random() * 450);
+      return {
+        id: `debris-${index}-${Math.random().toString(36).slice(2)}`,
+        x,
+        y,
+        xFast: Math.round(x * 0.45),
+        yFast: Math.round(y * 0.45),
+        rot: Math.round(Math.random() * 70 - 35),
+        delay: Math.round(Math.random() * 184),
+        duration: Math.round(1035 + Math.random() * 345),
+        scale: 0.6 + Math.random() * 0.5,
+      };
+    });
+  };
+
+  useEffect(
+    () => () => {
+      clearTimers();
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (openPhase !== "idle") {
+      document.body.classList.add("inventory-opening");
+    } else {
+      document.body.classList.remove("inventory-opening");
+    }
+    return () => {
+      document.body.classList.remove("inventory-opening");
+    };
+  }, [openPhase]);
+
+  useEffect(() => {
+    openPhaseRef.current = openPhase;
+    if (openPhase !== "idle") {
+      setGlowHovered(false);
+    }
+  }, [openPhase]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.add("inventory-scene-active");
+    return () => {
+      document.body.classList.remove("inventory-scene-active");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onMove = (event: MouseEvent) => {
+      setMousePos({ x: event.clientX, y: event.clientY });
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -162,7 +274,7 @@ const InventoryScene = () => {
       window.cancelAnimationFrame(rafId);
       flameCanvas.remove();
     };
-  }, [refreshNonce]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -242,6 +354,8 @@ const InventoryScene = () => {
     });
 
     const spawnPip = () => {
+      const gate = document.querySelector(".inventory-pack-ui__particle-gate") as HTMLElement | null;
+      if (!gate) return;
       const pip = document.createElement("span");
       pip.className = "inventory__pip";
       const x = 15 + Math.random() * 70;
@@ -274,7 +388,7 @@ const InventoryScene = () => {
       window.clearInterval(intervalId);
       pipBoxes.forEach((box) => box.remove());
     };
-  }, [refreshNonce]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -325,7 +439,7 @@ const InventoryScene = () => {
       window.clearInterval(intervalId);
       smokeBoxes.forEach((box) => box.remove());
     };
-  }, [refreshNonce]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -334,25 +448,26 @@ const InventoryScene = () => {
     if (!root) return;
 
     const sparkleBoxes = [
-      "inventory__sparkle-box inventory__sparkle-box--left",
-      "inventory__sparkle-box inventory__sparkle-box--right",
-    ].map((className) => {
+      { className: "inventory__sparkle-box inventory__sparkle-box--left", isPack: false },
+      { className: "inventory__sparkle-box inventory__sparkle-box--right", isPack: false },
+      { className: "inventory__sparkle-box inventory__sparkle-box--pack", isPack: true },
+    ].map((entry) => {
       const box = document.createElement("div");
-      box.className = className;
+      box.className = entry.className;
       root.appendChild(box);
-      return box;
+      return { ...entry, el: box };
     });
 
-    const spawnSparkle = () => {
+    const spawnSparkle = (target: HTMLDivElement, options?: { fast?: boolean }) => {
       const sparkle = document.createElement("span");
       const isGold = Math.random() > 0.5;
       sparkle.className = `inventory__sparkle ${isGold ? "inventory__sparkle--gold" : "inventory__sparkle--white"}`;
       const x = 8 + Math.random() * 84;
       const y = 10 + Math.random() * 80;
-      const size = 2 + Math.random() * 2.4;
-      const drift = Math.round(Math.random() * 10 - 5);
-      const rise = 20 + Math.random() * 20;
-      const duration = 1800 + Math.random() * 1200;
+      const size = (options?.fast ? 2.4 : 2) + Math.random() * (options?.fast ? 2.8 : 2.4);
+      const drift = Math.round(Math.random() * (options?.fast ? 14 : 10) - (options?.fast ? 7 : 5));
+      const rise = (options?.fast ? 28 : 20) + Math.random() * (options?.fast ? 28 : 20);
+      const duration = (options?.fast ? 1200 : 1800) + Math.random() * (options?.fast ? 900 : 1200);
       sparkle.style.left = `${x}%`;
       sparkle.style.top = `${y}%`;
       sparkle.style.width = `${size}px`;
@@ -360,7 +475,6 @@ const InventoryScene = () => {
       sparkle.style.setProperty("--drift", `${drift}px`);
       sparkle.style.setProperty("--rise", `${rise}px`);
       sparkle.style.setProperty("--dur", `${duration}ms`);
-      const target = sparkleBoxes[Math.floor(Math.random() * sparkleBoxes.length)];
       target.appendChild(sparkle);
       sparkle.addEventListener("animationend", () => {
         sparkle.remove();
@@ -370,82 +484,327 @@ const InventoryScene = () => {
     const sparkleInterval = window.setInterval(() => {
       const count = 2 + Math.floor(Math.random() * 2);
       for (let i = 0; i < count; i += 1) {
-        spawnSparkle();
+        const target = sparkleBoxes[Math.floor(Math.random() * sparkleBoxes.length)].el;
+        spawnSparkle(target);
       }
     }, 360);
 
+    const packBox = sparkleBoxes.find((box) => box.isPack)?.el ?? null;
+    const packSparkleInterval = window.setInterval(() => {
+      if (!packBox || openPhaseRef.current !== "idle") return;
+      const count = 2 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < count; i += 1) {
+        spawnSparkle(packBox, { fast: true });
+      }
+    }, 160);
+
     return () => {
       window.clearInterval(sparkleInterval);
-      sparkleBoxes.forEach((box) => box.remove());
+      window.clearInterval(packSparkleInterval);
+      sparkleBoxes.forEach((box) => box.el.remove());
     };
-  }, [refreshNonce]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const root = document.querySelector(".inventory-scene") as HTMLElement | null;
     if (!root) return;
-    const readout = document.createElement("div");
-    readout.className = "inventory-scene__cursor-readout";
-    root.appendChild(readout);
-    const refreshButton = document.createElement("button");
-    refreshButton.type = "button";
-    refreshButton.className = "inventory-scene__refresh-button";
-    refreshButton.textContent = "Refresh Scene";
-    refreshButton.addEventListener("click", () => {
-      setRefreshNonce((value) => value + 1);
-    });
-    root.appendChild(refreshButton);
+    const poofBox = document.createElement("div");
+    poofBox.className = "inventory__claim-poof-box";
+    root.appendChild(poofBox);
+    poofBoxRef.current = poofBox;
+    return () => {
+      poofBoxRef.current = null;
+      poofBox.remove();
+    };
+  }, []);
 
-    const onMove = (event: MouseEvent) => {
-      readout.textContent = `x:${Math.round(event.clientX)} y:${Math.round(event.clientY)}`;
+  const spawnClaimPoof = () => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = poofBoxRef.current;
+    if (!box) return;
+    const row = document.querySelector(".inventory-cardrow") as HTMLElement | null;
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    const count = 48 + Math.floor(Math.random() * 18);
+    for (let i = 0; i < count; i += 1) {
+      const pip = document.createElement("span");
+      pip.className = "inventory__claim-pip";
+      const x = rect.left + Math.random() * rect.width;
+      const y = rect.top + Math.random() * rect.height;
+      const size = 1.6 + Math.random() * 2.8;
+      const rise = 80 + Math.random() * 120;
+      const drift = Math.round(Math.random() * 50 - 25);
+      const duration = 1200 + Math.random() * 1200;
+      const delay = Math.random() * 200;
+      pip.style.left = `${x}px`;
+      pip.style.top = `${y}px`;
+      pip.style.width = `${size}px`;
+      pip.style.height = `${size}px`;
+      pip.style.setProperty("--rise", `${rise}px`);
+      pip.style.setProperty("--drift", `${drift}px`);
+      pip.style.setProperty("--dur", `${duration}ms`);
+      pip.style.setProperty("--delay", `${delay}ms`);
+      box.appendChild(pip);
+      pip.addEventListener("animationend", () => {
+        pip.remove();
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.querySelector(".inventory-scene") as HTMLElement | null;
+    if (!root) return;
+
+    const burstBox = document.createElement("div");
+    burstBox.className = "inventory__burst-box";
+    root.appendChild(burstBox);
+
+    let rafId = 0;
+
+    const spawnParticle = (kind: "spark" | "streak" | "dust") => {
+      const span = document.createElement("span");
+      span.className = `inventory__burst-${kind}`;
+      const dx = Math.round(Math.random() * 840 - 420);
+      const isDown = Math.random() < 0.15;
+      const dy = isDown ? Math.round(240 + Math.random() * 180) : -Math.round(160 + Math.random() * 460);
+      const delay = Math.round(Math.random() * 140);
+      const alpha = 0.65 + Math.random() * 0.35;
+      const size =
+        kind === "dust"
+          ? Math.round(12 + Math.random() * 10)
+          : Math.round(kind === "spark" ? 3 + Math.random() * 3 : 4 + Math.random() * 3);
+      const dur =
+        kind === "spark"
+          ? Math.round(420 + Math.random() * 340)
+          : kind === "streak"
+            ? Math.round(520 + Math.random() * 460)
+            : Math.round(900 + Math.random() * 600);
+      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      const rot = kind === "streak" ? Math.round(angle + (Math.random() * 24 - 12)) : 0;
+
+      span.style.setProperty("--x", "50%");
+      span.style.setProperty("--y", "44%");
+      span.style.setProperty("--dx", `${dx}px`);
+      span.style.setProperty("--dy", `${dy}px`);
+      span.style.setProperty("--dur", `${dur}ms`);
+      span.style.setProperty("--delay", `${delay}ms`);
+      span.style.setProperty("--sz", `${size}px`);
+      span.style.setProperty("--rot", `${rot}deg`);
+      span.style.setProperty("--a", `${alpha}`);
+
+      burstBox.appendChild(span);
+      span.addEventListener("animationend", () => {
+        span.remove();
+      });
     };
 
-    window.addEventListener("mousemove", onMove);
+    const spawnBurst = () => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduceMotion) return;
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+      const start = performance.now();
+      const tick = (now: number) => {
+        const elapsed = now - start;
+        const count = elapsed < 240 ? 3 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i += 1) {
+          const roll = Math.random();
+          const kind = roll < 0.45 ? "spark" : roll < 0.75 ? "streak" : "dust";
+          spawnParticle(kind);
+        }
+        if (elapsed < 520) {
+          rafId = window.requestAnimationFrame(tick);
+        } else {
+          rafId = 0;
+        }
+      };
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("alto:openpack:burst", spawnBurst);
 
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      readout.remove();
-      refreshButton.remove();
+      window.removeEventListener("alto:openpack:burst", spawnBurst);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      burstBox.remove();
     };
-  }, [refreshNonce]);
+  }, []);
+
+  const handleOpenPackClick = () => {
+    if (openPhase !== "idle") return;
+    clearTimers();
+    setRevealedCount(0);
+    setFlipped(Array.from({ length: 5 }, () => false));
+    setCardExitVectors([]);
+    setGlowPinned(true);
+    window.dispatchEvent(new CustomEvent("alto:openpack:commit"));
+
+    if (prefersReducedMotion) {
+      setOpenPhase("revealing");
+      window.dispatchEvent(new CustomEvent("alto:openpack:reveal-ready"));
+      return;
+    }
+
+    setOpenPhase("shaking");
+
+    setTimeoutSafe(() => {
+      setOpenPhase("burst");
+      window.dispatchEvent(new CustomEvent("alto:openpack:shake-start"));
+      window.dispatchEvent(new CustomEvent("alto:openpack:burst"));
+      debrisRef.current = createDebrisChunks();
+      setVfxKey((prev) => prev + 1);
+      setVfxActive(true);
+      setTimeoutSafe(() => setVfxActive(false), 1725);
+    }, 748);
+
+    setTimeoutSafe(() => {
+      setOpenPhase("spawning");
+    }, 748);
+
+    setTimeoutSafe(() => {
+      setOpenPhase("revealing");
+      window.dispatchEvent(new CustomEvent("alto:openpack:reveal-ready"));
+    }, 1518);
+  };
+
+  const handleCardFlip = (index: number) => {
+    if (openPhase !== "revealing") return;
+    if (flipped[index]) return;
+    setFlipped((prev) => {
+      const next = [...prev];
+      next[index] = true;
+      return next;
+    });
+    setRevealedCount((prev) => Math.min(5, prev + 1));
+  };
+
+  const handleClaim = () => {
+    if (openPhase !== "revealing" || revealedCount < 5) return;
+    spawnClaimPoof();
+    setGlowPinned(false);
+    const downwardSlots = new Set<number>();
+    while (downwardSlots.size < (Math.random() > 0.5 ? 1 : 2)) {
+      downwardSlots.add(Math.floor(Math.random() * 5));
+    }
+    const vectors = Array.from({ length: 5 }, (_, index) => {
+      const baseX = 900 + Math.random() * 500;
+      const sway = Math.random() * 120 - 60;
+      const dir = index % 2 === 0 ? 1 : -1;
+      const y = downwardSlots.has(index)
+        ? Math.round(650 + Math.random() * 300)
+        : Math.round(-1200 + Math.random() * 550);
+      return {
+        x: Math.round(dir * baseX + sway),
+        y,
+        rot: Math.round(Math.random() * 36 - 18),
+        delay: Math.round(index * 63 + Math.random() * 40),
+      };
+    });
+    setCardExitVectors(vectors);
+    setOpenPhase("claiming");
+    setTimeoutSafe(() => setOpenPhase("resetting"), 2580);
+    setTimeoutSafe(() => {
+      setOpenPhase("idle");
+      setRevealedCount(0);
+      setFlipped(Array.from({ length: 5 }, () => false));
+      setCardExitVectors([]);
+    }, 2600);
+  };
 
   return (
-    <div className="inventory-scene">
+    <div
+      className={`inventory-scene${openPhase === "burst" ? " is-burst" : ""}${openPhase !== "idle" ? " is-dim" : ""}${openPhase === "idle" ? " is-idle" : ""}`}
+    >
+      <div className="inventory-mouse-debug">
+        {mousePos.x}, {mousePos.y}
+      </div>
       <div className="inventory-scene__bg" aria-hidden="true" />
-      <div className="inventory-scene__glow" aria-hidden="true" />
+      <div
+        className={`inventory-scene__glow phase-${openPhase}${glowHovered ? " is-hovered" : ""}${glowPinned ? " is-pinned" : ""}`}
+        aria-hidden="true"
+      />
+      <div className={`inventory-scene__glow-active${openPhase === "idle" ? " is-hidden" : ""}`} aria-hidden="true" />
+      <div className={`inventory-scene__glow-overlay${glowOverlayHidden ? " is-hidden" : ""}`} aria-hidden="true" />
       <div className="inventory-scene__content">
-        <div className="inventory-scene__pack-title">
-          Alto Standard Pack - Single <span>(1)</span>
-        </div>
+        <div className="inventory-scene__pack-title">{packs[0]?.name}</div>
         <div className="inventory-scene__lantern-flicker" aria-hidden="true" />
         <div className="inventory-scene__lantern-flicker inventory-scene__lantern-flicker--right" aria-hidden="true" />
         <div className="inventory-scene__lantern-flicker inventory-scene__lantern-flicker--orange" aria-hidden="true" />
         <div className="inventory-scene__lantern-flicker inventory-scene__lantern-flicker--orange inventory-scene__lantern-flicker--orange-right" aria-hidden="true" />
         <div className="inventory-scene__crystal-glow" aria-hidden="true" />
-        <button
-          type="button"
-          className="inventory-scene__nav-icon inventory-scene__nav-icon--left"
-          onClick={() => window.alert("TODO: Inventory nav left.")}
-          aria-label="Inventory previous"
-        >
-          <img src="/assets/ui/inventory/inventory-next_icon_left.png" alt="" />
-        </button>
-        <button
-          type="button"
-          className="inventory-scene__nav-icon inventory-scene__nav-icon--right"
-          onClick={() => window.alert("TODO: Inventory nav right.")}
-          aria-label="Inventory next"
-        >
-          <img src="/assets/ui/inventory/inventory-next_icon_right.png" alt="" />
-        </button>
-        <img className="inventory-scene__pack-icon" src="/assets/ui/inventory/inventory-pack_icon.png" alt="" />
-        <button
-          type="button"
-          className="inventory-scene__openpack-button"
-          onClick={() => window.alert("TODO: Open pack.")}
-        >
-          <img src="/assets/ui/inventory/inventory-button_openpack.png" alt="Open pack" />
-        </button>
+        <div className={`inventory-pack-ui${isPackUiHidden ? " inventory-pack-ui--hidden" : ""}`}>
+          <button
+            type="button"
+            className="inventory-scene__nav-icon inventory-scene__nav-icon--left"
+            onClick={() => window.alert("TODO: Inventory nav left.")}
+            aria-label="Inventory previous"
+            disabled={openPhase !== "idle"}
+          >
+            <img src="/assets/ui/inventory/inventory-next_icon_left.png" alt="" />
+          </button>
+          <button
+            type="button"
+            className="inventory-scene__nav-icon inventory-scene__nav-icon--right"
+            onClick={() => window.alert("TODO: Inventory nav right.")}
+            aria-label="Inventory next"
+            disabled={openPhase !== "idle"}
+          >
+            <img src="/assets/ui/inventory/inventory-next_icon_right.png" alt="" />
+          </button>
+          <div
+            className={`inventory-scene__pack-icon${openPhase === "shaking" ? " is-shaking" : ""}`}
+            aria-hidden="true"
+          >
+            <div className="inventory-pack-shadow" />
+            <div className="inventory-pack-float">
+              <div className="inventory-pack-roll">
+                <div className="inventory-pack-mask">
+                  <div className="inventory-pack-art" />
+                  <div className="inventory-pack-glint" />
+                  <div className="inventory-pack-rim" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`inventory-scene__openpack-button phase-${openPhase}`}
+            onClick={handleOpenPackClick}
+            onMouseEnter={() => {
+              if (openPhase === "idle") setGlowHovered(true);
+            }}
+            onMouseLeave={() => {
+              if (openPhase === "idle") setGlowHovered(false);
+            }}
+            onFocus={() => {
+              if (openPhase === "idle") setGlowHovered(true);
+            }}
+            onBlur={() => {
+              if (openPhase === "idle") setGlowHovered(false);
+            }}
+            disabled={openPhase !== "idle"}
+          >
+            <img src="/assets/ui/inventory/inventory-button_openpack.png" alt="Open pack" />
+          </button>
+          <div className="inventory-packui-overlay" aria-hidden="true">
+            <button type="button" className={`inventory-openpack phase-${openPhase}`} tabIndex={-1} disabled>
+              <img
+                className="inventory-openpack__textmask"
+                src="/assets/ui/inventory/open-pack_text_mask.png"
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="inventory-openpack__fallbacktext">OPEN PACK</span>
+              <span className="inventory-openpack__sr">Open pack</span>
+            </button>
+          </div>
+        </div>
+        {openPhase === "idle" && <div className="inventory-pack-ui__particle-gate" aria-hidden="true" />}
         <button type="button" className="main-menu-nav-button inventory-scene__back" onClick={() => setScene("STORE")}>
           <span className="main-menu-nav-button__art" aria-hidden="true">
             <img
@@ -462,6 +821,97 @@ const InventoryScene = () => {
           <span className="main-menu-nav-button__label">Back</span>
         </button>
       </div>
+      {vfxActive && (
+        <div key={vfxKey} className="inventory-pack-vfx" aria-hidden="true">
+          <div className="inventory-pack-vfx__bloom" />
+          <div className="inventory-pack-vfx__rays" />
+          <img
+            className="inventory-pack-vfx__shockwave"
+            src="/assets/ui/inventory/vfx/vfx_pack_shockwave.png"
+            alt=""
+          />
+          <img
+            className="inventory-pack-vfx__coreflash"
+            src="/assets/ui/inventory/vfx/vfx_pack_core_flash.png"
+            alt=""
+          />
+          <img
+            className="inventory-pack-vfx__runering"
+            src="/assets/ui/inventory/vfx/vfx_pack_rune_ring.png"
+            alt=""
+          />
+          <img
+            className="inventory-pack-vfx__wisps"
+            src="/assets/ui/inventory/vfx/vfx_pack_energy_wisps.png"
+            alt=""
+          />
+          <div className="inventory-pack-vfx__debris">
+            {debrisRef.current.map((chunk) => (
+              <span
+                key={chunk.id}
+                className="inventory-pack-vfx__debris-chunk"
+                style={{
+                  ["--dx" as any]: `${chunk.x}px`,
+                  ["--dy" as any]: `${chunk.y}px`,
+                  ["--dx-fast" as any]: `${chunk.xFast}px`,
+                  ["--dy-fast" as any]: `${chunk.yFast}px`,
+                  ["--rot" as any]: `${chunk.rot}deg`,
+                  ["--delay" as any]: `${chunk.delay}ms`,
+                  ["--dur" as any]: `${chunk.duration}ms`,
+                  ["--scale" as any]: chunk.scale,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      <button
+        type="button"
+        className={`inventory-button_claim${
+          openPhase === "spawning" || openPhase === "revealing" ? "" : " is-hidden"
+        }`}
+        onClick={handleClaim}
+        disabled={openPhase !== "revealing" || revealedCount < 5}
+        aria-label="Claim pack"
+      >
+        <img src="/assets/ui/inventory/inventory-button_claimpack.png" alt="Claim pack" />
+      </button>
+      {cardsVisible && (
+        <div className={`inventory-cardrow phase-${openPhase}`}>
+          {Array.from({ length: 5 }, (_, index) => {
+            const vector = cardExitVectors[index];
+            return (
+              <button
+                key={`card-${index}`}
+                type="button"
+                className={`inventory-card${flipped[index] ? " is-flipped" : ""}${
+                  openPhase === "claiming" ? " is-exiting" : ""
+                }`}
+                style={{
+                  ["--i" as any]: index,
+                  ["--exit-x" as any]: vector ? `${vector.x}px` : "0px",
+                  ["--exit-y" as any]: vector ? `${vector.y}px` : "0px",
+                  ["--exit-rot" as any]: vector ? `${vector.rot}deg` : "0deg",
+                  ["--exit-delay" as any]: vector ? `${vector.delay}ms` : "0ms",
+                }}
+                onClick={() => handleCardFlip(index)}
+                disabled={flipped[index] || openPhase !== "revealing"}
+                aria-label={flipped[index] ? `Card ${index + 1} revealed` : `Reveal card ${index + 1}`}
+              >
+                <div className="inventory-card__inner">
+                  <div
+                    className="inventory-card__face inventory-card__back"
+                    style={{ backgroundImage: "url(/assets/ui/inventory/card_back.png)" }}
+                  />
+                  <div className="inventory-card__face inventory-card__front" aria-hidden="true">
+                    <span className="inventory-card__frontGlow" />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
