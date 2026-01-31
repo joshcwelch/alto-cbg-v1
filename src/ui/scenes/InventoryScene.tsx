@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import InventoryFoundationFX from "../components/InventoryFoundationFX";
 import { useUIStore } from "../state/useUIStore";
 
 type OpenPhase = "idle" | "shaking" | "burst" | "spawning" | "revealing" | "claiming" | "resetting";
@@ -730,6 +731,7 @@ const InventoryScene = () => {
       />
       <div className={`inventory-scene__glow-active${openPhase === "idle" ? " is-hidden" : ""}`} aria-hidden="true" />
       <div className={`inventory-scene__glow-overlay${glowOverlayHidden ? " is-hidden" : ""}`} aria-hidden="true" />
+      <InventoryFoundationFX />
       <div className="inventory-scene__content">
         <div className="inventory-scene__pack-title">{packs[0]?.name}</div>
         <div className="inventory-scene__lantern-flicker" aria-hidden="true" />
