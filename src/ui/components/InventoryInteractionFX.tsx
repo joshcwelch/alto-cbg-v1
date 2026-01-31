@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-type InventoryInteractionFXProps = {
-  mousePos: { x: number; y: number };
-};
-
 const FX_INTENSITY = {
   impact: 1,
   chroma: 0.85,
@@ -14,7 +10,7 @@ const FX_INTENSITY = {
 const DEBUG_EXAGGERATE_FX = false;
 const ENABLE_PLACEHOLDER_RARE_STREAK = false;
 
-const InventoryInteractionFX = ({ mousePos }: InventoryInteractionFXProps) => {
+const InventoryInteractionFX = () => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [impactKey, setImpactKey] = useState(0);
   const [chromaKey, setChromaKey] = useState(0);
@@ -75,20 +71,29 @@ const InventoryInteractionFX = ({ mousePos }: InventoryInteractionFXProps) => {
       }
     };
 
-    const updateTarget = () => {
+    const updateTarget = (event?: MouseEvent) => {
       const width = window.innerWidth || 1;
       const height = window.innerHeight || 1;
-      target.x = (mousePos.x / width - 0.5) * 2;
-      target.y = (mousePos.y / height - 0.5) * 2;
+      const x = event?.clientX ?? width * 0.5;
+      const y = event?.clientY ?? height * 0.5;
+      target.x = (x / width - 0.5) * 2;
+      target.y = (y / height - 0.5) * 2;
       if (!rafId) rafId = window.requestAnimationFrame(tick);
     };
 
+    const onMove = (event: MouseEvent) => updateTarget(event);
+    const onLeave = () => updateTarget();
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mouseleave", onLeave);
     updateTarget();
 
     return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseleave", onLeave);
       if (rafId) window.cancelAnimationFrame(rafId);
     };
-  }, [mousePos.x, mousePos.y, prefersReducedMotion]);
+  }, [prefersReducedMotion]);
 
   const debugScale = DEBUG_EXAGGERATE_FX ? 1.5 : 1;
 

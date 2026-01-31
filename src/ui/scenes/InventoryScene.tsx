@@ -37,7 +37,7 @@ const InventoryScene = () => {
   const [cardExitVectors, setCardExitVectors] = useState<ExitVector[]>([]);
   const [vfxActive, setVfxActive] = useState(false);
   const [vfxKey, setVfxKey] = useState(0);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const mouseDebugRef = useRef<HTMLDivElement | null>(null);
   const glowOverlayHidden = false;
   const prefersReducedMotion =
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -113,10 +113,12 @@ const InventoryScene = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const target = mouseDebugRef.current;
+    if (!target) return;
     const onMove = (event: MouseEvent) => {
-      setMousePos({ x: event.clientX, y: event.clientY });
+      target.textContent = `${event.clientX}, ${event.clientY}`;
     };
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
@@ -728,8 +730,8 @@ const InventoryScene = () => {
     <div
       className={`inventory-scene${openPhase === "burst" ? " is-burst" : ""}${openPhase !== "idle" ? " is-dim" : ""}${openPhase === "idle" ? " is-idle" : ""}`}
     >
-      <div className="inventory-mouse-debug">
-        {mousePos.x}, {mousePos.y}
+      <div ref={mouseDebugRef} className="inventory-mouse-debug">
+        0, 0
       </div>
       <div className="inventory-scene__bg" aria-hidden="true" />
       <div
@@ -739,7 +741,7 @@ const InventoryScene = () => {
       <div className={`inventory-scene__glow-active${openPhase === "idle" ? " is-hidden" : ""}`} aria-hidden="true" />
       <div className={`inventory-scene__glow-overlay${glowOverlayHidden ? " is-hidden" : ""}`} aria-hidden="true" />
       <InventoryFoundationFX />
-      <InventoryInteractionFX mousePos={mousePos} />
+      <InventoryInteractionFX />
       <div className="inventory-scene__content">
         <div className="inventory-scene__pack-title">{packs[0]?.name}</div>
         <div className="inventory-scene__lantern-flicker" aria-hidden="true" />
