@@ -4142,6 +4142,17 @@
     animation: none;
     opacity: 0.06;
   }
+
+  .inventory-juice__dust-layer {
+    animation: none;
+    opacity: calc(0.12 * var(--fx-dust));
+  }
+
+  .inventory-juice__impact,
+  .inventory-juice__chroma,
+  .inventory-juice__lens {
+    display: none;
+  }
 }
 
 @keyframes inventory-dust-drift {
@@ -4189,6 +4200,166 @@
   50% {
     opacity: 0.4;
     filter: blur(1.2px) brightness(1.08);
+  }
+}
+
+.inventory-interaction-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  --fx-impact: 1;
+  --fx-chroma: 1;
+  --fx-dust: 1;
+  --fx-lens: 1;
+  --fx-parallax-x: 0px;
+  --fx-parallax-y: 0px;
+}
+
+.inventory-juice__dust {
+  position: absolute;
+  inset: -6%;
+  mix-blend-mode: screen;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.inventory-juice__dust-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  animation: inventory-juice-drift 36s linear infinite;
+  filter: blur(0.4px);
+}
+
+.inventory-juice__dust-layer--far {
+  background-image:
+    radial-gradient(circle, rgba(90, 185, 235, 0.32) 0 1px, rgba(90, 185, 235, 0) 2px),
+    radial-gradient(circle, rgba(170, 220, 255, 0.24) 0 1.2px, rgba(170, 220, 255, 0) 2.4px);
+  background-size: 240px 240px, 320px 320px;
+  background-position: 0 0, 120px 160px;
+  opacity: calc(0.22 * var(--fx-dust));
+  animation-duration: 44s;
+  transform: translate3d(calc(var(--fx-parallax-x) * 0.35), calc(var(--fx-parallax-y) * 0.35), 0);
+}
+
+.inventory-juice__dust-layer--near {
+  background-image:
+    radial-gradient(circle, rgba(140, 210, 255, 0.38) 0 1.4px, rgba(140, 210, 255, 0) 2.6px),
+    radial-gradient(circle, rgba(100, 190, 255, 0.3) 0 1.1px, rgba(100, 190, 255, 0) 2.2px);
+  background-size: 200px 200px, 260px 260px;
+  background-position: 40px 60px, 160px 110px;
+  opacity: calc(0.28 * var(--fx-dust));
+  animation-duration: 30s;
+  transform: translate3d(calc(var(--fx-parallax-x) * 0.65), calc(var(--fx-parallax-y) * 0.65), 0);
+}
+
+.inventory-juice__impact {
+  position: absolute;
+  inset: -12%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(215, 245, 255, 0.85), rgba(60, 140, 210, 0) 58%),
+    radial-gradient(circle at 50% 55%, rgba(120, 220, 255, 0.45), rgba(10, 25, 40, 0) 65%);
+  mix-blend-mode: screen;
+  filter: blur(18px) brightness(1.15);
+  animation: inventory-impact-flash 360ms ease-out;
+}
+
+.inventory-juice__chroma {
+  position: absolute;
+  inset: -8%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 48% 46%, rgba(255, 90, 90, 0.22), rgba(255, 90, 90, 0) 55%),
+    radial-gradient(circle at 52% 48%, rgba(120, 200, 255, 0.2), rgba(120, 200, 255, 0) 58%);
+  mix-blend-mode: screen;
+  filter: blur(6px) saturate(1.1);
+  animation: inventory-chroma-hit 180ms ease-out;
+}
+
+.inventory-juice__lens {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: min(72vw, 960px);
+  height: 180px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0) 20%, rgba(200, 245, 255, 0.9) 48%, rgba(255, 255, 255, 0) 72%);
+  background-size: 240% 100%;
+  mix-blend-mode: screen;
+  filter: blur(2px) brightness(1.05);
+  animation: inventory-lens-sweep 920ms ease-out;
+}
+
+.inventory-juice__lens::after {
+  content: "";
+  position: absolute;
+  inset: 24% 0 24%;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(160, 230, 255, 0.7), rgba(255, 255, 255, 0));
+  filter: blur(6px);
+  opacity: 0.65;
+}
+
+@keyframes inventory-juice-drift {
+  0% {
+    background-position: 0 0, 120px 160px;
+  }
+  50% {
+    background-position: -60px -40px, 60px 120px;
+  }
+  100% {
+    background-position: -120px -80px, 0 80px;
+  }
+}
+
+@keyframes inventory-impact-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  30% {
+    opacity: calc(0.75 * var(--fx-impact));
+    transform: scale(1.01);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes inventory-chroma-hit {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  45% {
+    opacity: calc(0.24 * var(--fx-chroma));
+    transform: translate3d(4px, -2px, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-2px, 1px, 0);
+  }
+}
+
+@keyframes inventory-lens-sweep {
+  0% {
+    opacity: 0;
+    background-position: 140% 0%;
+    transform: translate(-50%, -50%) scale(0.98);
+  }
+  30% {
+    opacity: calc(0.65 * var(--fx-lens));
+  }
+  60% {
+    opacity: calc(0.4 * var(--fx-lens));
+  }
+  100% {
+    opacity: 0;
+    background-position: -140% 0%;
+    transform: translate(-50%, -50%) scale(1.02);
   }
 }
 

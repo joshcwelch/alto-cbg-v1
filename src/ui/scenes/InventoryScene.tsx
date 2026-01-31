@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import InventoryFoundationFX from "../components/InventoryFoundationFX";
+import InventoryInteractionFX from "../components/InventoryInteractionFX";
 import { useUIStore } from "../state/useUIStore";
 
 type OpenPhase = "idle" | "shaking" | "burst" | "spawning" | "revealing" | "claiming" | "resetting";
@@ -682,11 +683,17 @@ const InventoryScene = () => {
       return next;
     });
     setRevealedCount((prev) => Math.min(5, prev + 1));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("alto:openpack:card-flip", { detail: { index } }));
+    }
   };
 
   const handleClaim = () => {
     if (openPhase !== "revealing" || revealedCount < 5) return;
     spawnClaimPoof();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("alto:openpack:claim"));
+    }
     setGlowPinned(false);
     const downwardSlots = new Set<number>();
     while (downwardSlots.size < (Math.random() > 0.5 ? 1 : 2)) {
@@ -732,6 +739,7 @@ const InventoryScene = () => {
       <div className={`inventory-scene__glow-active${openPhase === "idle" ? " is-hidden" : ""}`} aria-hidden="true" />
       <div className={`inventory-scene__glow-overlay${glowOverlayHidden ? " is-hidden" : ""}`} aria-hidden="true" />
       <InventoryFoundationFX />
+      <InventoryInteractionFX mousePos={mousePos} />
       <div className="inventory-scene__content">
         <div className="inventory-scene__pack-title">{packs[0]?.name}</div>
         <div className="inventory-scene__lantern-flicker" aria-hidden="true" />
