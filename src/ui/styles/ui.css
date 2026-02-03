@@ -1969,6 +1969,141 @@
     drop-shadow(0 0 28px rgba(80, 170, 255, 0.2));
 }
 
+.collection__lantern-flames {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  mix-blend-mode: screen;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 14px rgba(120, 210, 255, 0.32))
+    drop-shadow(0 0 26px rgba(80, 170, 255, 0.18));
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
+}
+
+.collection-fx-group {
+  position: fixed;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.collection-fx-group--flame {
+  left: 60px;
+  top: 621px;
+  transform: translate(-50%, -100%);
+  width: 120px;
+  height: 220px;
+}
+
+.collection-fx-group--flame-b {
+  left: 1853px;
+  top: 625px;
+  transform: translate(-50%, -100%);
+  width: 120px;
+  height: 220px;
+}
+
+.collection-fx-group--particles {
+  left: 60px;
+  top: 552px;
+  transform: translate(-50%, -100%);
+  width: 80px;
+  height: 120px;
+}
+
+.collection-fx-group--particles-b {
+  left: 1853px;
+  top: 591px;
+  transform: translate(-50%, -100%);
+  width: 80px;
+  height: 120px;
+}
+
+.collection-fx-group--smoke {
+  left: 60px;
+  top: 546px;
+  transform: translate(-50%, -100%);
+  width: 80px;
+  height: 120px;
+}
+
+.collection-fx-group--smoke-b {
+  left: 1853px;
+  top: 591px;
+  transform: translate(-50%, -100%);
+  width: 80px;
+  height: 120px;
+}
+
+.collection__pip-box {
+  position: absolute;
+  left: calc(50% + 50px);
+  top: 50%;
+  width: 56px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 4;
+  border: none;
+}
+
+.collection__smoke-box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+  border: none;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.collection__pip {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(200, 245, 255, 0.9);
+  box-shadow: 0 0 10px rgba(140, 220, 255, 0.95), 0 0 16px rgba(90, 190, 255, 0.6);
+  opacity: 0;
+  animation: mainmenu-pip-rise var(--dur, 1200ms) ease-out forwards;
+}
+
+.collection__pip--ember {
+  background: rgba(140, 235, 255, 0.95);
+  box-shadow:
+    0 0 12px rgba(90, 210, 255, 0.95),
+    0 0 22px rgba(50, 170, 255, 0.75),
+    0 0 34px rgba(20, 120, 220, 0.5);
+  filter: blur(0.2px);
+}
+
+.collection__smoke {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(170, 235, 255, 0.52) 0%,
+    rgba(115, 200, 250, 0.34) 45%,
+    rgba(40, 90, 140, 0) 75%
+  );
+  opacity: 0;
+  filter: blur(1.2px);
+  animation: mainmenu-smoke-rise var(--dur, 4200ms) ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+  box-shadow: 0 0 14px rgba(130, 210, 255, 0.55);
+}
+
 .mainmenu__smoke {
   position: absolute;
   border-radius: 999px;
@@ -3339,6 +3474,1425 @@
   display: flex;
   flex-direction: column;
   gap: var(--menu-gutter);
+  --collection-scale: min(calc(100vw * 0.0005208333), calc(100vh * 0.0009259259));
+}
+
+.collection-scene--empty {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2.4vw, 22px);
+}
+
+.collection-scene--empty > .ui-button {
+  position: relative;
+  z-index: 3;
+}
+
+.collection-scene--empty > .main-menu-nav-button {
+  position: relative;
+  z-index: 3;
+}
+
+.collection-scene__filter-button {
+  position: fixed;
+  left: 327px;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: auto;
+  z-index: 18;
+  display: inline-block;
+  --filter-btn-top: 259px;
+  --filter-btn-stack-offset: 190px;
+  top: var(--filter-btn-top);
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 200ms ease, filter 200ms ease;
+  will-change: transform, filter;
+}
+
+.collection-scene__filter-button-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 16px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #f2e7d3;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  padding: 0 0 0 100px;
+  transform: translateY(-5px);
+}
+
+.collection-scene__filter-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.collection-scene__filter-slider {
+  position: fixed;
+  left: 324px;
+  top: var(--filter-slider-top, 204px);
+  transform: translate(-50%, -50%) translateY(var(--filter-slider-dy, 0px));
+  width: 340px;
+  height: auto;
+  z-index: 22;
+  pointer-events: none;
+  opacity: 1;
+  transition: transform 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 1) 60%);
+  mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 1) 60%);
+}
+
+
+.collection-scene__search {
+  position: fixed;
+  left: 1376px;
+  top: 231px;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  width: 240px;
+  height: 47px;
+}
+
+/* Search bar frame using asset */
+.collection-search-frame {
+  position: relative;
+  width: 100%;
+  height: 47px;
+  background-image: url("/assets/ui/collection/collection-filter_searchbar.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  padding-left: 56px;
+  padding-right: 18px;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+
+/* Native input inside the stone frame */
+.collection-search-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(245, 235, 210, 0.95);
+  font-family: "Cinzel", "Spectral SC", serif;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  caret-color: rgba(120, 220, 255, 0.9);
+}
+
+/* Placeholder styling */
+.collection-search-input::placeholder {
+  color: rgba(200, 185, 155, 0.55);
+  text-shadow: none;
+}
+
+/* Hover: subtle bevel highlight */
+.collection-search-frame:hover {
+  filter:
+    drop-shadow(0 7px 16px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 8px rgba(90, 220, 255, 0.12));
+}
+
+/* Focus-within: arcane activation glow */
+.collection-search-frame:focus-within {
+  filter:
+    drop-shadow(0 7px 16px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 0 10px rgba(90, 220, 255, 0.35))
+    drop-shadow(0 0 18px rgba(90, 220, 255, 0.18));
+}
+
+/* Remove browser autofill styling */
+.collection-search-input:-webkit-autofill {
+  -webkit-text-fill-color: rgba(245, 235, 210, 0.95);
+  transition: background-color 9999s ease-out;
+}
+
+/* Reduced motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .collection-search-frame {
+    transition: none;
+  }
+}
+
+.collection-scene__rarity-filter {
+  position: fixed;
+  left: 1615px;
+  top: 231px;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.collection-scene__rarity-filter-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(120, 200, 255, 0.95), rgba(20, 60, 90, 0.85)),
+    linear-gradient(135deg, rgba(240, 220, 170, 0.55), rgba(60, 40, 20, 0.8));
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.35),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+  transform: rotate(45deg);
+}
+
+.collection-scene__rarity-filter-menu {
+  position: relative;
+}
+
+.collection-scene__rarity-filter-caret {
+  font-size: 10px;
+  color: rgba(230, 200, 150, 0.85);
+}
+
+.collection-rarity-dropdown-trigger {
+  position: relative;
+  height: 52px;
+  min-width: 220px;
+  background-image: url("/assets/ui/collection/collection-filter_raritydropdown.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 54px;
+  padding-right: 36px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: "Cinzel", "Spectral SC", serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 235, 210, 0.95);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+
+.collection-rarity-dropdown-trigger > span:first-child {
+  display: inline-block;
+  padding-top: 2px;
+}
+
+/* Hover */
+.collection-rarity-dropdown-trigger:hover {
+  filter:
+    drop-shadow(0 7px 16px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 8px rgba(90, 220, 255, 0.12));
+}
+
+/* Open / active state */
+.collection-rarity-dropdown-trigger[aria-expanded="true"] {
+  filter:
+    drop-shadow(0 7px 16px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 0 10px rgba(90, 220, 255, 0.35))
+    drop-shadow(0 0 18px rgba(90, 220, 255, 0.18));
+}
+
+/* Keyboard focus */
+.collection-rarity-dropdown-trigger:focus-visible {
+  outline: 2px solid rgba(90, 220, 255, 0.45);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+
+.collection-scene__rarity-filter-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 170px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(150, 120, 90, 0.65);
+  background:
+    linear-gradient(180deg, rgba(70, 60, 48, 0.95) 0%, rgba(25, 20, 18, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 235, 200, 0.12),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.6),
+    0 8px 16px rgba(0, 0, 0, 0.55);
+  display: grid;
+  gap: 6px;
+}
+
+.collection-rarity-menu {
+  position: absolute;
+  z-index: 50;
+  min-width: 260px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, rgba(18, 14, 12, 0.92) 0%, rgba(10, 8, 8, 0.95) 100%);
+  border: 1px solid rgba(150, 120, 90, 0.35);
+  box-shadow:
+    0 18px 30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 2px rgba(255, 235, 200, 0.07),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.55);
+}
+
+.collection-scene__rarity-filter-option {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgba(180, 150, 110, 0.55);
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.9) 0%, rgba(24, 18, 14, 0.95) 100%);
+  color: rgba(238, 215, 175, 0.95);
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 225, 180, 0.08),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.7),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: transform 140ms ease, filter 140ms ease, opacity 140ms ease;
+}
+
+.collection-rarity-menu__item {
+  --rg: rgba(90, 220, 255, 0.2);
+  display: grid;
+  grid-template-columns: 44px 1fr 22px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, filter 160ms ease;
+}
+
+.collection-rarity-menu__item:hover {
+  background:
+    radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0) 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.1));
+  border-color: rgba(220, 190, 140, 0.22);
+  transform: translateY(-1px);
+}
+
+.collection-rarity-menu__item:active {
+  transform: translateY(0px);
+  filter: brightness(0.98);
+}
+
+.collection-rarity-menu__icon {
+  width: 38px;
+  height: auto;
+  display: block;
+  filter:
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 8px color-mix(in srgb, var(--rg) 70%, transparent));
+}
+
+.collection-rarity-menu__icon--placeholder {
+  width: 38px;
+  height: 28px;
+}
+
+.collection-rarity-menu__label {
+  font-family: "Cinzel", "Spectral SC", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 12px;
+  color: rgba(245, 235, 210, 0.92);
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.78),
+    0 0 6px color-mix(in srgb, var(--rg) 35%, transparent),
+    0 0 10px color-mix(in srgb, var(--rg) 18%, transparent);
+}
+
+.collection-rarity-menu__check {
+  justify-self: end;
+  opacity: 0;
+  color: rgba(245, 235, 210, 0.95);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+}
+
+.collection-rarity-menu__item.is-selected .collection-rarity-menu__check,
+.collection-rarity-menu__item[aria-selected="true"] .collection-rarity-menu__check {
+  opacity: 1;
+}
+
+.collection-rarity-menu__item.is-selected,
+.collection-rarity-menu__item[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--rg) 45%, rgba(220, 190, 140, 0.22));
+  background:
+    radial-gradient(circle at 25% 50%, color-mix(in srgb, var(--rg) 18%, transparent), rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.12));
+}
+
+.collection-rarity-menu__item[data-rarity="common"] {
+  --rg: rgba(110, 220, 255, 0.75);
+}
+
+.collection-rarity-menu__item[data-rarity="ucommon"] {
+  --rg: rgba(90, 245, 200, 0.75);
+}
+
+.collection-rarity-menu__item[data-rarity="rare"] {
+  --rg: rgba(50, 150, 255, 0.85);
+}
+
+.collection-rarity-menu__item[data-rarity="epic"] {
+  --rg: rgba(190, 90, 255, 0.9);
+}
+
+.collection-rarity-menu__item[data-rarity="legendary"] {
+  --rg: rgba(255, 210, 110, 0.85);
+}
+
+.collection-rarity-menu__item[data-rarity="mythic"] {
+  --rg: rgba(255, 245, 255, 0.9);
+}
+
+.collection-rarity-menu__item[data-rarity="all"] {
+  --rg: rgba(210, 195, 170, 0.45);
+}
+
+.collection-rarity-menu__item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--rg) 50%, transparent);
+  outline-offset: 3px;
+}
+
+.collection-rarity-menu__item:hover,
+.collection-rarity-menu__item:focus-visible {
+  border-radius: 10px;
+}
+
+.collection-scene__rarity-filter-option:hover,
+.collection-scene__rarity-filter-option:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.collection-scene__rarity-filter-option:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.6);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .collection-rarity-dropdown-trigger {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-rarity-menu__item {
+    transition: none;
+  }
+}
+
+/* Owned / Unowned toggles (fixed-position for manual placement) */
+.collection-scene__ownership-toggles {
+  position: fixed;
+
+  /* PLACEHOLDER COORDS: adjust with cursor position */
+  left: 1126px;
+  top: 230px;
+
+  transform: translate(-50%, -50%);
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  pointer-events: auto;
+}
+
+/* Each toggle is a button but should not look like a modern button */
+.collection-scene__ownership-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Icon sizing */
+.collection-scene__ownership-toggle-icon {
+  width: 30px;
+  height: auto;
+  display: block;
+
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+  transform: translateZ(0);
+  transition: transform 140ms ease, filter 160ms ease, opacity 160ms ease;
+}
+
+/* Label matches your fantasy filter text language */
+.collection-scene__ownership-toggle-label {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+
+  color: rgba(235, 220, 190, 0.9);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+
+  transform: translateZ(0);
+  transition: color 160ms ease, text-shadow 160ms ease, opacity 160ms ease;
+}
+
+/* OFF state: slightly dimmer */
+.collection-scene__ownership-toggle.is-off .collection-scene__ownership-toggle-icon {
+  opacity: 0.92;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.62));
+}
+.collection-scene__ownership-toggle.is-off .collection-scene__ownership-toggle-label {
+  opacity: 0.78;
+}
+
+/* ON state: add controlled cyan “alt-light” glow */
+.collection-scene__ownership-toggle.is-on .collection-scene__ownership-toggle-icon {
+  filter:
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.68))
+    drop-shadow(0 0 8px rgba(90, 220, 255, 0.45))
+    drop-shadow(0 0 12px rgba(90, 220, 255, 0.25));
+}
+.collection-scene__ownership-toggle.is-on .collection-scene__ownership-toggle-label {
+  opacity: 1;
+  color: rgba(245, 235, 210, 0.98);
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.75),
+    0 0 7px rgba(90, 220, 255, 0.22);
+}
+
+/* Hover: premium “ignite” without blinking */
+.collection-scene__ownership-toggle:hover .collection-scene__ownership-toggle-icon {
+  transform: translateY(-1px) scale(1.02);
+  filter:
+    drop-shadow(0 7px 14px rgba(0, 0, 0, 0.72))
+    drop-shadow(0 0 10px rgba(90, 220, 255, 0.35));
+}
+.collection-scene__ownership-toggle:hover .collection-scene__ownership-toggle-label {
+  color: rgba(250, 240, 215, 1);
+}
+
+/* Press: slight inset feel */
+.collection-scene__ownership-toggle:active .collection-scene__ownership-toggle-icon {
+  transform: translateY(0px) scale(0.99);
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.75));
+}
+
+/* Keyboard focus (AAA accessibility) */
+.collection-scene__ownership-toggle:focus-visible {
+  outline: 2px solid rgba(90, 220, 255, 0.45);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .collection-scene__ownership-toggle-icon,
+  .collection-scene__ownership-toggle-label {
+    transition: none;
+  }
+}
+
+.collection-scene__filter-button:hover,
+.collection-scene__filter-button:focus-visible {
+  transform: translate(-50%, -50%) scale(1.01);
+  filter: brightness(1.03);
+}
+
+.collection-scene__filter-button:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.6);
+  outline-offset: 3px;
+}
+
+.collection-scene__filter-button--secondary {
+  top: calc(var(--filter-btn-top) + var(--filter-btn-stack-offset) - 100px);
+}
+
+.collection-scene__filter-button--tertiary {
+  top: calc(var(--filter-btn-top) + (var(--filter-btn-stack-offset) * 2) - 200px);
+}
+
+.collection-scene__filter-button--quaternary {
+  top: calc(var(--filter-btn-top) + (var(--filter-btn-stack-offset) * 3) - 300px);
+}
+
+.collection-scene__faction-filter {
+  position: fixed;
+  left: 327px;
+  top: 800px;
+  transform: translate(-50%, -50%);
+  width: 252px;
+  z-index: 18;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: center;
+  gap: 12px 22px;
+  padding: 12px 10px;
+  border-radius: 6px;
+  background: radial-gradient(circle at 50% 55%, rgba(4, 3, 3, 0.48), rgba(6, 5, 5, 0) 78%);
+  box-shadow:
+    inset 0 12px 22px rgba(0, 0, 0, 0.45),
+    inset 0 -10px 16px rgba(120, 90, 60, 0.06);
+}
+
+.collection-scene__faction-filter::before {
+  content: "";
+  position: absolute;
+  inset: -6px -2px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 60%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 70%);
+  filter: blur(8px);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.collection-scene__faction-filter-button {
+  width: 100px;
+  height: 100px;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+  filter:
+    brightness(0.99)
+    drop-shadow(0 2px 3px rgba(6, 8, 10, 0.6))
+    drop-shadow(0 10px 18px rgba(12, 18, 26, 0.45));
+  transition: transform 200ms ease, filter 200ms ease, opacity 200ms ease;
+  will-change: transform, filter;
+}
+
+.collection-scene__faction-filter-button::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.collection-scene__faction-filter-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+}
+
+.collection-scene__faction-filter-button:nth-child(5) {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.collection-scene__faction-filter-button:not(.is-selected):not(.is-inactive):hover,
+.collection-scene__faction-filter-button:not(.is-selected):not(.is-inactive):focus-visible {
+  transform: translateY(-2px) scale(1.04);
+  filter:
+    brightness(1.05)
+    saturate(1.08)
+    drop-shadow(0 4px 6px rgba(6, 8, 10, 0.65))
+    drop-shadow(0 12px 24px rgba(80, 130, 180, 0.35));
+}
+
+.collection-scene__faction-filter-button:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.6);
+  outline-offset: 4px;
+}
+
+.collection-scene__faction-filter-button.is-selected {
+  filter:
+    brightness(1.12)
+    saturate(1.18)
+    drop-shadow(0 4px 6px rgba(6, 8, 10, 0.65))
+    drop-shadow(0 0 26px rgba(160, 220, 255, 0.6));
+  animation: collection-faction-pulse 5.2s ease-in-out infinite;
+}
+
+.collection-scene__faction-filter-button.is-selected::after {
+  opacity: 0.7;
+  background: radial-gradient(circle at 50% 50%, rgba(210, 220, 220, 0.38), rgba(50, 60, 65, 0) 72%);
+  filter: blur(6px);
+  animation: collection-faction-aura 10s linear infinite;
+}
+
+.collection-scene__faction-filter-button.is-inactive {
+  filter:
+    grayscale(0.75)
+    brightness(0.6)
+    drop-shadow(0 2px 3px rgba(3, 4, 6, 0.45))
+    drop-shadow(0 6px 10px rgba(8, 10, 12, 0.25));
+  opacity: 0.5;
+}
+
+@keyframes collection-faction-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes collection-faction-aura {
+  0% {
+    transform: rotate(0deg) scale(0.98);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-scene__faction-filter-button.is-selected {
+    animation: none;
+  }
+
+  .collection-scene__faction-filter-button.is-selected::after {
+    animation: none;
+  }
+
+  .collection-scene__faction-filter-button {
+    transition: opacity 200ms ease;
+  }
+
+  .collection-scene__faction-filter-button:not(.is-selected):not(.is-inactive):hover,
+  .collection-scene__faction-filter-button:not(.is-selected):not(.is-inactive):focus-visible {
+    transform: none;
+  }
+}
+
+
+.collection-scene__deckbuilder {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1.2);
+  will-change: transform;
+  overflow: hidden;
+}
+
+.collection-scene__deckbuilder-art {
+  position: relative;
+  display: inline-block;
+  width: 146px;
+}
+
+.collection-scene__deckbuilder-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+
+.collection-scene__deckbuilder:hover,
+.collection-scene__deckbuilder:focus-visible {
+  transform: scale(1.05);
+}
+
+.collection-scene__deckbuilder:not(:hover):not(:focus-visible) {
+  transition: transform 320ms cubic-bezier(0.34, 0.07, 0.12, 0.98);
+}
+
+.collection-scene__salvage {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  z-index: 20;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1.2);
+  will-change: transform;
+}
+
+.collection-scene__rarity-progress {
+  position: fixed;
+  left: 1615px;
+  top: 460px;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 255px;
+  padding: 8px 12px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 55%, rgba(4, 3, 3, 0.28), rgba(6, 5, 5, 0) 82%);
+  box-shadow:
+    inset 0 10px 18px rgba(0, 0, 0, 0.32),
+    inset 0 -10px 18px rgba(120, 90, 60, 0.05);
+  --rp-common: rgba(110, 220, 255, 0.75);
+  --rp-ucommon: rgba(90, 245, 200, 0.75);
+  --rp-rare: rgba(50, 150, 255, 0.85);
+  --rp-epic: rgba(190, 90, 255, 0.9);
+  --rp-legendary: rgba(255, 210, 110, 0.85);
+  --rp-mythic: rgba(255, 245, 255, 0.9);
+}
+
+.collection-scene__rarity-progress::before {
+  content: "";
+  position: absolute;
+  inset: -6px -2px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 60%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 70%);
+  filter: blur(8px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.collection-scene__rarity-progress-row {
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  min-height: 48px;
+  margin-top: -2px;
+  transition: transform 180ms ease, filter 180ms ease, opacity 180ms ease;
+  cursor: default;
+}
+
+.collection-scene__rarity-progress-row:first-child {
+  margin-top: 0;
+}
+
+.collection-scene__rarity-progress-row:nth-child(1) {
+  --rp-glow: var(--rp-common);
+}
+
+.collection-scene__rarity-progress-row:nth-child(2) {
+  --rp-glow: var(--rp-ucommon);
+}
+
+.collection-scene__rarity-progress-row:nth-child(3) {
+  --rp-glow: var(--rp-rare);
+}
+
+.collection-scene__rarity-progress-row:nth-child(4) {
+  --rp-glow: var(--rp-epic);
+}
+
+.collection-scene__rarity-progress-row:nth-child(5) {
+  --rp-glow: var(--rp-legendary);
+}
+
+.collection-scene__rarity-progress-row:nth-child(6) {
+  --rp-glow: var(--rp-mythic);
+}
+
+.collection-scene__rarity-progress-row::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 55%),
+    radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0) 58%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--rp-glow) 22%, transparent), transparent 72%);
+  opacity: 0.14;
+  filter: blur(7px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.collection-scene__rarity-progress-row + .collection-scene__rarity-progress-row::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -2px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(220, 190, 140, 0.16),
+    rgba(0, 0, 0, 0.22),
+    rgba(255, 255, 255, 0)
+  );
+  opacity: 0.9;
+}
+
+.collection-scene__rarity-progress-icon {
+  width: clamp(36px, 2.5vw, 46px);
+  height: auto;
+  display: block;
+  filter:
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.68))
+    drop-shadow(0 0 8px color-mix(in srgb, var(--rp-glow) 60%, transparent))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--rp-glow) 35%, transparent));
+  animation: rarityBreath 5.8s ease-in-out infinite;
+  will-change: transform, filter, opacity;
+}
+
+.collection-scene__rarity-progress-row:nth-child(2) .collection-scene__rarity-progress-icon {
+  animation-delay: 0.35s;
+}
+
+.collection-scene__rarity-progress-row:nth-child(3) .collection-scene__rarity-progress-icon {
+  animation-delay: 0.7s;
+}
+
+.collection-scene__rarity-progress-row:nth-child(4) .collection-scene__rarity-progress-icon {
+  animation-delay: 1.05s;
+}
+
+.collection-scene__rarity-progress-row:nth-child(5) .collection-scene__rarity-progress-icon {
+  animation-delay: 1.4s;
+}
+
+.collection-scene__rarity-progress-row:nth-child(6) .collection-scene__rarity-progress-icon {
+  animation-delay: 1.75s;
+}
+
+.collection-scene__rarity-progress-text {
+  display: grid;
+  gap: 2px;
+}
+
+.collection-scene__rarity-progress-title {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 12px;
+  color: rgba(240, 220, 185, 0.95);
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.78),
+    0 0 6px color-mix(in srgb, var(--rp-glow) 68%, transparent),
+    0 0 12px color-mix(in srgb, var(--rp-glow) 46%, transparent),
+    0 0 18px color-mix(in srgb, var(--rp-glow) 30%, transparent);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.collection-scene__rarity-progress-sub {
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: rgba(210, 195, 170, 0.72);
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.72),
+    0 0 5px color-mix(in srgb, var(--rp-glow) 52%, transparent),
+    0 0 10px color-mix(in srgb, var(--rp-glow) 34%, transparent),
+    0 0 14px color-mix(in srgb, var(--rp-glow) 20%, transparent);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.collection-scene__rarity-progress-title,
+.collection-scene__rarity-progress-sub {
+  animation: none;
+  transform: translateZ(0);
+}
+
+.collection-scene__rarity-progress-row:hover {
+  transform: translateY(-1px);
+}
+
+.collection-scene__rarity-progress-row:hover::after {
+  opacity: 0.2;
+  filter: blur(6px);
+}
+
+.collection-scene__rarity-progress-row:hover .collection-scene__rarity-progress-title {
+  color: rgba(250, 235, 205, 0.98);
+}
+
+.collection-scene__rarity-progress-row:hover .collection-scene__rarity-progress-icon {
+  filter:
+    drop-shadow(0 7px 14px rgba(0, 0, 0, 0.72))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--rp-glow) 75%, transparent))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--rp-glow) 45%, transparent));
+}
+
+.collection-scene__rarity-progress-row:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--rp-glow) 55%, transparent);
+  outline-offset: 3px;
+}
+
+@keyframes rarityBreath {
+  0%,
+  100% {
+    transform: translateZ(0) scale(1);
+    opacity: 0.95;
+    filter:
+      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.68))
+      drop-shadow(0 0 7px color-mix(in srgb, var(--rp-glow) 55%, transparent))
+      drop-shadow(0 0 10px color-mix(in srgb, var(--rp-glow) 30%, transparent));
+  }
+  50% {
+    transform: translateZ(0) scale(1.015);
+    opacity: 1;
+    filter:
+      drop-shadow(0 7px 13px rgba(0, 0, 0, 0.72))
+      drop-shadow(0 0 10px color-mix(in srgb, var(--rp-glow) 70%, transparent))
+      drop-shadow(0 0 14px color-mix(in srgb, var(--rp-glow) 40%, transparent));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-scene__rarity-progress-icon {
+    animation: none;
+  }
+
+  .collection-scene__rarity-progress-row {
+    transition: none;
+  }
+}
+
+.collection-scene__actions-panel {
+  position: fixed;
+  left: 1606px;
+  top: 822px;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-width: 220px;
+  padding: 16px 28px;
+  border-radius: 6px;
+  background: radial-gradient(circle at 50% 55%, rgba(4, 3, 3, 0.48), rgba(6, 5, 5, 0) 78%);
+  box-shadow:
+    inset 0 12px 22px rgba(0, 0, 0, 0.45),
+    inset 0 -10px 16px rgba(120, 90, 60, 0.06);
+}
+
+.collection-scene__actions-panel::before {
+  content: "";
+  position: absolute;
+  inset: -6px -2px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 60%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 70%);
+  filter: blur(8px);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.collection-scene__actions-panel > .collection-scene__deckbuilder,
+.collection-scene__actions-panel > .collection-scene__salvage {
+  z-index: 1;
+}
+
+.collection-scene__salvage img {
+  display: block;
+  width: 130px;
+  height: auto;
+}
+
+
+.collection-scene__salvage:hover,
+.collection-scene__salvage:focus-visible {
+  transform: scale(1.05);
+}
+
+.collection-scene__salvage:not(:hover):not(:focus-visible) {
+  transition: transform 320ms cubic-bezier(0.34, 0.07, 0.12, 0.98);
+}
+
+.collection-scene__exit .main-menu-nav-button__art {
+  width: clamp(106px, 8vw, 144px);
+}
+
+.collection-scene__exit .main-menu-nav-button__label {
+  font-size: clamp(9px, 1vw, 11px);
+}
+
+.collection-scene--empty > .collection-scene__exit {
+  position: fixed !important;
+  left: calc(50% + 10px) !important;
+  bottom: 30px !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 200 !important;
+  outline: none;
+}
+
+.collection-scene__cardgrid-host {
+  --ccg-host-left: 660px;
+  --ccg-host-right: 500px;
+  --ccg-host-top: 210px;
+  --ccg-host-bottom: 90px;
+  position: absolute;
+  top: calc(var(--ccg-host-top) + 25px);
+  bottom: var(--ccg-host-bottom);
+  left: calc(var(--ccg-host-left) - 190px);
+  width: 800px;
+  height: 700px;
+  z-index: 16;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.collection-card-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  --ccg-card-w: 220px;
+  --ccg-card-h: 292px;
+  --ccg-gap-x: 44px;
+  --ccg-gap-y: 22px;
+  pointer-events: auto;
+}
+
+.collection-card-grid::before {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 45%, rgba(7, 6, 5, 0.12), rgba(7, 6, 5, 0.6) 75%);
+  opacity: 0.55;
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.collection-card-grid__viewport {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 24px 24px;
+  pointer-events: auto;
+}
+
+.collection-card-grid__pagination-dock {
+  position: fixed;
+  left: 973px;
+  top: 954px;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  pointer-events: auto;
+}
+
+.collection-card-grid__summary {
+  position: fixed;
+  left: 792px;
+  top: 228px;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(230, 214, 190, 0.92);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.collection-card-grid__summary-count {
+  font-size: 23px;
+  color: #f1d59a;
+}
+
+.collection-card-grid__summary-label {
+  font-size: 15px;
+}
+
+.collection-card-grid__grid {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: calc((var(--ccg-card-w) * 3) + (var(--ccg-gap-x) * 2));
+  min-height: calc((var(--ccg-card-h) * 2) + (var(--ccg-gap-y) * 1));
+  display: grid;
+  grid-template-columns: repeat(3, var(--ccg-card-w));
+  grid-auto-rows: var(--ccg-card-h);
+  column-gap: var(--ccg-gap-x);
+  row-gap: var(--ccg-gap-y);
+  align-content: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.collection-card-grid__card {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 14px;
+  width: var(--ccg-card-w);
+  height: var(--ccg-card-h);
+  overflow: hidden;
+  position: relative;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  will-change: transform;
+}
+
+.collection-card-grid__card::before {
+  content: "";
+  position: absolute;
+  inset: 10.5px 13.5px;
+  border-radius: 14px;
+  background: rgba(18, 14, 12, 0.85);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 12px 22px rgba(6, 8, 12, 0.45);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.collection-card-grid__card,
+.collection-card-grid__card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.collection-card-grid__card img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.collection-card-grid__card:hover,
+.collection-card-grid__card:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.collection-card-grid__card:hover::before,
+.collection-card-grid__card:focus-visible::before {
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    0 18px 30px rgba(10, 14, 20, 0.55);
+}
+
+.collection-card-grid__card:focus-visible {
+  outline: 2px solid rgba(240, 215, 165, 0.7);
+  outline-offset: 3px;
+}
+
+.collection-card-grid__pagination {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(150, 120, 90, 0.65);
+  background:
+    linear-gradient(180deg, rgba(70, 60, 48, 0.85) 0%, rgba(30, 24, 20, 0.95) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 235, 200, 0.12),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.6),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+
+.collection-card-grid__page-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.collection-card-grid__page-block {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid rgba(180, 150, 110, 0.55);
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.9) 0%, rgba(24, 18, 14, 0.95) 100%);
+  color: rgba(238, 215, 175, 0.95);
+  font-family: "Cinzel", "Spectral SC", "IM Fell English", serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 225, 180, 0.08),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.7),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: transform 140ms ease, filter 140ms ease, opacity 140ms ease;
+}
+
+.collection-card-grid__page-block.is-active {
+  color: #f6d88e;
+  border-color: rgba(230, 190, 130, 0.8);
+  background: linear-gradient(180deg, rgba(40, 30, 22, 0.92) 0%, rgba(16, 12, 10, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 230, 190, 0.18),
+    0 0 10px rgba(230, 190, 130, 0.35);
+}
+
+.collection-card-grid__page-block:hover,
+.collection-card-grid__page-block:focus-visible,
+.collection-card-grid__page-nav:not(:disabled):hover,
+.collection-card-grid__page-nav:not(:disabled):focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.collection-card-grid__page-nav {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(190, 160, 120, 0.65);
+  background: linear-gradient(180deg, rgba(70, 58, 46, 0.9) 0%, rgba(28, 22, 18, 0.98) 100%);
+  color: #f1d59a;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 230, 190, 0.2),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.65),
+    0 1px 3px rgba(0, 0, 0, 0.55);
+  transition: transform 140ms ease, filter 140ms ease, opacity 140ms ease;
+}
+
+.collection-card-grid__page-nav:disabled,
+.collection-card-grid__page-block:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  transform: none;
+}
+
+.collection-card-grid__empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+  text-align: center;
+  padding: 18px 22px;
+  color: rgba(230, 214, 190, 0.92);
+  font-family: "Spectral SC", "IM Fell English", serif;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: rgba(8, 7, 6, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(120, 90, 60, 0.4);
+  box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-card-grid__card,
+  .collection-card-grid__page-block,
+  .collection-card-grid__page-nav {
+    transition: none;
+  }
+
+  .collection-card-grid__card:hover,
+  .collection-card-grid__card:focus-visible,
+  .collection-card-grid__page-block:not(:disabled):hover,
+  .collection-card-grid__page-block:not(:disabled):focus-visible,
+  .collection-card-grid__page-nav:not(:disabled):hover,
+  .collection-card-grid__page-nav:not(:disabled):focus-visible {
+    transform: none;
+  }
+}
+
+.collection-scene__bg {
+  position: fixed;
+  inset: 0;
+  background-image: url("/assets/ui/collection/collection-background_frame.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 2;
+  background-color: #000;
+}
+
+.collection-scene__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(220px 180px at 0% 0%, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.26) 55%, rgba(0, 0, 0, 0) 82%),
+    radial-gradient(220px 180px at 100% 0%, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.26) 55%, rgba(0, 0, 0, 0) 82%),
+    radial-gradient(320px 240px at 0% 100%, rgba(0, 0, 0, 0.46) 0%, rgba(0, 0, 0, 0.29) 60%, rgba(0, 0, 0, 0) 85%),
+    radial-gradient(320px 240px at 100% 100%, rgba(0, 0, 0, 0.46) 0%, rgba(0, 0, 0, 0.29) 60%, rgba(0, 0, 0, 0) 85%);
+  pointer-events: none;
+}
+
+.collection-debug {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 10;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(6, 8, 12, 0.7);
+  border: 1px solid rgba(130, 180, 220, 0.45);
+  color: rgba(210, 235, 255, 0.92);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: "Spectral SC", "IM Fell English", serif;
+  pointer-events: none;
 }
 
 .collection-header {
@@ -4448,8 +6002,17 @@
 
 .inventory-scene__back {
   position: fixed;
-  left: 960px;
-  top: 883px;
+  left: 286px;
+  top: 952px;
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(0.6);
+  transform-origin: center center;
+}
+
+.inventory-scene__exit {
+  position: fixed;
+  left: 1621px;
+  top: 952px;
   z-index: 4;
   transform: translate(-50%, -50%) scale(0.6);
   transform-origin: center center;
@@ -8016,7 +9579,7 @@ body.inventory-opening .inventory__pip-box {
 
 .inventory-card__front {
   transform: rotateY(180deg);
-  background: radial-gradient(circle at 50% 30%, rgba(120, 225, 250, 0.26), rgba(8, 10, 12, 0.95));
+  background: url("/assets/ui/inventory/card_front.png") center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;

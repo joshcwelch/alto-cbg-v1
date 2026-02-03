@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useUIStore } from "../ui/state/useUIStore";
 import { profileData } from "../ui/data/profileData";
+import { useAccountStore } from "../ui/state/useAccountStore";
 
 const ProfileScreen = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -14,10 +15,11 @@ const ProfileScreen = () => {
     heroLevelProgress,
     winCount,
     friendsCount,
-    username,
-    title,
     achievements,
   } = profileData;
+  const player = useAccountStore((s) => s.player);
+  const username = player?.displayName ?? profileData.username;
+  const title = profileData.title;
   const [baseAchievement, top1Achievement, top2Achievement, bottom1Achievement] = achievements;
   const achievementProgressDelays = ["0s", "0.6s", "1.1s", "1.6s"];
   const [refreshNonce, setRefreshNonce] = useState(0);

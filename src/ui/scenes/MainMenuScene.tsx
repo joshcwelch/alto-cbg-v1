@@ -538,9 +538,6 @@ const MainMenuScene = () => {
               type="button"
               className="main-menu-nav-button"
               onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.localStorage.setItem("collection:lastTab", "COLLECTION");
-                }
                 setScene("COLLECTION");
               }}
             >
@@ -548,7 +545,7 @@ const MainMenuScene = () => {
                 <ArtSlot assetKey="mainMenuButtonInactive" className="main-menu-nav-button__img main-menu-nav-button__img--inactive" alt="" />
                 <ArtSlot assetKey="mainMenuButtonActive" className="main-menu-nav-button__img main-menu-nav-button__img--active" alt="" />
               </span>
-              <span className="main-menu-nav-button__label">Collection</span>
+              <span className="main-menu-nav-button__label">COLLECTON</span>
             </button>
             <button type="button" className="main-menu-nav-button" onClick={() => setScene("STORE")}>
               <span className="main-menu-nav-button__art" aria-hidden="true">

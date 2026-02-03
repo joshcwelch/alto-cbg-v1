@@ -7,6 +7,7 @@ export type UIScene =
   | "DECK_SELECT"
   | "QUESTS"
   | "COLLECTION"
+  | "DECK_BUILDER"
   | "STORE"
   | "INVENTORY"
   | "OPTIONS"
@@ -26,7 +27,9 @@ type UIState = {
   transitionActive: boolean;
   pendingScene: UIScene | null;
   transitionKey: number;
+  previousScene: UIScene | null;
   setScene: (scene: UIScene) => void;
+  goBack: () => void;
   setModal: (modal: UIModal | null) => void;
   endTransition: (key?: number) => void;
 };
@@ -40,6 +43,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   transitionActive: false,
   pendingScene: null,
   transitionKey: 0,
+  previousScene: null,
   setScene: (scene) => {
     const { scene: currentScene, transitionKey } = get();
     if (scene === currentScene) return;
@@ -48,14 +52,27 @@ export const useUIStore = create<UIState>((set, get) => ({
       transitionTimer = null;
     }
     const nextKey = transitionKey + 1;
-    set({ transitionActive: true, pendingScene: scene, transitionKey: nextKey });
+    set({
+      transitionActive: true,
+      pendingScene: scene,
+      transitionKey: nextKey,
+      previousScene: currentScene,
+    });
     if (typeof window === "undefined") {
-      set({ scene, pendingScene: null, transitionActive: false });
+      set({ scene, pendingScene: null, transitionActive: false, previousScene: currentScene });
       return;
     }
     transitionTimer = window.setTimeout(() => {
       set({ scene, pendingScene: null });
     }, TRANSITION_FADE_IN_MS);
+  },
+  goBack: () => {
+    const { previousScene } = get();
+    if (previousScene) {
+      get().setScene(previousScene);
+      return;
+    }
+    get().setScene("MAIN_MENU");
   },
   setModal: (modal) => set({ modal }),
   endTransition: (key) =>

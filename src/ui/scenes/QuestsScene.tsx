@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../state/useUIStore";
 import QuestStoreCrestButton from "../components/QuestStoreCrestButton";
+import { useAccountStore } from "../state/useAccountStore";
 
 const QuestsScene = () => {
   const setScene = useUIStore((state) => state.setScene);
@@ -9,6 +10,11 @@ const QuestsScene = () => {
   const ambientRef = useRef<HTMLDivElement | null>(null);
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const ambienceRef = useRef<HTMLAudioElement | null>(null);
+  const quests = useAccountStore((state) => state.quests);
+  const questsStatus = useAccountStore((state) => state.questsStatus);
+  const questsError = useAccountStore((state) => state.questsError);
+  const claimQuestId = useAccountStore((state) => state.claimQuestId);
+  const claimQuest = useAccountStore((state) => state.claimQuest);
 
   useEffect(() => {
     const update = () => {
@@ -320,12 +326,25 @@ const QuestsScene = () => {
     return () => window.clearInterval(intervalId);
   }, [ambientRef]);
 
-  const quest1Progress = { current: 1, total: 3 };
-  const quest2Progress = { current: 0, total: 3 };
-  const quest3Progress = { current: 100, total: 100 };
+  const fallbackDaily = [
+    { questId: "d1", title: "Play 3 matches", progress: 1, goal: 3, isClaimable: false },
+    { questId: "d2", title: "Play 3 games as Lyra", progress: 0, goal: 3, isClaimable: false },
+    { questId: "d3", title: "Deal 100 damage", progress: 100, goal: 100, isClaimable: true },
+  ];
+  const dailyQuests = quests.filter((quest) => !quest.questId.startsWith("w"));
+  const quest1 = dailyQuests[0] ?? fallbackDaily[0];
+  const quest2 = dailyQuests[1] ?? fallbackDaily[1];
+  const quest3 = dailyQuests[2] ?? fallbackDaily[2];
 
   const getProgressPercent = (current: number, total: number) =>
     total === 0 ? 0 : Math.min(100, Math.round((current / total) * 100));
+
+  const questsStatusLine =
+    questsStatus === "loading"
+      ? "Loading quests..."
+      : questsStatus === "error"
+        ? `Quests error: ${questsError ?? "Unknown error"}`
+        : null;
 
   return (
     <div className="quests-scene">
@@ -333,6 +352,21 @@ const QuestsScene = () => {
       <div className="quests-scene__content">
         <canvas className="quests-scene__fog" ref={fogCanvasRef} aria-hidden="true" />
         <div className="quests-scene__ambient" ref={ambientRef} aria-hidden="true" />
+        {questsStatusLine ? (
+          <div
+            className="quests-scene__status"
+            style={{
+              position: "absolute",
+              top: "12px",
+              left: "16px",
+              fontSize: "12px",
+              letterSpacing: "0.03em",
+              color: questsStatus === "error" ? "#f2b0b0" : "#d7dfef",
+            }}
+          >
+            {questsStatusLine}
+          </div>
+        ) : null}
         <div className="quests-scene__timer quests-scene__timer--1">
           <span className="quests-scene__timer-value">
             <span className="quests-scene__timer-num">{timeLeft.hours}</span>
@@ -390,17 +424,17 @@ const QuestsScene = () => {
           <img className="quests-scene__daily-reward-icon" src="/assets/ui/quests/quest-gold_icon.png" alt="" />
           <span className="quests-scene__daily-reward-value">75</span>
         </div>
-        <div className="quests-scene__daily-quest-1">Play 3 Matches</div>
+        <div className="quests-scene__daily-quest-1">{quest1.title}</div>
         <img
           className="quests-scene__daily-icon-play"
           src="/assets/ui/quests/quest-daily-icon_play.png"
           alt=""
         />
-        <div className="quests-scene__daily-quest-2">Play 3 Games as Lyra</div>
+        <div className="quests-scene__daily-quest-2">{quest2.title}</div>
         <div className="quests-scene__daily-icon-lyra">
           <img src="/assets/ui/quests/quest-daily-icon__lyra.png" alt="" />
         </div>
-        <div className="quests-scene__daily-quest-3">Deal 100 Damage</div>
+        <div className="quests-scene__daily-quest-3">{quest3.title}</div>
         <div className="quests-scene__daily-icon-damage">
           <img src="/assets/ui/quests/quest-daily-icon_onehundmg.png" alt="" />
         </div>
@@ -409,17 +443,28 @@ const QuestsScene = () => {
             <div className="quests-scene__progress-track">
               <div
                 className="quests-scene__progress-fill"
-                style={{ width: `${getProgressPercent(quest1Progress.current, quest1Progress.total)}%` }}
+                style={{ width: `${getProgressPercent(quest1.progress, quest1.goal)}%` }}
               />
             </div>
             <div className="quests-scene__progress-text">
-              {quest1Progress.current}/{quest1Progress.total}
+              {quest1.progress}/{quest1.goal}
             </div>
-            <button type="button" className="quests-scene__progress-abandon">
+            <button
+              type="button"
+              className="quests-scene__progress-abandon"
+              onClick={() => claimQuest(quest1.questId)}
+              disabled={
+                claimQuestId === quest1.questId || !(quest1.isClaimable || quest1.progress >= quest1.goal)
+              }
+            >
               <span className="quests-scene__progress-x" aria-hidden="true">
                 &#10005;
               </span>
-              Abandon
+              {claimQuestId === quest1.questId
+                ? "Claiming..."
+                : quest1.isClaimable || quest1.progress >= quest1.goal
+                  ? "Claim"
+                  : "Abandon"}
             </button>
           </div>
         </div>
@@ -428,17 +473,28 @@ const QuestsScene = () => {
             <div className="quests-scene__progress-track">
               <div
                 className="quests-scene__progress-fill"
-                style={{ width: `${getProgressPercent(quest2Progress.current, quest2Progress.total)}%` }}
+                style={{ width: `${getProgressPercent(quest2.progress, quest2.goal)}%` }}
               />
             </div>
             <div className="quests-scene__progress-text">
-              {quest2Progress.current}/{quest2Progress.total}
+              {quest2.progress}/{quest2.goal}
             </div>
-            <button type="button" className="quests-scene__progress-abandon">
+            <button
+              type="button"
+              className="quests-scene__progress-abandon"
+              onClick={() => claimQuest(quest2.questId)}
+              disabled={
+                claimQuestId === quest2.questId || !(quest2.isClaimable || quest2.progress >= quest2.goal)
+              }
+            >
               <span className="quests-scene__progress-x" aria-hidden="true">
                 &#10005;
               </span>
-              Abandon
+              {claimQuestId === quest2.questId
+                ? "Claiming..."
+                : quest2.isClaimable || quest2.progress >= quest2.goal
+                  ? "Claim"
+                  : "Abandon"}
             </button>
           </div>
         </div>
@@ -447,18 +503,30 @@ const QuestsScene = () => {
             <div className="quests-scene__progress-track">
               <div
                 className="quests-scene__progress-fill"
-                style={{ width: `${getProgressPercent(quest3Progress.current, quest3Progress.total)}%` }}
+                style={{ width: `${getProgressPercent(quest3.progress, quest3.goal)}%` }}
               />
             </div>
             <div className="quests-scene__progress-text">
-              {quest3Progress.current}/{quest3Progress.total}
+              {quest3.progress}/{quest3.goal}
             </div>
-            <div className="quests-scene__progress-complete" aria-label="Quest complete">
+            <button
+              type="button"
+              className="quests-scene__progress-complete"
+              aria-label="Quest complete"
+              onClick={() => claimQuest(quest3.questId)}
+              disabled={
+                claimQuestId === quest3.questId || !(quest3.isClaimable || quest3.progress >= quest3.goal)
+              }
+            >
               <span className="quests-scene__progress-check" aria-hidden="true">
                 ✓
               </span>
-              Complete
-            </div>
+              {claimQuestId === quest3.questId
+                ? "Claiming..."
+                : quest3.isClaimable || quest3.progress >= quest3.goal
+                  ? "Claim"
+                  : "Abandon"}
+            </button>
           </div>
         </div>
         <div className="quests-scene__nav">

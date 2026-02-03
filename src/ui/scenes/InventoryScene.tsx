@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import InventoryFoundationFX from "../components/InventoryFoundationFX";
 import InventoryInteractionFX from "../components/InventoryInteractionFX";
 import { useUIStore } from "../state/useUIStore";
+import { useAccountStore } from "../state/useAccountStore";
+import type { PackCardResult } from "../../api/types";
 
 type OpenPhase = "idle" | "shaking" | "burst" | "spawning" | "revealing" | "claiming" | "resetting";
 
@@ -31,6 +33,9 @@ const InventoryScene = () => {
   const debrisRef = useRef<DebrisChunk[]>([]);
   const poofBoxRef = useRef<HTMLDivElement | null>(null);
   const packs = [{ id: "standard", name: "ALTO STANDARD PACK - SINGLE (1)" }];
+  const openPack = useAccountStore((s) => s.openPack);
+  const [packResults, setPackResults] = useState<PackCardResult[] | null>(null);
+  const [packError, setPackError] = useState<string | null>(null);
   const [openPhase, setOpenPhase] = useState<OpenPhase>("idle");
   const [revealedCount, setRevealedCount] = useState(0);
   const [flipped, setFlipped] = useState<boolean[]>(() => Array.from({ length: 5 }, () => false));
@@ -646,6 +651,13 @@ const InventoryScene = () => {
     setFlipped(Array.from({ length: 5 }, () => false));
     setCardExitVectors([]);
     setGlowPinned(true);
+    setPackResults(null);
+    setPackError(null);
+
+    // Kick the "server truth" request immediately so results are ready by reveal time.
+    openPack(packs[0]?.id ?? "standard")
+      .then((resp) => setPackResults(resp.results))
+      .catch((err) => setPackError(err instanceof Error ? err.message : "Failed to open pack"));
     window.dispatchEvent(new CustomEvent("alto:openpack:commit"));
 
     if (prefersReducedMotion) {
@@ -834,6 +846,25 @@ const InventoryScene = () => {
           </span>
           <span className="main-menu-nav-button__label">Back</span>
         </button>
+        <button
+          type="button"
+          className="main-menu-nav-button inventory-scene__exit"
+          onClick={() => setScene("MAIN_MENU")}
+        >
+          <span className="main-menu-nav-button__art" aria-hidden="true">
+            <img
+              className="main-menu-nav-button__img main-menu-nav-button__img--inactive"
+              src="/assets/ui/inventory/inventory-main-btn_inactive.png"
+              alt=""
+            />
+            <img
+              className="main-menu-nav-button__img main-menu-nav-button__img--active"
+              src="/assets/ui/inventory/inventory-main-btn_active.png"
+              alt=""
+            />
+          </span>
+          <span className="main-menu-nav-button__label">EXIT</span>
+        </button>
       </div>
       {vfxActive && (
         <div key={vfxKey} className="inventory-pack-vfx" aria-hidden="true">
@@ -894,13 +925,15 @@ const InventoryScene = () => {
         <div className={`inventory-cardrow phase-${openPhase}`}>
           {Array.from({ length: 5 }, (_, index) => {
             const vector = cardExitVectors[index];
+            const rarity = packResults?.[index]?.rarity ?? "common";
             return (
               <button
                 key={`card-${index}`}
                 type="button"
-                className={`inventory-card${flipped[index] ? " is-flipped" : ""}${
+                className={`inventory-card rarity-${rarity}${flipped[index] ? " is-flipped" : ""}${
                   openPhase === "claiming" ? " is-exiting" : ""
                 }`}
+                data-rarity={rarity}
                 style={{
                   ["--i" as any]: index,
                   ["--exit-x" as any]: vector ? `${vector.x}px` : "0px",
@@ -910,7 +943,11 @@ const InventoryScene = () => {
                 }}
                 onClick={(event) => handleCardFlip(index, event)}
                 disabled={flipped[index] || openPhase !== "revealing"}
-                aria-label={flipped[index] ? `Card ${index + 1} revealed` : `Reveal card ${index + 1}`}
+                aria-label={
+                  flipped[index]
+                    ? `Card ${index + 1} revealed (${rarity})`
+                    : `Reveal card ${index + 1}`
+                }
               >
                 <div className="inventory-card__inner">
                   <div

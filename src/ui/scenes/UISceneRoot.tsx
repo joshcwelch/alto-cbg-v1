@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useAstraStore } from "../state/useAstraStore";
 import { useUIStore } from "../state/useUIStore";
+import { useAccountStore } from "../state/useAccountStore";
 import CollectionScene from "./CollectionScene";
+import DeckBuilderScene from "./DeckBuilderScene";
 import DeckSelectScene from "./DeckSelectScene";
 import AchievementsScene from "./AchievementsScene";
 import CustomizeScene from "./CustomizeScene";
@@ -17,15 +19,18 @@ import QuestsScene from "./QuestsScene";
 import StoreScene from "./StoreScene";
 import WorldMapScene from "./WorldMapScene";
 import BoardScene from "./BoardScene";
+import LoginScene from "./LoginScene";
 
 const UISceneRoot = () => {
   const scene = useUIStore((state) => state.scene);
   const setContext = useAstraStore((state) => state.setContext);
   const showCoachmark = useAstraStore((state) => state.showCoachmark);
+  const authStatus = useAccountStore((state) => state.authStatus);
+  const hydrateSession = useAccountStore((state) => state.hydrateSession);
 
   useEffect(() => {
     setContext({ scene });
-    if (scene === "COLLECTION") {
+    if (scene === "DECK_BUILDER") {
       showCoachmark({
         id: "collection-edit-deck",
         text: "If you need to make changes, click 'EDIT DECK' to modify your Stormcaller.",
@@ -34,6 +39,18 @@ const UISceneRoot = () => {
     }
   }, [scene, setContext, showCoachmark]);
 
+  useEffect(() => {
+    hydrateSession().catch(() => undefined);
+  }, [hydrateSession]);
+
+  if (authStatus === "checking") {
+    return <div>Checking session...</div>;
+  }
+
+  if (authStatus === "logged_out") {
+    return <LoginScene />;
+  }
+
   switch (scene) {
     case "MAIN_MENU":
       return <MainMenuScene />;
@@ -41,6 +58,8 @@ const UISceneRoot = () => {
       return <QuestsScene />;
     case "COLLECTION":
       return <CollectionScene />;
+    case "DECK_BUILDER":
+      return <DeckBuilderScene />;
     case "WORLD_MAP":
       return <WorldMapScene />;
     case "HERO_SELECT":
